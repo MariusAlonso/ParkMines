@@ -1,16 +1,17 @@
 
 
 class Simulation():
-    def __init__(self, stock):
-        pass
+    def __init__(self, t0, stock):
+        for v in stock.vehicles:
+            if v.order_deposit < t0 :
         
 
 class Vehicle():
-    def __init__(self, entrance, leaving, order_entrance, order_leaving):
-        self.entrance = entrance
-        self.leaving = leaving
-        self.order_entrance = order_entrance
-        self.order_leaving = order_leavings
+    def __init__(self, deposit, retrieval, order_deposit, order_retrieval):
+        self.deposit = deposit
+        self.retrieval = retrieval
+        self.order_deposit = order_deposit
+        self.order_retrieval = order_retrieval
         self.id = id
 
 
