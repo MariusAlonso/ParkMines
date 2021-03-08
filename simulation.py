@@ -1,11 +1,27 @@
 
 
 class Simulation():
-    def __init__(self, t0, stock):
-        for v in stock.vehicles:
-            if v.order_deposit < t0 :
-                pass
-        
+    def __init__(self, t0, stock, nb_robots):
+        self.nb_robots = nb_robots
+        self.events = []
+        for v in stock.vehicles.values():
+            self.events.append(Event(v, v.order_deposit, "d"))
+            self.events.append(Event(v, v.order_retrieval, "r"))
+        self.events.sort()
+
+class Event():
+
+    def __init__(self, vehicle, date, typ):
+        self.vehicle = vehicle
+        self.date = date
+        self.typ = typ
+    
+    def __lt__(self, other):
+        return self.date < other.date
+
+class Algorithm():
+    def __init__(self):
+        pass
 
 class Vehicle():
     def __init__(self, id_vehicle, deposit, retrieval, order_deposit, order_retrieval):
@@ -17,5 +33,7 @@ class Vehicle():
 
 
 class Stock():
-    def __init__(self, vehicles) :
-        self.vehicles = vehicles
+    def __init__(self, vehicles):
+        self.vehicles = {}
+        for v in vehicles:
+            self.vehicles[v.id] = v
