@@ -6,13 +6,14 @@ class Simulation():
             if v.order_deposit < t0 :
                 pass
         
-
+id = 0
 class Vehicle():
-    def __init__(self, deposit, retrieval, order_deposit, order_retrieval):
+    def __init__(self, id, deposit, retrieval, order_deposit, order_retrieval):
         self.deposit = deposit
         self.retrieval = retrieval
         self.order_deposit = order_deposit
         self.order_retrieval = order_retrieval
+        id += 1
         self.id = id
 
 
