@@ -4,6 +4,7 @@ class Simulation():
     def __init__(self, t0, stock):
         for v in stock.vehicles:
             if v.order_deposit < t0 :
+                pass
         
 
 class Vehicle():
