@@ -6,8 +6,9 @@ class Simulation():
             if v.order_deposit < t0 :
                 pass
         
-id = 0
+
 class Vehicle():
+    id = 0
     def __init__(self, deposit, retrieval, order_deposit, order_retrieval):
         self.deposit = deposit
         self.retrieval = retrieval
