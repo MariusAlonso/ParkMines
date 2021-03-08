@@ -6,10 +6,8 @@ class Parking() :
 
 
 class Block() :
-    def __init__(self, nb_lanes, lane_length):
-        self.lanes = []
-        for _ in range(nb_lanes) :
-            self.lanes.append(Lane(lane_length))
+    def __init__(self, lanes):
+        self.lanes = lanes
 
 
 class Lane() :
@@ -27,7 +25,7 @@ class Lane() :
         self.bottom_id_vehicle = None
 
     def push_top(self, id_vehicle): 
-        if self.dict_vehicules == False:
+        if not self.dict_vehicules:
             self.dict_vehicules[id_vehicle] = [None, None]
             self.top_id_vehicle = id_vehicle
             self.bottom_id_vehicle = id_vehicle
