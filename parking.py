@@ -1,4 +1,4 @@
-
+from simulation import Vehicle
 
 class Parking() :
     def __init__(self, blocks):
@@ -22,17 +22,17 @@ class Lane() :
         self.bottom_position = bottom_position
         self.top_access = top_access
         self.bottom_access = bottom_access
-        self.dict_vehicules = dict()                           # (id_vehicule : [id_vehicule_top, id_vehicule_bottom])
-        self.top_id_vehicule = None
-        self.bottom_id_vehicule = None
+        self.dict_vehicules = dict()                           # (id_vehicle : [id_vehicle_top, id_vehicle_bottom])
+        self.top_id_vehicle = None
+        self.bottom_id_vehicle = None
 
-    def push_top(self, id_vehicule): 
+    def push_top(self, id_vehicle): 
         if self.dict_vehicules == False:
-            self.dict_vehicules[id_vehicule] = [None, None]
-            self.top_id_vehicule = id_vehicule
-            self.bottom_id_vehicule = id_vehicule
+            self.dict_vehicules[id_vehicle] = [None, None]
+            self.top_id_vehicle = id_vehicle
+            self.bottom_id_vehicle = id_vehicle
         else:
-            self.dict_vehicules[self.top_id_vehicule][0] = id_vehicule   #on ajoute le nouveau véhicule au top de l'ancien top véhicule
-            self.dict_vehicules[id_vehicule] = [None, self.top_id_vehicule]
-            self.top_id_vehicule = id_vehicule
+            self.dict_vehicules[self.top_id_vehicle][0] = id_vehicle   #on ajoute le nouveau véhicule au top de l'ancien top véhicule
+            self.dict_vehicules[id_vehicle] = [None, self.top_id_vehicle]
+            self.top_id_vehicle = id_vehicle
 
