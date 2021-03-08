@@ -11,4 +11,6 @@ class TestTest() :
         vehicle_2 = Vehicle(12,22,32,42)
         block = Block(3,5)
         lane = Lane(1, block, 10, 2, 5)
+        lane.push_top(vehicle_1) 
+        assert lane.dict_vehicules == {vehicle_1: [None, None]}
 
