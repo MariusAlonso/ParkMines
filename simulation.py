@@ -8,14 +8,12 @@ class Simulation():
         
 
 class Vehicle():
-    id = 0
-    def __init__(self, deposit, retrieval, order_deposit, order_retrieval):
+    def __init__(self, id_vehicle, deposit, retrieval, order_deposit, order_retrieval):
         self.deposit = deposit
         self.retrieval = retrieval
         self.order_deposit = order_deposit
         self.order_retrieval = order_retrieval
-        id += 1
-        self.id = id
+        self.id = id_vehicle
 
 
 class Stock():
