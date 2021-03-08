@@ -12,4 +12,4 @@ class TestTest() :
         parking = Parking([Block([Lane(1, None, 10, 10, 10), Lane(2, None, 10, 10, 10)])])
         simulation = Simulation(0, stock, 1, parking, {})
         simulation.next_event()
-        assert 1 in simulation.parking.blocks[0].lanes[0].dict_vehicules or 1 in simulation.parking.blocks[0].lanes[0].dict_vehicules
+        assert 1 in simulation.parking.blocks[0].lanes[0].dict_vehicle or 1 in simulation.parking.blocks[0].lanes[0].dict_vehicle

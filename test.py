@@ -12,7 +12,7 @@ class TestTest() :
         block = Block(5)
         lane = Lane(1, block, 10, 2, 5)
         lane.push_top(vehicle_1.id) 
-        assert lane.dict_vehicules == {vehicle_1.id: [None, None]}
+        assert lane.dict_vehicle == {vehicle_1.id: [None, None]}
 
     def test_push_lane_2(self):
         vehicle_1 = Vehicle(1,1,2,3,4)
@@ -21,5 +21,5 @@ class TestTest() :
         lane = Lane(1, block, 10, 2, 5)
         lane.push_top(vehicle_1.id) 
         lane.push_top(vehicle_2.id)
-        assert lane.dict_vehicules == {vehicle_1.id: [vehicle_2.id, None], vehicle_2.id: [None, vehicle_1.id]}
+        assert lane.dict_vehicle == {vehicle_1.id: [vehicle_2.id, None], vehicle_2.id: [None, vehicle_1.id]}
 
