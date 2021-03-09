@@ -8,7 +8,7 @@ class TestTest() :
         assert stock.order_events[0].vehicle.id is 2
 
     def test_random(self) :
-        stock = Stock([Vehicle(1, 0, 1, -1, -1), Vehicle(2, 0, 2, -1, -1), Vehicle(3, 0, 3, -1, -1)])
+        stock = Stock([Vehicle(1, -1, 1, -1, -1), Vehicle(2, -1, 2, -1, -1), Vehicle(3, -1, 3, -1, -1)])
         parking = Parking([Block([Lane(1, 10), Lane(2, 10)])])
         simulation = Simulation(0, stock, 1, parking)
         simulation.next_event()

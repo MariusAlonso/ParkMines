@@ -4,6 +4,7 @@ import random
 from vehicle import Vehicle
 
 class Simulation():
+
     def __init__(self, t0, stock, nb_robots, parking):
         self.stock = stock
         for i, event in enumerate(self.stock.order_events) :
@@ -15,14 +16,19 @@ class Simulation():
         self.parking = parking
     
     def next_event(self):
-        """
-        self.t = max(self.t, stock.events[0].date)
-        for event in self.events:
-            if event.date <= self.t:
-                pass
-        """
         algorithm = AlgorithmRandom(self.t, self.stock, self.nb_robots, self.parking)
         algorithm.solve()
+
+        while True :
+            self.i_order_events += 1
+
+            if self.i_order_events == len(self.stock.order_events):
+                print("END OF THE SIMULATION")
+                break
+
+            if self.stock.order_events[self.i_order_events].date > self.t:
+                self.t = self.order_events[self.i_order_events].date
+                break
 
 
 
@@ -41,12 +47,10 @@ class Event():
 
 
 class Algorithm():
+
     def __init__(self, t0, stock, nb_robots, parking):
         self.nb_robots = nb_robots
         self.stock = stock
-        for i, event in enumerate(self.stock.order_events) :
-            if event.date >= t0 :
-                break
         self.t0 = t0
         self.parking = parking
 
@@ -58,8 +62,15 @@ class Algorithm():
 class AlgorithmRandom(Algorithm):
     
     def solve(self):
-        for vehicle in self.stock.vehicles.values():
-            if vehicle.deposit <= self.t0:
+
+        for i, event in enumerate(self.stock.events) :
+            if event.date >= self.t0 :
+                break
+        self.i_events = i
+
+        for j in range(self.i_events):
+            vehicle = self.stock.events[j].vehicle
+            if vehicle.id not in self.parking.occupation :
                 while True :
                     rand_i_block = random.randrange(len(self.parking.blocks))
                     rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
@@ -77,15 +88,19 @@ class AlgorithmRandom(Algorithm):
                                                
 
 class Stock():
+
     def __init__(self, vehicles):
+
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
+
         self.order_events = []
         for v in self.vehicles.values():
             self.order_events.append(Event(v, v.order_deposit, True))
             self.order_events.append(Event(v, v.order_retrieval, False))
         self.order_events.sort()
+
         self.events = []
         for v in self.vehicles.values():
             self.events.append(Event(v, v.deposit, True))
