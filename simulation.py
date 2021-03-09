@@ -72,7 +72,7 @@ class Vehicle():
 
 
 class Stock():
-    def __init__(self, *vehicles):
+    def __init__(self, vehicles):
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
