@@ -15,7 +15,7 @@ class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
         self.id = id_lane
-        self.list_vehicles = np.array(self.length)
+        self.list_vehicles = np.array([None]*self.length)
         self.length = length
         self.top_position = None
         self.bottom_position = None
