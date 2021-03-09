@@ -25,7 +25,7 @@ class Lane() :
 
     def push_top(self, id_vehicle):
         if self.top_position == None:
-            if not bottom_access:
+            if not self.bottom_access:
                 self.list_vehicles[self.length - 1] = id_vehicle
                 self.top_position = self.length - 1
                 self.bottom_position = self.length -1
