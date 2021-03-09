@@ -9,17 +9,14 @@ class Simulation():
         self.t = t0
         self.parking = parking
         self.occupation = occupation
-        self.events = []
-        for v in stock.vehicles.values():
-            self.events.append(Event(v, v.order_deposit, True))
-            self.events.append(Event(v, v.order_retrieval, False))
-        self.events.sort()
     
     def next_event(self):
-        self.t = max(self.t, self.events[0].date)
+        """
+        self.t = max(self.t, stock.events[0].date)
         for event in self.events:
             if event.date <= self.t:
                 pass
+        """
         algorithm = AlgorithmRandom(self.t, self.stock, self.nb_robots, self.parking, self.occupation)
         algorithm.solve()
 
@@ -46,6 +43,9 @@ class Algorithm():
         self.t0 = t0
         self.parking = parking
         self.occupation = occupation
+    
+    def simple_pick_up(self, vehicle):
+        pass
 
 
 class AlgorithmRandom(Algorithm):
@@ -60,6 +60,7 @@ class AlgorithmRandom(Algorithm):
                     if True : #rand_lane.top_position >= v.length :
                         rand_lane.push_top(v.id)
                         break
+        
                 
 
 class Vehicle():
@@ -76,3 +77,13 @@ class Stock():
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
+        self.order_events = []
+        for v in self.vehicles.values():
+            self.order_events.append(Event(v, v.order_deposit, True))
+            self.order_events.append(Event(v, v.order_retrieval, False))
+        self.order_events.sort()
+        self.events = []
+        for v in self.vehicles.values():
+            self.events.append(Event(v, v.deposit, True))
+            self.events.append(Event(v, v.retrieval, False))
+        self.events.sort()
