@@ -4,6 +4,7 @@ import numpy as np
 class Parking() :
     def __init__(self, blocks):
         self.blocks = blocks
+        self.occupation = dict()
 
 
 class Block() :
@@ -14,7 +15,7 @@ class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
         self.id = id_lane
-        self.list_vehicles = np.empty(self.length)
+        self.list_vehicles = np.array(self.length)
         self.length = length
         self.top_position = None
         self.bottom_position = None
@@ -36,6 +37,26 @@ class Lane() :
         else:
             self.list_vehicles[self.top_position-1] = id_vehicle
             self.top_position -= 1
+
+    def pop_top(self):
+        if self.top_position:
+            pass
+
+
+    
+    def push_bottom(self, id_vehicle):
+        if self.bottom_position == None:
+            if not self.top_access:
+                self.list_vehicles[0] = id_vehicle
+                self.top_position = 0
+                self.bottom_position = 0
+            else:
+                self.list_vehicles[self.length//2] = id_vehicle
+                self.top_position = self.length//2
+                self.bottom_position = self.length//2
+        else:
+            self.list_vehicles[self.bottom_position + 1] = id_vehicle
+            self.bottom_position += 1
 
 
        

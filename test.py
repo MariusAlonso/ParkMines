@@ -20,4 +20,20 @@ class TestTest() :
         lane.push_top(vehicle_2.id) 
         assert lane.list_vehicles[4] == vehicle_2.id
 
+    def test_push_bottom(self):
+        vehicle_1 = Vehicle(1,1,2,3,4)
+        lane = Lane(0, 10)
+        lane.push_bottom(vehicle_1.id) 
+        assert lane.list_vehicles[5] == vehicle_1.id
+
+    def test_push_bottom_2(self):
+        vehicle_1 = Vehicle(1,1,2,3,4)
+        vehicle_2 = Vehicle(2,12,22,32,42)
+        lane = Lane(0, 10)
+        lane.push_bottom(vehicle_1.id) 
+        lane.push_bottom(vehicle_2.id) 
+        assert lane.list_vehicles[6] == vehicle_2.id
+    
+    
+
 
