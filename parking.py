@@ -60,6 +60,14 @@ class Lane() :
             self.list_vehicles[self.bottom_position + 1] = id_vehicle
             self.bottom_position += 1
 
+    def pop_bottom(self):
+        if self.bottom_position:
+            self.list_vehicles[self.bottom_position] = None
+            self.bottom_position -= 1
+            if self.bottom_position < self.top_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                self.bottom_position = None
+                self.top_position = None
+
 
        
 

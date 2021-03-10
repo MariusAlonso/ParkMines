@@ -47,6 +47,20 @@ class TestTest() :
         assert lane.list_vehicles[5] == None
         assert lane.top_position == None
 
+    def test_pop_bottom(self):
+        vehicle_1 = Vehicle(1,1,2,3,4)
+        vehicle_2 = Vehicle(2,12,22,32,42)
+        lane = Lane(0, 10)
+        lane.push_bottom(vehicle_1.id) 
+        lane.push_bottom(vehicle_2.id)
+        lane.pop_bottom()
+        assert lane.list_vehicles[6] == None
+        assert lane.bottom_position == 5
+        lane.pop_bottom()
+        assert lane.list_vehicles[5] == None
+        assert lane.bottom_position == None
+
+
 
 
     
