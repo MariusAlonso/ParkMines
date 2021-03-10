@@ -58,9 +58,13 @@ class Algorithm():
         i_block, i_lane, positon = self.parking.occupation[vehicle.id]
         lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
         if lane_vehcle.bottom_position - position > position - lane_vehcle.top_position:
-            lane_chosen.pop_top(vehicle.id)
+            while lane_vehcle.bottom_position - position >= 0:
+                lane_chosen.pop_bottom(vehicle.id)
+                del self.parking.occupation[vehicle.id]
         else:
-            lane_chosen.pop_bottom(vehicle.id)
+            while position - lane_vehcle.top_position >= 0:
+                lane_chosen.pop_top(vehicle.id)
+                del self.parking.occupation[vehicle.id]]
 
 
 
