@@ -2,42 +2,65 @@
 import bisect
 import random
 from vehicle import Vehicle
+import heapq
 
 class Simulation():
 
     def __init__(self, t0, stock, nb_robots, parking):
         self.stock = stock
-        for i, event in enumerate(self.stock.order_events):
-            if event.date >= t0:
-                break
-        self.i_order_events = i
         self.nb_robots = nb_robots
         self.t = t0
         self.parking = parking
-    
+
+        self.events = []
+        for v in self.stock.vehicles.values():
+            heapq.heappush(self.events, Event(v, v.order_deposit, True, True))
+            heapq.heappush(self.events, Event(v, v.order_retrieval, True, False))
+        
+        self.algorithm = AlgorithmRandom(self.t, self.stock, self.nb_robots, self.parking, self.events)
+
+        while self.events:
+            if self.events[0].date >= self.t:
+                break
+            self.execute(heapq.heappop(self.events))
+
+    def execute(self, event):
+        vehicle = event.vehicle
+        if event.is_order:
+            if event.is_deposit:
+                heapq.heappush(self.events, Event(vehicle, vehicle.deposit, False, True))
+            else:
+                heapq.heappush(self.events, Event(vehicle, vehicle.retrieval, False, False))
+        else:
+            if event.is_deposit:
+                self.algorithm.place(vehicle)
+            else:
+                pass
+                #self.algorithm.pick(vehicle)
+
     def next_event(self):
-        algorithm = AlgorithmRandom(self.t, self.stock, self.nb_robots, self.parking)
-        algorithm.solve()
+        
+        event = heapq.heappop(self.events)
+        self.t = event.date
 
         while True:
-            self.i_order_events += 1
-
-            if self.i_order_events == len(self.stock.order_events):
+            if not self.events:
                 print("END OF THE SIMULATION")
+                break       
+            if self.events[0].date > self.t:
                 break
-
-            if self.stock.order_events[self.i_order_events].date > self.t:
-                self.t = self.order_events[self.i_order_events].date
-                break
+            heapq.heappop(self.events)
 
 
 
 class Event():
 
-    def __init__(self, vehicle, date, is_deposit):
+    def __init__(self, vehicle, date, is_order, is_deposit):
         self.vehicle = vehicle
         self.date = date
+        self.is_order = is_order
         self.is_deposit = is_deposit
+        # self.is_deposit vaut True ssi l'évènement est une entrée de véhicule ou le passage d'une commande d'entrée de véhicule
     
     def __eq__(self, other):
         return self.date == other.date
@@ -48,13 +71,14 @@ class Event():
 
 class Algorithm():
 
-    def __init__(self, t0, stock, nb_robots, parking):
+    def __init__(self, t0, stock, nb_robots, parking, events):
         self.nb_robots = nb_robots
         self.stock = stock
         self.t0 = t0
         self.parking = parking
+        self.events = events
 
-    def simple_retrieval(self, vehicle):
+    def pick(self, vehicle):
         i_block, i_lane, positon = self.parking.occupation[vehicle.id]
         lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
         if lane_vehcle.bottom_position - position > position - lane_vehcle.top_position:
@@ -64,46 +88,27 @@ class Algorithm():
         else:
             while position - lane_vehcle.top_position >= 0:
                 lane_chosen.pop_top(vehicle.id)
-                del self.parking.occupation[vehicle.id]]
+                del self.parking.occupation[vehicle.id]
 
 
 
 class AlgorithmRandom(Algorithm):
     
-    def solve(self):
-
-        known_events_i = []
-        for i, event in enumerate(self.stock.events):
-            if event.is_deposit:
-                if self.t0 > event.vehicle.order_deposit:
-                    known_events_i.append(i)
+    def place(self, vehicle):
+        while True:
+            rand_i_block = random.randrange(len(self.parking.blocks))
+            rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
+            lane_chosen = self.parking.blocks[rand_i_block].lanes[rand_i_lane]
+            if random.randrange(2):
+                if True:#lane_chosen.is_top_available():
+                    lane_chosen.push_top(vehicle.id)
+                    self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.top_position)
+                    break
             else:
-                if self.t0 > event.vehicle.order_retrieval:
-                    known_events_i.append(i)              
-
-        ##########################################################################
-        for i, event in enumerate(self.stock.events):
-            if event.date >= self.t0:
-                break
-        self.i_events = i
-
-        for j in range(self.i_events):
-            vehicle = self.stock.events[j].vehicle
-            if vehicle.id not in self.parking.occupation:
-                while True:
-                    rand_i_block = random.randrange(len(self.parking.blocks))
-                    rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
-                    lane_chosen = self.parking.blocks[rand_i_block].lanes[rand_i_lane]
-                    if random.randrange(2):
-                        if True:#lane_chosen.is_top_available():
-                            lane_chosen.push_top(vehicle.id)
-                            self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.top_position)
-                            break
-                    else:
-                        if True:#lane_chosen.is_bottom_available():
-                            lane_chosen.push_bottom(vehicle.id)
-                            self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.bottom_position)
-                            break
+                if True:#lane_chosen.is_bottom_available():
+                    lane_chosen.push_bottom(vehicle.id)
+                    self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.bottom_position)
+                    break
                                                
 
 class Stock():
@@ -113,15 +118,3 @@ class Stock():
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
-
-        self.order_events = []
-        for v in self.vehicles.values():
-            self.order_events.append(Event(v, v.order_deposit, True))
-            self.order_events.append(Event(v, v.order_retrieval, False))
-        self.order_events.sort()
-
-        self.events = []
-        for v in self.vehicles.values():
-            self.events.append(Event(v, v.deposit, True))
-            self.events.append(Event(v, v.retrieval, False))
-        self.events.sort()

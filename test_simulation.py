@@ -3,9 +3,10 @@ from simulation import *
 
 class TestTest():
     def test_stock_simulation_init(self):
-        stock = Stock([Vehicle(0, 0, 1, 3), Vehicle(0, 0, 0, 3), Vehicle(0, 0, 2, 4)])
+        stock = Stock([Vehicle(3, 4, 1, 3), Vehicle(2, 1, 0, 3), Vehicle(3, 6, 2, 4)])
         parking = Parking([Block([Lane(1, 10), Lane(2, 10)])])
-        assert stock.order_events[0].vehicle.id is 2
+        simulation = Simulation(0, stock, 1, parking)
+        assert simulation.events[0].vehicle.id is 2
 
     def test_random(self):
         Vehicle.next_id = 1
