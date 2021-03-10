@@ -60,6 +60,29 @@ class TestTest() :
         assert lane.list_vehicles[5] == None
         assert lane.bottom_position == None
 
+    def test_is_top_available(self):
+        vehicle_1 = Vehicle(1,1,2,3,4)
+        vehicle_2 = Vehicle(2,12,22,32,42)
+        lane = Lane(0, 2)
+        lane.push_top(vehicle_1.id) 
+        assert lane.is_top_available() == True
+        assert lane.top_position == 1
+        lane.push_top(vehicle_2)
+        assert lane.is_top_available() == False
+        assert lane.top_position == 0
+
+    def test_is_bottom_available(self):
+        vehicle_1 = Vehicle(1,1,2,3,4)
+        vehicle_2 = Vehicle(2,12,22,32,42)
+        lane = Lane(0, 2)
+        assert lane.is_bottom_available() == True
+        lane.push_bottom(vehicle_1.id)
+        assert lane.is_bottom_available() == False
+        assert lane.bottom_position == 1
+      
+
+
+
 
 
 

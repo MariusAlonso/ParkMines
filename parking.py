@@ -37,14 +37,12 @@ class Lane() :
             self.top_position -= 1
 
     def pop_top(self):
-        if self.top_position:
+        if self.top_position != None:
             self.list_vehicles[self.top_position] = None
             self.top_position += 1
             if self.top_position > self.bottom_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                 self.top_position = None
                 self.bottom_position = None
-            
-
     
     def push_bottom(self, id_vehicle):
         if self.bottom_position == None:
@@ -61,12 +59,20 @@ class Lane() :
             self.bottom_position += 1
 
     def pop_bottom(self):
-        if self.bottom_position:
+        if self.bottom_position != None:
             self.list_vehicles[self.bottom_position] = None
             self.bottom_position -= 1
             if self.bottom_position < self.top_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                 self.bottom_position = None
                 self.top_position = None
+
+    def is_top_available(self):
+        return self.top_access and (self.top_position == None or self.top_position != 0)
+
+    def is_bottom_available(self):
+        return self.bottom_access and (self.top_position == None or self.bottom_position != self.length - 1)
+
+    
 
 
        
