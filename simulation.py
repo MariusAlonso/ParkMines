@@ -3,6 +3,7 @@ import bisect
 import random
 from vehicle import Vehicle
 import heapq
+import datetime
 
 class Simulation():
 
@@ -33,23 +34,27 @@ class Simulation():
                 heapq.heappush(self.events, Event(vehicle, vehicle.retrieval, False, False))
         else:
             if event.is_deposit:
+                print(self.parking)
+                print("")
                 self.algorithm.place(vehicle)
             else:
                 pass
                 #self.algorithm.pick(vehicle)
 
     def next_event(self):
-        
-        event = heapq.heappop(self.events)
-        self.t = event.date
+        if self.events:
+            event = heapq.heappop(self.events)
+            self.t = event.date
 
-        while True:
-            if not self.events:
-                print("END OF THE SIMULATION")
-                break       
-            if self.events[0].date > self.t:
-                break
-            heapq.heappop(self.events)
+            while True:
+                if not self.events:
+                    print("END OF THE SIMULATION")
+                    break       
+                if self.events[0].date > self.t:
+                    break
+                heapq.heappop(self.events)
+        else:
+            print("THE SIMULATION IS COMPLETED")
 
 
 
@@ -100,12 +105,12 @@ class AlgorithmRandom(Algorithm):
             rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
             lane_chosen = self.parking.blocks[rand_i_block].lanes[rand_i_lane]
             if random.randrange(2):
-                if True:#lane_chosen.is_top_available():
+                if lane_chosen.is_top_available():
                     lane_chosen.push_top(vehicle.id)
                     self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.top_position)
                     break
             else:
-                if True:#lane_chosen.is_bottom_available():
+                if lane_chosen.is_bottom_available():
                     lane_chosen.push_bottom(vehicle.id)
                     self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.bottom_position)
                     break

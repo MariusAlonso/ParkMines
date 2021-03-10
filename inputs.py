@@ -55,7 +55,7 @@ def import_from_file():
                 order_deposit = deepcopy(deposit)
                 order_retrieval = deepcopy(retrieval)
 
-                movements_list.append(Vehicle(1, deposit, retrieval, order_deposit, order_retrieval))
+                movements_list.append(Vehicle(deposit, retrieval, order_deposit, order_retrieval))
 
     return movements_list
 

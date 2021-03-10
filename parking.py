@@ -5,6 +5,9 @@ class Parking() :
     def __init__(self, blocks):
         self.blocks = blocks
         self.occupation = dict()
+    
+    def __repr__(self):
+        return self.blocks[0].__repr__()
 
 
 class Block() :
