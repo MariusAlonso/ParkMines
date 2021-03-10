@@ -12,7 +12,18 @@ class Block() :
         self.lanes = lanes
     
     def __repr__(self):
-        return self.lanes.__repr__()
+        #on représente les lanes horizontalement pour construire et on transpose avant d'afficher
+        height = len(self.lanes)
+        width = self.lanes[0].length
+        matrix = np.empty((height, width), dtype=str)
+        for row_index, lane in enumerate(self.lanes):
+            liste = lane.list_vehicles[:]
+            liste = [str(item).replace('None', '-') for item in liste]
+            matrix[row_index] = liste
+
+        #les lanes sont les colonnes (la première à gauche)
+        #conformément aux termes top et bottom pour les extrémités
+        return matrix.T.__repr__()
 
 class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
@@ -29,9 +40,6 @@ class Lane() :
         liste = self.list_vehicles[:]
         liste = [str(item).replace('None', '-') for item in liste]
         return liste.__repr__()
-        
-
-
 
     def push_top(self, id_vehicle):
         if self.top_position == None:
@@ -86,6 +94,6 @@ class Lane() :
     
 
 
-print(Block([Lane(0,2), Lane(1,3)]))
+print(Block([Lane(0,2), Lane(1,2)]))
 
     
