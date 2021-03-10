@@ -80,7 +80,9 @@ class TestTest() :
         assert lane.is_bottom_available() == False
         assert lane.bottom_position == 1
       
-
+    def test_repr_lane(self):
+        lane = Lane(0, 2)
+        print(lane)
 
 
 

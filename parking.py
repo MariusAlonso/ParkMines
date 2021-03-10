@@ -10,6 +10,9 @@ class Parking() :
 class Block() :
     def __init__(self, lanes):
         self.lanes = lanes
+    
+    def __repr__(self):
+        return self.lanes.__repr__()
 
 class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
@@ -21,6 +24,14 @@ class Lane() :
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
         self.top_access = top_access
         self.bottom_access = bottom_access
+
+    def __repr__(self):
+        liste = self.list_vehicles[:]
+        liste = [str(item).replace('None', '-') for item in liste]
+        return liste.__repr__()
+        
+
+
 
     def push_top(self, id_vehicle):
         if self.top_position == None:
@@ -75,6 +86,6 @@ class Lane() :
     
 
 
-       
+print(Block([Lane(0,2), Lane(1,3)]))
 
     
