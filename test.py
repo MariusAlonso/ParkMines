@@ -1,6 +1,52 @@
 from parking import *
 from simulation import *
 
+"""
+IL NE FAUT PLUS UTILISER CE FICHIER
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+
 class TestTest() :
     def test_parking_init(self) :
         #assert Parking(Block(...)) == ...
