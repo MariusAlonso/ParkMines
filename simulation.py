@@ -90,7 +90,7 @@ class Algorithm():
     def pick(self, vehicle):
         i_block, i_lane, position = self.parking.occupation[vehicle.id]
         lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
-        if lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
+        if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
             while True:
                 moved_vehicle = self.stock.vehicles[lane_vehicle.pop_bottom()]
                 print(f"{moved_vehicle} is out of position")

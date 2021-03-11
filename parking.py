@@ -18,7 +18,7 @@ class Block() :
         #on représente les lanes horizontalement pour construire et on transpose avant d'afficher
         height = len(self.lanes)
         width = self.lanes[0].length
-        matrix = np.empty((height, width), dtype=str)
+        matrix = np.empty((height, width), dtype='<U5')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
             liste = [str(item).replace('None', '-') for item in liste]
@@ -26,7 +26,7 @@ class Block() :
 
         #les lanes sont les colonnes (la première à gauche)
         #conformément aux termes top et bottom pour les extrémités
-        return matrix.T.__repr__()
+        return matrix.__repr__()
 
 class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):

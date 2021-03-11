@@ -20,11 +20,11 @@ class TestTest():
 
     def test_inputs_random(self):
         Vehicle.next_id = 1
-        stock = Stock(import_from_file()[:5])
+        stock = Stock(import_from_file()[:10])
         parking = Parking([Block([Lane(1, 10), Lane(2, 10)])])
         simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, 1, parking)
         simulation.next_event(3)
-        assert 1 in simulation.parking.blocks[0].lanes[0].list_vehicles or 1 in simulation.parking.blocks[0].lanes[1].list_vehicles
+        assert 10 in simulation.parking.blocks[0].lanes[0].list_vehicles or 10 in simulation.parking.blocks[0].lanes[1].list_vehicles
         simulation.complete()
         assert 1 not in simulation.parking.blocks[0].lanes[0].list_vehicles or 1 in simulation.parking.blocks[0].lanes[1].list_vehicles
  
