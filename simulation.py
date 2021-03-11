@@ -57,7 +57,7 @@ class Simulation():
             
     
     def complete(self):
-        while not self.next_event():
+        while self.next_event():
             pass
 
 
@@ -96,7 +96,7 @@ class Algorithm():
                 print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
                 if lane_vehicle.bottom_position != None and lane_vehicle.bottom_position - position >= 0:
-                    heapq.heappush(self.events, Event(moved_vehicle, vehicule.retrieval, False, True))
+                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
                 else:
                     break
         else:
@@ -105,7 +105,7 @@ class Algorithm():
                 print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
                 if lane_vehicle.top_position != None and position - lane_vehicle.top_position >= 0:
-                    heapq.heappush(self.events, Event(moved_vehicle, vehicule.retrieval, False, True))
+                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
                 else:
                     break
 
