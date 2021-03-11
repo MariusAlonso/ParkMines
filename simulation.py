@@ -84,16 +84,24 @@ class Algorithm():
         self.events = events
 
     def pick(self, vehicle):
-        i_block, i_lane, positon = self.parking.occupation[vehicle.id]
+        i_block, i_lane, position = self.parking.occupation[vehicle.id]
         lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
-        if lane_vehcle.bottom_position - position > position - lane_vehcle.top_position:
-            while lane_vehcle.bottom_position - position >= 0:
-                lane_chosen.pop_bottom(vehicle.id)
-                del self.parking.occupation[vehicle.id]
+        if lane_vehicle.bottom_position - position > position - lane_vehicle.top_position:
+            while True:
+                moved_vehicle = self.stock.vehicles[lane_vehicle.pop_bottom()]
+                del self.parking.occupation[moved_vehicle.id]
+                if lane_vehicle.bottom_position - position > 0:
+                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
+                else:
+                    break
         else:
-            while position - lane_vehcle.top_position >= 0:
-                lane_chosen.pop_top(vehicle.id)
-                del self.parking.occupation[vehicle.id]
+            while True:
+                moved_vehicle = self.stock.vehicles[lane_vehicle.pop_top()]
+                del self.parking.occupation[moved_vehicle.id]
+                if position - lane_vehicle.top_position > 0:
+                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
+                else:
+                    break
 
 
 
