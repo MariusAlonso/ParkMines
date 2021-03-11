@@ -9,3 +9,6 @@ class Vehicle():
         self.order_retrieval = order_retrieval
         self.id = self.__class__.next_id
         self.__class__.next_id += 1
+    
+    def __repr__(self):
+        return self.id.__repr__()

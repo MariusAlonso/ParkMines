@@ -34,27 +34,31 @@ class Simulation():
                 heapq.heappush(self.events, Event(vehicle, vehicle.retrieval, False, False))
         else:
             if event.is_deposit:
+                print(f"Deposit of {vehicle.id}")
+                self.algorithm.place(vehicle)
                 print(self.parking)
                 print("")
-                self.algorithm.place(vehicle)
             else:
-                pass
-                #self.algorithm.pick(vehicle)
+                print(f"Retrieval of {vehicle.id}")
+                self.algorithm.pick(vehicle)
+                print(self.parking)
+                print("")
 
-    def next_event(self):
-        if self.events:
-            event = heapq.heappop(self.events)
-            self.t = event.date
-
-            while True:
-                if not self.events:
-                    print("END OF THE SIMULATION")
-                    break       
-                if self.events[0].date > self.t:
-                    break
-                heapq.heappop(self.events)
-        else:
-            print("THE SIMULATION IS COMPLETED")
+    def next_event(self, repeat = 1):
+        for _ in range(repeat):
+            if self.events:
+                event = heapq.heappop(self.events)
+                self.t = event.date
+                self.execute(event)
+            else:
+                print("THE SIMULATION IS COMPLETED")
+                break
+        return bool(self.events)
+            
+    
+    def complete(self):
+        while not self.next_event():
+            pass
 
 
 
@@ -86,20 +90,22 @@ class Algorithm():
     def pick(self, vehicle):
         i_block, i_lane, position = self.parking.occupation[vehicle.id]
         lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
-        if lane_vehicle.bottom_position - position > position - lane_vehicle.top_position:
+        if lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
             while True:
                 moved_vehicle = self.stock.vehicles[lane_vehicle.pop_bottom()]
+                print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
-                if lane_vehicle.bottom_position - position > 0:
-                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
+                if lane_vehicle.bottom_position != None and lane_vehicle.bottom_position - position >= 0:
+                    heapq.heappush(self.events, Event(moved_vehicle, vehicule.retrieval, False, True))
                 else:
                     break
         else:
             while True:
                 moved_vehicle = self.stock.vehicles[lane_vehicle.pop_top()]
+                print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
-                if position - lane_vehicle.top_position > 0:
-                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
+                if lane_vehicle.top_position != None and position - lane_vehicle.top_position >= 0:
+                    heapq.heappush(self.events, Event(moved_vehicle, vehicule.retrieval, False, True))
                 else:
                     break
 
