@@ -96,7 +96,8 @@ class Algorithm():
                 print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
                 if lane_vehicle.bottom_position != None and lane_vehicle.bottom_position - position >= 0:
-                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
+                    self.place(moved_vehicle, forbidden_access = (lane_vehicle, "bottom"))
+                    print(self.parking)
                 else:
                     break
         else:
@@ -105,7 +106,8 @@ class Algorithm():
                 print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
                 if lane_vehicle.top_position != None and position - lane_vehicle.top_position >= 0:
-                    heapq.heappush(self.events, Event(moved_vehicle, vehicle.retrieval, False, True))
+                    self.place(moved_vehicle, forbidden_access = (lane_vehicle, "top"))
+                    print(self.parking)
                 else:
                     break
 
@@ -113,21 +115,23 @@ class Algorithm():
 
 class AlgorithmRandom(Algorithm):
     
-    def place(self, vehicle):
+    def place(self, vehicle, forbidden_access = None):
         while True:
             rand_i_block = random.randrange(len(self.parking.blocks))
             rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
             lane_chosen = self.parking.blocks[rand_i_block].lanes[rand_i_lane]
             if random.randrange(2):
-                if lane_chosen.is_top_available():
-                    lane_chosen.push_top(vehicle.id)
-                    self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.top_position)
-                    break
+                if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "top" == forbidden_access[1]):
+                    if lane_chosen.is_top_available():
+                        lane_chosen.push_top(vehicle.id)
+                        self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.top_position)
+                        break
             else:
-                if lane_chosen.is_bottom_available():
-                    lane_chosen.push_bottom(vehicle.id)
-                    self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.bottom_position)
-                    break
+                if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "bottom" == forbidden_access[1]):
+                    if lane_chosen.is_bottom_available():
+                        lane_chosen.push_bottom(vehicle.id)
+                        self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.bottom_position)
+                        break
                                                
 
 class Stock():

@@ -1,7 +1,7 @@
 from simulation import Vehicle
 import numpy as np
 
-class Parking() :
+class Parking():
     def __init__(self, blocks):
         self.blocks = blocks
         self.occupation = dict()
@@ -10,7 +10,7 @@ class Parking() :
         return self.blocks[0].__repr__()
 
 
-class Block() :
+class Block():
     def __init__(self, lanes):
         self.lanes = lanes
     
