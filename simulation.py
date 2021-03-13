@@ -1,5 +1,4 @@
 
-import bisect
 import random
 from vehicle import Vehicle
 import heapq
@@ -7,19 +6,24 @@ import datetime
 
 class Simulation():
 
-    def __init__(self, t0, stock, nb_robots, parking):
+    def __init__(self, t0, stock, nb_robots, parking, AlgorithmType):
+        """
+        t0 : date d'initialisation
+        """
         self.stock = stock
         self.nb_robots = nb_robots
         self.t = t0
         self.parking = parking
 
+        # Création de la file d'événements : ajout des commandes
         self.events = []
         for v in self.stock.vehicles.values():
-            heapq.heappush(self.events, Event(v, v.order_deposit, True, True))
-            heapq.heappush(self.events, Event(v, v.order_retrieval, True, False))
+            heapq.heappush(self.events, Event(v, v.order_deposit, "order_deposit"))
+            heapq.heappush(self.events, Event(v, v.order_retrieval, "order_retrieval"))
         
-        self.algorithm = AlgorithmRandom(self.t, self.stock, self.nb_robots, self.parking, self.events)
+        self.algorithm = AlgorithmType(self.t, self.stock, self.nb_robots, self.parking, self.events)
 
+        # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
             if self.events[0].date >= self.t:
                 break
@@ -27,24 +31,28 @@ class Simulation():
 
     def execute(self, event):
         vehicle = event.vehicle
-        if event.is_order:
-            if event.is_deposit:
-                heapq.heappush(self.events, Event(vehicle, vehicle.deposit, False, True))
-            else:
-                heapq.heappush(self.events, Event(vehicle, vehicle.retrieval, False, False))
-        else:
-            if event.is_deposit:
-                print(f"Deposit of {vehicle.id}")
-                self.algorithm.place(vehicle)
-                print(self.parking)
-                print("")
-            else:
-                print(f"Retrieval of {vehicle.id}")
-                self.algorithm.pick(vehicle)
-                print(self.parking)
-                print("")
+        if event.event_type == "order_deposit":
+            heapq.heappush(self.events, Event(vehicle, vehicle.deposit, "deposit"))
+        
+        elif event.event_type == "order_retrieval":
+            heapq.heappush(self.events, Event(vehicle, vehicle.retrieval, "retrieval"))
+
+        elif event.event_type == "deposit":
+            print(f"Deposit of {vehicle.id}")
+            self.algorithm.place(vehicle)
+            print(self.parking)
+            print("")
+
+        elif event.event_type == "retrieval":
+            print(f"Retrieval of {vehicle.id}")
+            self.algorithm.pick(vehicle)
+            print(self.parking)
+            print("")
 
     def next_event(self, repeat = 1):
+        """
+        Exécute un nombre d'évènements égal à repeat
+        """
         for _ in range(repeat):
             if self.events:
                 event = heapq.heappop(self.events)
@@ -57,6 +65,9 @@ class Simulation():
             
     
     def complete(self):
+        """
+        Finit la simulation
+        """
         while self.next_event():
             pass
 
@@ -64,12 +75,17 @@ class Simulation():
 
 class Event():
 
-    def __init__(self, vehicle, date, is_order, is_deposit):
+    def __init__(self, vehicle, date, event_type):
+        """
+        Les valeurs possibles du string event_type sont :
+        - 'order_deposit'
+        - 'order_retrieval'
+        - 'deposit'
+        - 'retrieval'
+        """
         self.vehicle = vehicle
         self.date = date
-        self.is_order = is_order
-        self.is_deposit = is_deposit
-        # self.is_deposit vaut True ssi l'évènement est une entrée de véhicule ou le passage d'une commande d'entrée de véhicule
+        self.event_type = event_type
     
     def __eq__(self, other):
         return self.date == other.date
@@ -116,6 +132,9 @@ class Algorithm():
 class AlgorithmRandom(Algorithm):
     
     def place(self, vehicle, forbidden_access = None):
+        """
+        forbidden_access : tuple (Lane, "top"/"bottom")
+        """
         while True:
             rand_i_block = random.randrange(len(self.parking.blocks))
             rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
@@ -137,7 +156,9 @@ class AlgorithmRandom(Algorithm):
 class Stock():
 
     def __init__(self, vehicles):
-
+        """
+        Construit le dictionnaire self.vehicles associant à un id de véhicule l'objet correspondant
+        """
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
