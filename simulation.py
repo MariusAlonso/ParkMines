@@ -72,7 +72,6 @@ class Simulation():
             pass
 
 
-
 class Event():
 
     def __init__(self, vehicle, date, event_type):
@@ -102,6 +101,9 @@ class Algorithm():
         self.t0 = t0
         self.parking = parking
         self.events = events
+
+        #paramètres liés à la mesure de la performance de l'algorithme
+        self.nb_placements = 0
 
     def pick(self, vehicle):
         i_block, i_lane, position = self.parking.occupation[vehicle.id]
@@ -135,6 +137,8 @@ class AlgorithmRandom(Algorithm):
         """
         forbidden_access : tuple (Lane, "top"/"bottom")
         """
+        self.nb_placements += 1
+        print(f"{self.nb_placements} placements")
         while True:
             rand_i_block = random.randrange(len(self.parking.blocks))
             rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
@@ -162,3 +166,6 @@ class Stock():
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
+    
+    def __len__(self):
+        return len(self.vehicles)
