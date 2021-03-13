@@ -21,5 +21,20 @@ class Dashboard():
 
 class Performance():
 
-    def __init__(self):
-        pass
+    def __init__(self, t0, stock, nb_robots, parking, AlgorithmType):
+        """
+        Dans la classe performance, on se donne une simulation de référence
+        et on se donne des méthodes qui étudient la réponse à la variation 
+        d'un seul des paramètres (par rapport à la simulation de référence)
+        """
+        self.stock = stock
+        self.nb_robots = nb_robots
+        # t0 la date d'initial
+        self.t = t0
+        self.parking = parking
+    
+    def averageDashboard(self, nb_repetition=100):
+        """
+        renvoie les données du Dashboard de la simulation de référence,
+        moyennées sur nb_repetition répétitions
+        """
