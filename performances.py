@@ -19,3 +19,7 @@ class Dashboard():
             return 0
 
 
+class Performance():
+
+    def __init__(self):
+        pass
