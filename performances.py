@@ -46,3 +46,6 @@ class Performance():
 
         average /= nb_repetition
         return average
+    
+    def variableStock(self, nb_repetition=100):
+        pass
