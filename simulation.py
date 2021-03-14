@@ -39,14 +39,67 @@ class Simulation():
             heapq.heappush(self.events, Event(vehicle, vehicle.retrieval, "retrieval"))
 
         elif event.event_type == "deposit":
-            self.algorithm.place(vehicle)
+            #self.algorithm.place(vehicle)
             if self.print_in_terminal:
                 print(f"Deposit of {vehicle.id}")
                 print(self.parking)
                 print("")
 
         elif event.event_type == "retrieval":
-            self.algorithm.pick(vehicle)
+            #self.algorithm.pick(vehicle)
+            if self.print_in_terminal:
+                print(f"Retrieval of {vehicle.id}")
+                print(self.parking)
+                print("")
+
+        elif event.event_type == "robot_arrival":
+
+            if event.target.event_type == "deposit" and not self.parking.access:
+                event.robot.position = event.robot.goal_position
+                event.robot.start_time = self.t
+                event.robot.goal_time = event.target.date
+                heapq.heappush(self.events, Event(vehicle, event.robot.goal_time, "robot_arrival", event.robot, event.target))
+                    
+                if self.print_in_terminal:
+                    print(f"Robot {event.robot} waits in access zone")
+                    print(self.parking)
+                    print("")
+
+            else :
+
+                if event.target.event_type == "deposit":
+                    moved_vehicle = event.target.vehicle
+                    del self.parking.occupation[moved_vehicle.id]
+                else:
+                    position = self.parking.occupation[event.target.vehicle.id]
+                    (block_id, lane_id), side = robot.goal_position
+                    moved_vehicle = self.stock.vehicles[self.parking.blocks[block_id].lanes[lane_id].pop(side)]
+                    del self.parking.occupation[moved_vehicle.id]
+                
+                event.robot.position = event.robot.goal_position
+                event.robot.start_time = self.t
+
+                if event.target.event_type == "retrieval" and moved_vehicle.id == event.target.vehicle.id:
+                    event.robot.goal_position = "access"
+                else:
+                    event.robot.goal_position = self.algorithm.place(vehicle, event.robot.goal_position)
+                
+                event.robot.goal_time = self.t + self.parking.travel_time(position, event.robot.goal_position)
+                heapq.heappush(self.events, Event(vehicle, event.robot.goal_time, "robot_end_task", event.robot))
+                
+                if self.print_in_terminal:
+                    print(f"Robot {event.robot} loads {vehicle.id}")
+                    print(self.parking)
+                    print("")
+
+
+        elif event.event_type == "robot_end_task":
+
+            if event.robot.goal_position == "access":
+
+            (block_id, lane_id), side = event.pos
+            moved_vehicle = self.parking.blocks[block_id].lanes[lane_id].pop(side)
+            del self.parking.occupation[moved_vehicle.id]
             if self.print_in_terminal:
                 print(f"Retrieval of {vehicle.id}")
                 print(self.parking)
@@ -84,7 +137,7 @@ class Simulation():
 
 class Event():
 
-    def __init__(self, vehicle, date, event_type, pos=None, robot=None):
+    def __init__(self, vehicle, date, event_type, robot=None, target=None):
         """
         Les valeurs possibles du string event_type sont :
         - 'order_deposit'
