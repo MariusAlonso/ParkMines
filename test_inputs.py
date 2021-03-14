@@ -6,12 +6,12 @@ import datetime
 
 def test_returns_a_list(mocker):
     mocker.patch("sys.argv", ["pytest", "--path", "inputs/movements.csv"])
-    result = import_from_file()
+    result = importFromFile()
 
     assert type(result) == list
 
 def test_vehicle_1():
-    vehicle_1 = import_from_file()[0]
+    vehicle_1 = importFromFile()[0]
     print(vehicle_1)
 
     assert vehicle_1.deposit == datetime.datetime(2019, 9, 1, 7, 25, 22)
