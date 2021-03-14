@@ -34,7 +34,7 @@ class Performance():
         self.parking = parking
         self.algorithm = AlgorithmType
     
-    def averageDashboard(self, nb_repetition=100):
+    def averageDashboard(self, nb_repetition=1000):
         """
         renvoie les données du Dashboard de la simulation de référence,
         moyennées sur nb_repetition répétitions
@@ -45,5 +45,4 @@ class Performance():
             average += Dashboard(simulation).averageIntermediateMovesPerVehicle()
 
         average /= nb_repetition
-        print(average)
         return average

@@ -5,7 +5,7 @@ from performances import *
 
 class TestTest():
 
-    def testPositiveAverageMovesNumber(self):
+    def testPositiveAverageMovesNumberDashboard(self):
         # création du parking
         Vehicle.next_id = 1
         stock = Stock(import_from_file()[:13])
@@ -14,10 +14,11 @@ class TestTest():
         
         # test
         dashboard = Dashboard(simulation)
-        print(f"chaque véhicule effectue en moyenne {dashboard.averageIntermediateMovesPerVehicle()} déplacements intermédaires")
+        averageMoves = "{:.1f}".format(dashboard.averageIntermediateMovesPerVehicle())
+        # print(f"chaque véhicule effectue en moyenne {averageMoves} déplacements intermédaires")
         assert 0 <= dashboard.averageIntermediateMovesPerVehicle()
     
-    def testPositiveAverageMovesNumber(self):
+    def testPositiveAverageMovesNumberPerformance(self):
         # création du parking
         Vehicle.next_id = 1
         stock = Stock(import_from_file()[:13])
@@ -25,5 +26,6 @@ class TestTest():
         
         # test
         performance = Performance(datetime.datetime(2016,1,1,0,0,0,0), stock, 1, parking, AlgorithmRandom)
-        print(f"chaque véhicule effectue en moyenne {performance.averageDashboard()} déplacements intermédaires")
+        averageMoves = "{:.1f}".format(performance.averageDashboard())
+        print(f"chaque véhicule effectue en moyenne {averageMoves} déplacements intermédaires")
         assert 0 <= performance.averageDashboard()
