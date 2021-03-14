@@ -32,9 +32,17 @@ class Performance():
         # t0 la date d'initial
         self.t = t0
         self.parking = parking
+        self.algorithm = AlgorithmType
     
-    def averageDashboard(self, nb_repetition=100):
+    def averageDashboard(self, nb_repetition=1000):
         """
         renvoie les données du Dashboard de la simulation de référence,
         moyennées sur nb_repetition répétitions
         """
+        average = 0
+        for _ in range(nb_repetition):
+            simulation = Simulation(self.t, self.stock, self.nb_robots, self.parking, self.algorithm)
+            average += Dashboard(simulation).averageIntermediateMovesPerVehicle()
+
+        average /= nb_repetition
+        return average
