@@ -48,6 +48,9 @@ class Simulation():
             self.algorithm.pick(vehicle)
             print(self.parking)
             print("")
+        
+        elif event.event_type == "robot_arrival":
+            print(f"Robot f{}")
 
 
     def next_event(self, repeat = 1):
@@ -79,17 +82,19 @@ class Simulation():
 
 class Event():
 
-    def __init__(self, vehicle, date, event_type):
+    def __init__(self, vehicle, date, event_type, pos=None, robot=None):
         """
         Les valeurs possibles du string event_type sont :
         - 'order_deposit'
         - 'order_retrieval'
         - 'deposit'
         - 'retrieval'
+        - 'robot_arrrival'
         """
         self.vehicle = vehicle
         self.date = date
         self.event_type = event_type
+        self.pos = pos
     
     def __eq__(self, other):
         return self.date == other.date
