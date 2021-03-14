@@ -6,7 +6,7 @@ import datetime
 
 class Simulation():
 
-    def __init__(self, t0, stock, nb_robots, parking, AlgorithmType):
+    def __init__(self, t0, stock, nb_robots, parking, AlgorithmType, print_in_terminal=False):
         """
         t0 : date d'initialisation
         """
@@ -14,6 +14,7 @@ class Simulation():
         self.nb_robots = nb_robots
         self.t = t0
         self.parking = parking
+        self.print_in_terminal = print_in_terminal
 
         # Création de la file d'événements : ajout des commandes
         self.events = []
@@ -38,16 +39,18 @@ class Simulation():
             heapq.heappush(self.events, Event(vehicle, vehicle.retrieval, "retrieval"))
 
         elif event.event_type == "deposit":
-            print(f"Deposit of {vehicle.id}")
             self.algorithm.place(vehicle)
-            print(self.parking)
-            print("")
+            if self.print_in_terminal:
+                print(f"Deposit of {vehicle.id}")
+                print(self.parking)
+                print("")
 
         elif event.event_type == "retrieval":
-            print(f"Retrieval of {vehicle.id}")
             self.algorithm.pick(vehicle)
-            print(self.parking)
-            print("")
+            if self.print_in_terminal:
+                print(f"Retrieval of {vehicle.id}")
+                print(self.parking)
+                print("")
 
 
     def next_event(self, repeat = 1):
@@ -69,13 +72,15 @@ class Simulation():
         """
         Finit la simulation
         """
-        try:
-            while self.next_event():
-                pass
-        
-        # si un placement n'a pu être mené à bien
-        except ValueError:
-            break
+        while True:
+            try:
+                if not self.next_event():
+                    break
+                
+            
+            # si un placement n'a pu être mené à bien
+            except ValueError:
+                break
 
 class Event():
 
@@ -116,24 +121,19 @@ class Algorithm():
         if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
             while True:
                 moved_vehicle = self.stock.vehicles[lane_vehicle.pop_bottom()]
-                print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
                 if lane_vehicle.bottom_position != None and lane_vehicle.bottom_position - position >= 0:
                     self.place(moved_vehicle, forbidden_access = (lane_vehicle, "bottom"))
-                    print(self.parking)
                 else:
                     break
         else:
             while True:
                 moved_vehicle = self.stock.vehicles[lane_vehicle.pop_top()]
-                print(f"{moved_vehicle} is out of position")
                 del self.parking.occupation[moved_vehicle.id]
                 if lane_vehicle.top_position != None and position - lane_vehicle.top_position >= 0:
                     self.place(moved_vehicle, forbidden_access = (lane_vehicle, "top"))
-                    print(self.parking)
                 else:
                     break
-
 
 
 class AlgorithmRandom(Algorithm):
@@ -143,7 +143,6 @@ class AlgorithmRandom(Algorithm):
         forbidden_access : tuple (Lane, "top"/"bottom")
         """
         self.nb_placements += 1
-        print(f"{self.nb_placements} placements")
         nb_iter = 0
         while nb_iter < max_iter:
             rand_i_block = random.randrange(len(self.parking.blocks))
