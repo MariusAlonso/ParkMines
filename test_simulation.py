@@ -20,7 +20,7 @@ class TestTest():
 
     def test_inputs_random(self):
         Vehicle.next_id = 1
-        stock = Stock(import_from_file()[:13])
+        stock = Stock(importFromFile()[:13])
         parking = Parking([Block([Lane(1, 10), Lane(2, 10)])])
         simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, 1, parking, AlgorithmRandom)
         simulation.next_event(3)
