@@ -49,6 +49,7 @@ class Simulation():
             print(self.parking)
             print("")
 
+
     def next_event(self, repeat = 1):
         """
         Exécute un nombre d'évènements égal à repeat
@@ -68,10 +69,13 @@ class Simulation():
         """
         Finit la simulation
         """
-        while self.next_event():
-            pass
-
-
+        try:
+            while self.next_event():
+                pass
+        
+        # si un placement n'a pu être mené à bien
+        except ValueError:
+            break
 
 class Event():
 
@@ -103,6 +107,9 @@ class Algorithm():
         self.parking = parking
         self.events = events
 
+        #paramètres liés à la mesure de la performance de l'algorithme
+        self.nb_placements = 0
+
     def pick(self, vehicle):
         i_block, i_lane, position = self.parking.occupation[vehicle.id]
         lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
@@ -131,11 +138,14 @@ class Algorithm():
 
 class AlgorithmRandom(Algorithm):
     
-    def place(self, vehicle, forbidden_access = None):
+    def place(self, vehicle, forbidden_access = None, max_iter=1000):
         """
         forbidden_access : tuple (Lane, "top"/"bottom")
         """
-        while True:
+        self.nb_placements += 1
+        print(f"{self.nb_placements} placements")
+        nb_iter = 0
+        while nb_iter < max_iter:
             rand_i_block = random.randrange(len(self.parking.blocks))
             rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
             lane_chosen = self.parking.blocks[rand_i_block].lanes[rand_i_lane]
@@ -151,6 +161,9 @@ class AlgorithmRandom(Algorithm):
                         lane_chosen.push_bottom(vehicle.id)
                         self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.bottom_position)
                         break
+            if nb_iter == max_iter:
+                raise ValueError("le placement n'a pas pu être effectué")
+            
                                                
 
 class Stock():
@@ -162,3 +175,6 @@ class Stock():
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
+    
+    def __len__(self):
+        return len(self.vehicles)
