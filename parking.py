@@ -46,7 +46,7 @@ class Lane() :
         liste = [str(item).replace('None', '-') for item in liste]
         return liste.__repr__()
 
-    def push_top(self, id_vehicle):
+    def push_top(self, id_vehicle, coté):
         if self.top_position == None:
             if not self.bottom_access:
                 self.list_vehicles[-1] = id_vehicle
@@ -59,6 +59,7 @@ class Lane() :
         else:
             self.list_vehicles[self.top_position-1] = id_vehicle
             self.top_position -= 1
+        
 
     def pop_top(self):
         if self.top_position != None:
@@ -100,9 +101,61 @@ class Lane() :
     def is_bottom_available(self):
         return self.bottom_access and (self.top_position == None or self.bottom_position != self.length - 1)
 
+
+    def push(self, id_vehicle, coté):
+        if coté == "top":
+            if self.top_position == None:
+                if not self.bottom_access:
+                    self.list_vehicles[-1] = id_vehicle
+                    self.top_position = self.length - 1
+                    self.bottom_position = self.length -1
+                else:
+                    self.list_vehicles[self.length//2] = id_vehicle
+                    self.top_position = self.length//2
+                    self.bottom_position = self.length//2
+            else:
+                self.list_vehicles[self.top_position-1] = id_vehicle
+                self.top_position -= 1
+
+        elif coté == "bottom":
+            if self.bottom_position == None:
+                if not self.top_access:
+                    self.list_vehicles[0] = id_vehicle
+                    self.top_position = 0
+                    self.bottom_position = 0
+                else:
+                    self.list_vehicles[self.length//2] = id_vehicle
+                    self.top_position = self.length//2
+                    self.bottom_position = self.length//2
+            else:
+                self.list_vehicles[self.bottom_position + 1] = id_vehicle
+                self.bottom_position += 1
+
+
+    def pop(self, coté):
+        if coté == "top":
+            if self.top_position != None:
+                vehicle_id = self.list_vehicles[self.top_position]
+                self.list_vehicles[self.top_position] = None
+                self.top_position += 1
+                if self.top_position > self.bottom_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                    self.top_position = None
+                    self.bottom_position = None
+                return vehicle_id
+
+        elif coté == "bottom":
+            if self.bottom_position != None:
+                vehicle_id = self.list_vehicles[self.bottom_position]
+                self.list_vehicles[self.bottom_position] = None
+                self.bottom_position -= 1
+                if self.bottom_position < self.top_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                    self.bottom_position = None
+                    self.top_position = None
+                return vehicle_id
+
     
 
 
-print(Block([Lane(0,2), Lane(1,2)]))
+
 
     

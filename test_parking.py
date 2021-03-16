@@ -92,6 +92,18 @@ class TestTest() :
         lane = Lane(0, 2)
         print(lane)
 
+    def test_push(self):
+        Vehicle.next_id = 1
+        vehicle_1 = Vehicle(1,2,3,4)
+        lane = Lane(0, 10)
+        lane.push(vehicle_1.id, bottom) 
+        assert lane.list_vehicles[5] == vehicle_1.id
+        Vehicle.next_id = 1
+        vehicle_1 = Vehicle(1,2,3,4)
+        lane = Lane(0, 10)
+        lane.push(vehicle_1.id, top) 
+        assert lane.list_vehicles[5] == vehicle_1.id
+
 
 
 
