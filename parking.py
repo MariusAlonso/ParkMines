@@ -30,6 +30,14 @@ class Block():
         #conformément aux termes top et bottom pour les extrémités
         return matrix.__repr__()
 
+class Block_interface(Block):
+    def is_full(self):
+        pass
+
+    def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule 
+
+
+
 class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
@@ -153,7 +161,7 @@ class Lane() :
                     self.top_position = None
                 return vehicle_id
 
-    
+
 
 
 
