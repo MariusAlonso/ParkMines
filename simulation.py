@@ -43,7 +43,7 @@ class Simulation():
         self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes)
 
     def execute(self, event):
-        print(event.event_type)
+        #print(event.event_type)
 
         vehicle = event.vehicle
         if event.event_type == "order_deposit":
@@ -57,7 +57,7 @@ class Simulation():
         elif event.event_type == "deposit":
 
             lane_id = self.parking.blocks[0].empty_lane()
-            print(lane_id)
+            #print(lane_id)
             if lane_id == "full":
                 heapq.heappush(self.pending_deposits, event)
             else:
