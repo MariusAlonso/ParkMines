@@ -2,11 +2,10 @@ from simulation import Vehicle
 import numpy as np
 
 class Parking():
-    def __init__(self, blocks, disposal, access):
+    def __init__(self, blocks, disposal=[[]]):
         self.blocks = blocks
         self.occupation = dict()
         self.disposal = disposal
-        self.access = access
     
     def __repr__(self):
         return self.blocks[0].__repr__()
