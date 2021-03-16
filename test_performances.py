@@ -22,7 +22,7 @@ class TestTest():
         # création du parking
         Vehicle.next_id = 1
         stock = Stock(importFromFile()[:13])
-        parking = Parking([Block([Lane(1, 10), Lane(2, 10)])])
+        parking = Parking([Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10)])])
         
         # test
         performance = Performance(datetime.datetime(2016,1,1,0,0,0,0), stock, 1, parking, AlgorithmRandom)
