@@ -9,10 +9,10 @@ class Parking():
         self.disposal = disposal
     
     def __repr__(self):
-        return self.blocks[0].__repr__()
+        return self.blocks.__repr__()
     
     def travel_time(self, departure, arrival):
-        return 0.1 #datetime.timedelta(0,0,0,0,15)
+        return datetime.timedelta(0,0,0,0,15)
 
 
 class Block():
@@ -67,7 +67,7 @@ class Lane() :
         liste = [str(item).replace('None', '-') for item in liste]
         return liste.__repr__()
 
-    def push_top(self, id_vehicle, coté):
+    def push_top(self, id_vehicle):
         if self.top_position == None:
             if not self.bottom_access:
                 self.list_vehicles[-1] = id_vehicle
