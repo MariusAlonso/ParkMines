@@ -1,19 +1,28 @@
 from simulation import Vehicle
 import numpy as np
+import datetime
 
 class Parking():
-    def __init__(self, blocks, disposal, access):
+    def __init__(self, blocks, disposal=[[]]):
         self.blocks = blocks
         self.occupation = dict()
         self.disposal = disposal
+<<<<<<< HEAD
         self.access = access
         self.nb_of_places = self.nbOfPlaces()
+=======
+>>>>>>> 74351b0dc8a02cead45d41407d0fb4b0b52f23e2
     
     def __repr__(self):
         return self.blocks[0].__repr__()
     
+<<<<<<< HEAD
     def nbOfPlaces(self):
         return sum(block.height*block.width for block in self.blocks)
+=======
+    def travel_time(self, departure, arrival):
+        return 0.1 #datetime.timedelta(0,0,0,0,15)
+>>>>>>> 74351b0dc8a02cead45d41407d0fb4b0b52f23e2
 
 
 class Block():
@@ -33,6 +42,24 @@ class Block():
         # les lanes sont les colonnes (la première à gauche)
         # conformément aux termes top et bottom pour les extrémités
         return matrix.__repr__()
+
+class BlockInterface(Block):
+
+    def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
+        for i_lane, lane in enumerate(self.lanes):
+            if lane.list_vehicles[0] == None:
+                return i_lane
+        else:
+            return "full"
+
+    def occupied_lane(self): #renvoie "empty" si interface est pleine, et return premier vehicule
+        for i_lane, lane in enumerate(self.lanes):
+            if lane.list_vehicles[0] != None:
+                return i_lane
+        else:
+            return "empty"
+
+
 
 class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
@@ -157,7 +184,7 @@ class Lane() :
                     self.top_position = None
                 return vehicle_id
 
-    
+
 
 
 
