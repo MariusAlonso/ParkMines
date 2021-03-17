@@ -201,6 +201,8 @@ class Simulation():
             robot.start_position = robot.goal_position
             robot.goal_position = ((0, i_lane), "bottom")
             robot.start_time = self.t
+            print(self.t)
+            print(self.parking.travel_time(((0, i_lane), "bottom"), robot.goal_position))
             robot.goal_time = self.t + self.parking.travel_time(((0, i_lane), "bottom"), robot.goal_position)
 
             
