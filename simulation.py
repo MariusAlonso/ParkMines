@@ -29,6 +29,8 @@ class Simulation():
 
         # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
+            print(self.t)
+            print(self.events[0].date)
             if self.events[0].date >= self.t:
                 break
             self.execute(heapq.heappop(self.events))
@@ -190,6 +192,8 @@ class Simulation():
             robot.start_position = robot.goal_position
             robot.goal_position = ((0, i_lane), "bottom")
             robot.start_time = self.t
+            print(self.t)
+            print(self.parking.travel_time(((0, i_lane), "bottom"), robot.goal_position))
             robot.goal_time = self.t + self.parking.travel_time(((0, i_lane), "bottom"), robot.goal_position)
             
             vehicle_id = self.parking.blocks[0].lanes[i_lane].list_vehicles[0]

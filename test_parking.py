@@ -107,7 +107,7 @@ class TestTest():
     
     def testNumberOfPlaces(self):
         parking = Parking([Block([Lane(1, 10), Lane(2, 10)]), Block([Lane(1, 7), Lane(2, 7)])])
-        assert parking.nbOfPlaces == 34
+        assert parking.nb_of_places == 34
 
 
 

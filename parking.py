@@ -7,33 +7,28 @@ class Parking():
         self.blocks = blocks
         self.occupation = dict()
         self.disposal = disposal
-<<<<<<< HEAD
-        self.access = access
-        self.nb_of_places = self.nbOfPlaces()
-=======
->>>>>>> 74351b0dc8a02cead45d41407d0fb4b0b52f23e2
+        #self.access = access
+        self.nb_of_places = sum([block.height*block.width for block in self.blocks])
     
     def __repr__(self):
         return self.blocks[0].__repr__()
     
-<<<<<<< HEAD
-    def nbOfPlaces(self):
-        return sum(block.height*block.width for block in self.blocks)
-=======
     def travel_time(self, departure, arrival):
-        return 0.1 #datetime.timedelta(0,0,0,0,15)
->>>>>>> 74351b0dc8a02cead45d41407d0fb4b0b52f23e2
+        return datetime.timedelta(0,0,0,0,15)
 
 
 class Block():
     def __init__(self, lanes):
         self.lanes = lanes
+
+        # dimensions
+        self.height = len(self.lanes) # en nombre de voitures
+        self.width = self.lanes[0].length # en nombre de voitures
     
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
-        height = len(self.lanes) # en nombre de voitures
-        width = self.lanes[0].length # en nombre de voitures
-        matrix = np.empty((height, width), dtype='<U5')
+        
+        matrix = np.empty((self.height, self.width), dtype='<U5')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
             liste = [str(item).replace('None', '-') for item in liste]
