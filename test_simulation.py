@@ -40,4 +40,4 @@ class TestTest():
         assert 1 not in simulation.parking.blocks[0].lanes[0].list_vehicles or 1 in simulation.parking.blocks[0].lanes[1].list_vehicles
 
 test = TestTest()
-test.test_random()
+test.test_inputs_random()

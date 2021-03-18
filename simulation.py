@@ -46,11 +46,12 @@ class Simulation():
 
     def execute(self, event):
         if self.print_in_terminal:
-            print(f"----------------\nEXECUTION at time {self.t}")
+            print(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nEXECUTION at time {self.t}")
             print("event :", event)
             if not (event.robot is None) and not (event.robot.target is None) and event.event_type != event.robot.target.event_type:
                 print("target of the robot:", event.robot.target)
-            print([k for k in self.locked_lanes if self.locked_lanes[k]])
+            print("-------------")
+            #print([k for k in self.locked_lanes if self.locked_lanes[k]])
 
 
         vehicle = event.vehicle

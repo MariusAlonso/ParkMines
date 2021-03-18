@@ -11,7 +11,8 @@ class Parking():
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
     
     def __repr__(self):
-        return self.blocks.__repr__()
+        
+        return " - Interface :\n"+self.blocks[0].__repr__()+"\n - Parking :\n"+self.blocks[1].__repr__()
     
     def travel_time(self, departure, arrival):
         return datetime.timedelta(0,0,0,0,15)
