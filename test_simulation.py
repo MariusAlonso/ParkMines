@@ -6,7 +6,11 @@ from robot import *
 class TestTest():
     def test_stock_simulation_init(self):
         Vehicle.next_id = 1
-        stock = Stock([Vehicle(3, 4, 1, 3), Vehicle(2, 1, 0, 3), Vehicle(3, 6, 2, 4)])
+        y2020 = datetime.datetime(2020,1,1,0,0,0,0)
+        y2017 = datetime.datetime(2017,1,1,0,0,0,0)
+        y2018 = datetime.datetime(2018,1,1,0,0,0,0)
+        y2019 = datetime.datetime(2019,1,1,0,0,0,0)
+        stock = Stock([Vehicle(y2019, y2020, y2018, y2018), Vehicle(y2020, y2018, y2017, y2019), Vehicle(y2020, y2020, y2019, y2020)])
         parking = Parking([BlockInterface([Lane(1,1),Lane(1,1)]),Block([Lane(1, 10), Lane(2, 10)])])
         simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1)], parking, AlgorithmRandom)
         assert simulation.events[0].vehicle.id == 2
