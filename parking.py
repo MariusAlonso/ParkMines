@@ -25,6 +25,9 @@ class Block():
         # dimensions
         self.height = len(self.lanes) # en nombre de voitures
         self.width = self.lanes[0].length # en nombre de voitures
+
+        self.x_pos = None
+        self.y_pos = None
     
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher

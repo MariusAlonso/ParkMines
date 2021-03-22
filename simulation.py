@@ -7,7 +7,7 @@ from robot import *
 
 class Simulation():
 
-    def __init__(self, t0, stock, robots, parking, AlgorithmType, print_in_terminal=False):
+    def __init__(self, t0, stock, robots, parking, AlgorithmType, print_in_terminal=False, display=None):
         """
         t0 : date d'initialisation
         """
@@ -16,6 +16,7 @@ class Simulation():
         self.t = t0
         self.parking = parking
         self.print_in_terminal = print_in_terminal
+        self.display = display
 
         # Création de la file d'événements : ajout des commandes
         self.events = []
@@ -75,6 +76,9 @@ class Simulation():
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top")
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
                 self.wake_up_robots()
+                
+                if self.display:
+                    self.display.draw_vehicle(vehicle)
 
             if self.print_in_terminal:
                 print(f"Deposit of {vehicle.id}")
@@ -87,7 +91,12 @@ class Simulation():
                 i_block, i_lane, i_place = self.parking.occupation[vehicle.id]
                 if i_block == 0:
                     self.parking.blocks[0].lanes[i_lane].pop("top")
+
+                    if self.display:
+                        self.display.erase_vehicle(vehicle)
+
                     del self.parking.occupation[event.vehicle.id]
+
                     if self.print_in_terminal:
                         print(f"Retrieval of {vehicle.id}")
                         print(self.parking)
@@ -116,6 +125,10 @@ class Simulation():
                 block_id, lane_id, side = event.robot.goal_position
 
                 moved_vehicle = self.stock.vehicles[self.parking.blocks[block_id].lanes[lane_id].pop(side)]
+
+                if self.display:
+                    self.display.erase_vehicle(moved_vehicle)
+
                 del self.parking.occupation[moved_vehicle.id]
 
                 if self.print_in_terminal:
@@ -160,6 +173,9 @@ class Simulation():
                 self.parking.occupation[event.vehicle.id] = (block_id, lane_id, lane.top_position)
             else:
                 self.parking.occupation[event.vehicle.id] = (block_id, lane_id, lane.bottom_position)
+
+            if self.display:
+                self.display.draw_vehicle(vehicle)
 
             if self.print_in_terminal:
                 print(f"{event.robot} places {vehicle.id} ")
