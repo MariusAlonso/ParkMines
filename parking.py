@@ -19,12 +19,21 @@ class Parking():
 
 
 class Block():
-    def __init__(self, lanes):
-        self.lanes = lanes
+    def __init__(self, lanes, nb_lanes=None, lane_length=None):
+
+        if nb_lanes:
+            self.lanes = []
+            for i in range(1, nb_lanes+1):
+                self.lanes.append(Lane(i, lane_length))
+        else:
+            self.lanes = lanes
 
         # dimensions
         self.height = len(self.lanes) # en nombre de voitures
         self.width = self.lanes[0].length # en nombre de voitures
+
+        self.x_pos = None
+        self.y_pos = None
     
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
@@ -40,6 +49,11 @@ class Block():
         return matrix.__repr__()
 
 class BlockInterface(Block):
+
+    def __init__(self, lanes, nb_lanes=None, lane_length=None):
+        super().__init__(lanes, nb_lanes, lane_length)
+        self.nb_places_available = self.height
+
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
         for i_lane, lane in enumerate(self.lanes):
