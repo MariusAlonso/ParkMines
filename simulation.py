@@ -4,6 +4,7 @@ from vehicle import Vehicle
 import heapq
 import datetime
 from robot import *
+import time
 
 class Simulation():
 
@@ -17,6 +18,7 @@ class Simulation():
         self.parking = parking
         self.print_in_terminal = print_in_terminal
         self.display = display
+        self.time_execution = 0
 
         # Création de la file d'événements : ajout des commandes
         self.events = []
@@ -88,7 +90,7 @@ class Simulation():
         elif event.event_type == "retrieval":
             
             if vehicle.id in self.parking.occupation:
-                i_block, i_lane, i_place = self.parking.occupation[vehicle.id]
+                i_block, i_lane, position = self.parking.occupation[vehicle.id]
                 if i_block == 0:
                     self.parking.blocks[0].lanes[i_lane].pop("top")
 
@@ -136,26 +138,37 @@ class Simulation():
                     print(self.parking)
                     print("")
 
-                if block_id == 0 and self.pending_deposits:
-                    event_deposit = heapq.heappop(self.pending_deposits)
-                    self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top")
-                    self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
-                    self.wake_up_robots()
+                if block_id == 0:
+                    self.parking.blocks[0].nb_places_available += 1
+                    if self.pending_deposits:
+                        event_deposit = heapq.heappop(self.pending_deposits)
+                        self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top")
+                        self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
+                        self.wake_up_robots()
                 
                 event.robot.start_position = event.robot.goal_position
                 event.robot.start_time = self.t
 
                 if event.robot.target.event_type == "retrieval" and moved_vehicle.id == event.robot.target.vehicle.id:
                     i_lane = self.parking.blocks[0].empty_lane()
-                    self.locked_lanes[event.robot.goal_position] = False
-                    self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
-                    #On place le vehicule a l'interface
-                    event.robot.goal_position = (0, i_lane, "bottom")
+                    if i_lane != "full":
+                        self.locked_lanes[event.robot.goal_position] = False
+                        self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
+                        #On place le vehicule a l'interface
+                        event.robot.goal_position = (0, i_lane, "bottom")
+                        self.parking.blocks[0].nb_places_available -= 1
+                        
+                        event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
+                        heapq.heappush(self.events, Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot))
+
+                    else:
+                        self.assign_task(event.robot)
+                        self.whistle()
                 else:
                     event.robot.goal_position = self.algorithm.place(moved_vehicle, event.robot.goal_position)
-                
-                event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
-                heapq.heappush(self.events, Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot))
+                    
+                    event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
+                    heapq.heappush(self.events, Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot))
                 
 
 
@@ -200,9 +213,11 @@ class Simulation():
         """
         for _ in range(repeat):
             if self.events:
+                time_start = time.time()
                 event = heapq.heappop(self.events)
                 self.t = event.date
                 self.execute(event)
+                self.time_execution += time.time() - time_start
             else:
                 print("THE SIMULATION IS COMPLETED")
                 break
@@ -220,13 +235,14 @@ class Simulation():
             # si un placement n'a pu être mené à bien
             except ValueError:
                 break
+        print(f"Temps d'exécution : {self.time_execution:.2f}s")
     
     def assign_task(self, robot):
-        interface_places_ignored = 0
+        are_available_places_interface = False
         for lane_id, lane in enumerate(self.parking.blocks[0].lanes):
             if not lane.list_vehicles[0] is None:
                 vehicle = self.stock.vehicles[lane.list_vehicles[0]]
-                if interface_places_ignored > 0 or vehicle.order_retrieval > self.t or vehicle.retrieval - self.t > datetime.timedelta(hours=1):
+                if vehicle.order_retrieval > self.t or vehicle.retrieval - self.t > datetime.timedelta(hours=1):
                     robot.start_position = robot.goal_position
                     robot.goal_position = (0, lane_id, "bottom")
                     robot.start_time = self.t
@@ -239,9 +255,11 @@ class Simulation():
                     robot.target = event
                     
                     return event
-            interface_places_ignored += 1
+            else:
+                are_available_places_interface = True
         
-        event = self.find_unassigned_events()
+        event = self.find_unassigned_events(are_available_places_interface)
+
         if event:
             if self.print_in_terminal:
                 print(f" -> event {event} assigned to {robot}")
@@ -266,7 +284,7 @@ class Simulation():
             return event
         
 
-    def find_unassigned_events(self):
+    def find_unassigned_events(self, are_available_places_interface):
         i = 0
         while i < len(self.pending_retrievals):
             event = self.pending_retrievals[i]
@@ -282,8 +300,9 @@ class Simulation():
                             event.unassigned_tasks = position - vehicle_lane.top_position + 1
                             self.locked_lanes[(block_id, lane_id, "top")] = True
             if event.unassigned_tasks:
-                event.unassigned_tasks -= 1
-                return event
+                if event.unassigned_tasks != 1 or are_available_places_interface:                       
+                    event.unassigned_tasks -= 1
+                    return event
             i += 1
         i = 0
         while i < len(self.events):
@@ -300,8 +319,9 @@ class Simulation():
                             event.unassigned_tasks = position - vehicle_lane.top_position + 1
                             self.locked_lanes[(block_id, lane_id, "top")] = True
             if event.event_type == "retrieval" and event.unassigned_tasks:
-                event.unassigned_tasks -= 1
-                return event 
+                if event.unassigned_tasks != 1 or are_available_places_interface:                       
+                    event.unassigned_tasks -= 1
+                    return event
             i += 1
 
     def wake_up_robots(self):
@@ -358,7 +378,7 @@ class Algorithm():
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
-
+    """
     def pick(self, vehicle):
         i_block, i_lane, position = self.parking.occupation[vehicle.id]
         lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
@@ -378,7 +398,7 @@ class Algorithm():
                     self.place(moved_vehicle, forbidden_access = (lane_vehicle, "top"))
                 else:
                     break
-
+    """
 
 class AlgorithmRandom(Algorithm):
     

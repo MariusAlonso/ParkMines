@@ -32,12 +32,10 @@ class TestTest():
     def test_inputs_random(self):
         Vehicle.next_id = 1
         stock = Stock(importFromFile())
-        parking = Parking([BlockInterface([Lane(1,1),Lane(2,1),Lane(3,1)]),Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10), Lane(9, 10), Lane(10, 10)])])
-        simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1)], parking, AlgorithmRandom, print_in_terminal=True)
-        simulation.next_event(3)
-        #assert 10 in simulation.parking.blocks[0].lanes[0].list_vehicles or 10 in simulation.parking.blocks[0].lanes[1].list_vehicles
+        parking = Parking([BlockInterface([], 2, 1), Block([], 10, 10)])
+        simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1)], parking, AlgorithmRandom, print_in_terminal=False)
         simulation.complete()
-        assert 1 not in simulation.parking.blocks[0].lanes[0].list_vehicles or 1 in simulation.parking.blocks[0].lanes[1].list_vehicles
+        assert 1 not in simulation.parking.occupation
 
 test = TestTest()
 test.test_inputs_random()
