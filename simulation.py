@@ -16,6 +16,8 @@ class Simulation():
         self.t = t0
         self.parking = parking
         self.print_in_terminal = print_in_terminal
+        self.deposit_delays = []
+        self.retrieval_delays = []
 
         # Création de la file d'événements : ajout des commandes
         self.events = []
@@ -74,6 +76,10 @@ class Simulation():
             else:
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top")
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
+
+                # ajout du retard éventuel à la liste des retards au dépôt
+                self.deposit_delays.append(self.t - event.date)
+
                 self.wake_up_robots()
 
             if self.print_in_terminal:
@@ -170,6 +176,9 @@ class Simulation():
             if block_id == 0 and event.robot.target.date < self.t:
                 self.execute(event.robot.target)
                 self.pending_retrievals.remove(event.robot.target)
+
+                # ajout du retard éventuel à la liste des retards à la sortie
+                self.retrieval_delays.append(self.t - event.robot.target.date)
 
             event.robot.target = None
             self.assign_task(event.robot)
