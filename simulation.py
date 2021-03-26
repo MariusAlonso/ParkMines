@@ -18,9 +18,10 @@ class Simulation():
         self.parking = parking
         self.print_in_terminal = print_in_terminal
 
-        self.deposit_delays = []
+        self.before_deposit_delays = []
+        self.after_deposit_delays = []
         self.retrieval_delays = []
-        
+
         self.display = display
         self.time_execution = 0
 
@@ -82,8 +83,10 @@ class Simulation():
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top")
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
 
-                # ajout du retard éventuel à la liste des retards au dépôt
-                self.deposit_delays.append(self.t - event.date)
+                vehicle.effective_deposit = self.t
+
+                # ajout du retard (nul) à la liste des retards au dépôt
+                self.before_deposit_delays.append(datetime.timedelta(0, 0, 0, 0, 0, 0))
 
                 self.wake_up_robots()
                 
@@ -141,6 +144,10 @@ class Simulation():
 
                 del self.parking.occupation[moved_vehicle.id]
 
+                if block_id == 0:
+                    # ajout du retard éventuel à la liste des retards au dépôt
+                    self.after_deposit_delays.append(self.t - vehicle.effective_deposit)
+
                 if self.print_in_terminal:
                     print(f"Robot {event.robot} loads {moved_vehicle.id}")
                     print(self.parking)
@@ -152,6 +159,12 @@ class Simulation():
                         event_deposit = heapq.heappop(self.pending_deposits)
                         self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top")
                         self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
+
+                        # ajout du retard éventuel à la liste des retards au dépôt
+                        self.before_deposit_delays.append(self.t - event_deposit.date)
+                        # mise à jour de la date de dépôt effectif du véhicule
+                        event_deposit.vehicle.effective_deposit = self.t
+
                         self.wake_up_robots()
                 
                 event.robot.start_position = event.robot.goal_position
@@ -263,6 +276,7 @@ class Simulation():
                     heapq.heappush(self.events, Event(self.stock.vehicles[vehicle.id], robot.goal_time, "robot_arrival", robot))
 
                     event = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "empty_interface", robot)
+
                     robot.target = event
                     
                     return event
