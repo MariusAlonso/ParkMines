@@ -31,7 +31,6 @@ class Simulation():
             heapq.heappush(self.events, Event(v, v.order_deposit, "order_deposit"))
             heapq.heappush(self.events, Event(v, v.order_retrieval, "order_retrieval"))
 
-
         self.pending_deposits = []
         self.pending_retrievals = []
     
@@ -244,7 +243,8 @@ class Simulation():
                 self.execute(event)
                 self.time_execution += time.time() - time_start
             else:
-                print("THE SIMULATION IS COMPLETED")
+                if self.print_in_terminal:
+                    print("THE SIMULATION IS COMPLETED")
                 break
         return bool(self.events)
             

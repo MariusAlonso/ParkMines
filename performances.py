@@ -51,18 +51,30 @@ class Performance():
         self.parking = parking
         self.algorithm = AlgorithmType
     
-    def averageDashboard(self, nb_repetition=100):
+    def averageDashboard(self, nb_repetition=10):
         """
         renvoie les données du Dashboard de la simulation de référence,
         moyennées sur nb_repetition répétitions
         """
-        average = 0
+        average_dashboard = {}
+        average_intermediate_mpv = 0
+        average_before_deposit_delay = datetime.timedelta(0, 0, 0, 0, 0, 0)
+        average_after_deposit_delay = datetime.timedelta(0, 0, 0, 0, 0, 0)
+        average_retrieval_delay = datetime.timedelta(0, 0, 0, 0, 0, 0)
+
         for _ in range(nb_repetition):
             simulation = Simulation(self.t, self.stock, self.robots, self.parking, self.algorithm)
-            average += Dashboard(simulation).averageIntermediateMovesPerVehicle()
+            average_intermediate_mpv += Dashboard(simulation).averageIntermediateMovesPerVehicle()
+            average_before_deposit_delay += Dashboard(simulation).averageBeforeDepositDelay()
+            average_after_deposit_delay += Dashboard(simulation).averageAfterDepositDelay()
+            average_retrieval_delay += Dashboard(simulation).averageRetrievalDelay()
 
-        average /= nb_repetition
-        return average
+        average_dashboard["average_intermediate_mpv"] = average_intermediate_mpv / nb_repetition
+        average_dashboard["average_before_deposit_delay"] = average_before_deposit_delay / nb_repetition
+        average_dashboard["average_after_deposit_delay"] = average_after_deposit_delay / nb_repetition
+        average_dashboard["average_retrieval_delay"] = average_retrieval_delay / nb_repetition
+
+        return average_dashboard
     
-    def variableStock(self, nb_repetition=100):
+    def variableStock(self, nb_repetition=10):
         pass
