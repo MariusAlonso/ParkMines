@@ -134,7 +134,7 @@ class Display():
                 print(x0,y0)
 
 
-        self.font = pg.font.SysFont(None, 3*self.place_length//4)
+        self.font = pg.font.SysFont(None, 2*self.place_length//4)
         self.font_fixed = pg.font.SysFont(None, 30)
         """
         text_input_box = TextInputBox(50, 50, 400, font)

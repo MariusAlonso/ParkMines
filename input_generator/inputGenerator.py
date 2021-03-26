@@ -136,10 +136,10 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None, c
     #Adjust saturation by changing these values
 
     mu_entrances = congestion_coef * np.asarray(json.loads(parser.get('parking_stats', 'mu_entrances')))
-    sigma_entrances = np.asarray(json.loads(parser.get('parking_stats', 'sigma_entrances')))
+    sigma_entrances = congestion_coef * np.asarray(json.loads(parser.get('parking_stats', 'sigma_entrances')))
 
     mu_exits = congestion_coef * np.asarray(json.loads(parser.get('parking_stats', 'mu_exits')))
-    sigma_exits = np.asarray(json.loads(parser.get('parking_stats', 'sigma_exits')))
+    sigma_exits = congestion_coef * np.asarray(json.loads(parser.get('parking_stats', 'sigma_exits')))
 
     if show_plots :
         x = np.linspace(mu_entrances[6] - 3*sigma_entrances[6] , mu_entrances[6]  + 3*sigma_entrances[6] , 100)

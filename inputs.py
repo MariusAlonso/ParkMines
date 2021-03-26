@@ -26,7 +26,7 @@ def importFromFile():
     movements_list = []
     path = getPath()
 
-    generateMovements(5)
+    generateMovements(1)
 
     with open(path, "r") as movements:
         first_line = True
