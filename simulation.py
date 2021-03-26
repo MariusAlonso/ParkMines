@@ -215,14 +215,15 @@ class Simulation():
                 print(f"{event.robot} places {vehicle.id} ")
                 print(self.parking)
                 print("")
-            
-            # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
-            if block_id == 0 and event.robot.target.date < self.t:
-                self.execute(event.robot.target)
-                self.pending_retrievals.remove(event.robot.target)
 
+            if block_id == 0:
                 # ajout du retard éventuel à la liste des retards à la sortie
                 self.retrieval_delays.append(self.t - event.robot.target.date)
+            
+                # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
+                if event.robot.target.date < self.t:
+                    self.execute(event.robot.target)
+                    self.pending_retrievals.remove(event.robot.target)
 
             event.robot.target = None
             self.assign_task(event.robot)
@@ -259,7 +260,8 @@ class Simulation():
             # si un placement n'a pu être mené à bien
             except ValueError:
                 break
-        print(f"Temps d'exécution : {self.time_execution:.2f}s")
+        if self.print_in_terminal:
+            print(f"Temps d'exécution : {self.time_execution:.2f}s")
     
     def assign_task(self, robot):
         are_available_places_interface = False

@@ -22,6 +22,8 @@ import os
 import argparse
 import sys
 
+print_in_terminal=False
+
 ##############################################################################
 ############################ Load Config######################################
 ##############################################################################
@@ -32,10 +34,12 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
         parser = ConfigParser()
         parser.read(config_path)
     else :
-        print("invalid path for configuration file")
+        if print_in_terminal:
+            print("invalid path for configuration file")
         sys.exit()
 
-    print("-----LOAD DATA-----")
+    if print_in_terminal:
+        print("-----LOAD DATA-----")
 
     ################## paths to save
     path_to_save = parser.get('paths', 'path_to_save')
@@ -45,7 +49,8 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
         if os.path.exists(path_to_save) == False :
             os.mkdir(path_to_save)
     except :
-        print("invalid path to save files")
+        if print_in_terminal:
+            print("invalid path to save files")
         sys.exit()
         
     ##################simulation data
@@ -60,8 +65,9 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
     except :
         print("invalid simulation dates")
         sys.exit()
-        
-    print("Simulation of daily movements from " + str(start_date) + " to " + str(end_date))
+    
+    if print_in_terminal:
+        print("Simulation of daily movements from " + str(start_date) + " to " + str(end_date))
 
     simulation_duration = int((end_date - start_date).days)
 
@@ -70,17 +76,19 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
         
     control_capacity = parser.get('simulation_parameters', 'control_capacity', fallback = True) == "True"
 
-    print("Show plots: " + str(show_plots))
-    print("Control capacity: " + str(show_plots))
+    if print_in_terminal:
+        print("Show plots: " + str(show_plots))
+        print("Control capacity: " + str(show_plots))
 
     #time to find entrances/exits number with respect to capacity
     timeout = int(parser.get('simulation_parameters', 'timeout', fallback = 300))
 
     # Congestion control
     #multiplicative coef of entrances/exits mean
-    congestion_coef = float(parser.get('simulation_parameters', 'congestion_coef', fallback = 1.0)) 
+    congestion_coef = float(parser.get('simulation_parameters', 'congestion_coef', fallback = 1.0))
 
-    print("Congestion coefficient: " + str(congestion_coef))
+    if print_in_terminal:
+        print("Congestion coefficient: " + str(congestion_coef))
 
     days_without_exits = float(parser.get('simulation_parameters', 'n_days_without_exits', fallback = 1)) 
 
@@ -94,8 +102,9 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
     max_movements_per_day = json.loads(parser.get('parking_rules', 'max_movements_per_day'))
 
     #Site capacity
-    max_vehicles_on_site = int(parser.get('parking_rules', 'max_vehicles_on_site'))  
-    print("Site capacity: " + str(max_vehicles_on_site))
+    max_vehicles_on_site = int(parser.get('parking_rules', 'max_vehicles_on_site'))
+    if print_in_terminal:
+        print("Site capacity: " + str(max_vehicles_on_site))
 
     min_stay_duration = int(parser.get('parking_rules', 'min_stay_duration', fallback = 1))
     max_stay_duration = int(parser.get('parking_rules', 'max_stay_duration', fallback = 100))
@@ -183,7 +192,8 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
     ##############################################################################
     ###################### Generate Movements & events ###########################
     ##############################################################################
-    print("-----CREATE BOOKINGS-----")
+    if print_in_terminal:
+        print("-----CREATE BOOKINGS-----")
     ################## number of movements per day 
         
     #create data frame to export 
@@ -353,7 +363,8 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
     ############################# Save Files #####################################
     ##############################################################################
 
-    print("-----SAVE FILES-----")
+    if print_in_terminal:
+        print("-----SAVE FILES-----")
 
     #save movements.csv and events.csv
     mvts.to_csv(mvts_path, index = False)

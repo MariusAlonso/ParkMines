@@ -21,17 +21,17 @@ class Dashboard():
     
     def averageRetrievalDelay(self):
         retrieval_delays = np.array(self.simulation.retrieval_delays)
-        retrieval_delays[retrieval_delays < datetime.timedelta(0, 0, 0, 0, 0, 0)] = 0.
+        retrieval_delays[retrieval_delays < datetime.timedelta(0, 0, 0, 0, 0, 0)] = datetime.timedelta(0, 0, 0, 0, 0, 0)
         return np.mean(retrieval_delays)
     
     def averageBeforeDepositDelay(self):
         before_deposit_delays = np.array(self.simulation.before_deposit_delays)
-        before_deposit_delays[before_deposit_delays < datetime.timedelta(0, 0, 0, 0, 0, 0)] = 0.
+        before_deposit_delays[before_deposit_delays < datetime.timedelta(0, 0, 0, 0, 0, 0)] = datetime.timedelta(0, 0, 0, 0, 0, 0)
         return np.mean(before_deposit_delays)
 
     def averageAfterDepositDelay(self):
         after_deposit_delays = np.array(self.simulation.after_deposit_delays)
-        after_deposit_delays[after_deposit_delays < datetime.timedelta(0, 0, 0, 0, 0, 0)] = 0.
+        after_deposit_delays[after_deposit_delays < datetime.timedelta(0, 0, 0, 0, 0, 0)] = datetime.timedelta(0, 0, 0, 0, 0, 0)
         return np.mean(after_deposit_delays)
 
 
