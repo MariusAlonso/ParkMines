@@ -26,7 +26,7 @@ import sys
 ############################ Load Config######################################
 ##############################################################################
 
-def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
+def generate(config_path="parking_10lanes/config_script.txt", show_plots=None, congestion_coef=None):
 
     if os.path.exists(config_path):
         parser = ConfigParser()
@@ -78,7 +78,8 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
 
     # Congestion control
     #multiplicative coef of entrances/exits mean
-    congestion_coef = float(parser.get('simulation_parameters', 'congestion_coef', fallback = 1.0)) 
+    if congestion_coef is None:
+        congestion_coef = float(parser.get('simulation_parameters', 'congestion_coef', fallback = 1.0)) 
 
     print("Congestion coefficient: " + str(congestion_coef))
 
@@ -88,13 +89,12 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None):
 
     #be carefull to set a feasable max_operations_per_day
     #ie concordant with maxVehiclesPerDay so that there is always a way to find feasable hours
-    max_operations_per_hour = int(parser.get('parking_rules', 'max_operations_per_hour', fallback = 10))  
+    max_operations_per_hour = int(parser.get('parking_rules', 'max_operations_per_hour', fallback = 100000))  
 
-    min_movements_per_day = json.loads(parser.get('parking_rules', 'min_movements_per_day'))
-    max_movements_per_day = json.loads(parser.get('parking_rules', 'max_movements_per_day'))
-
+    min_movements_per_day = json.loads(parser.get('parking_rules', 'min_movements_per_day', fallback = "[0, 0, 0, 0, 0, 0, 0]"))
+    max_movements_per_day = json.loads(parser.get('parking_rules', 'max_movements_per_day', fallback = "[100000, 100000, 100000, 100000, 100000, 100000, 100000]"))
     #Site capacity
-    max_vehicles_on_site = int(parser.get('parking_rules', 'max_vehicles_on_site'))  
+    max_vehicles_on_site = int(parser.get('parking_rules', 'max_vehicles_on_site', fallback = 100000))  
     print("Site capacity: " + str(max_vehicles_on_site))
 
     min_stay_duration = int(parser.get('parking_rules', 'min_stay_duration', fallback = 1))

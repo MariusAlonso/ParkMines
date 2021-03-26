@@ -1,0 +1,49 @@
+[paths]
+
+path_to_save = inputs
+mvts_fileName =  /movements.csv
+
+
+
+[simulation_parameters]
+
+start_date = 2019-09-01 00:00:00
+end_date = 2019-12-31 23:59:00
+
+show_plots = True
+control_capacity = False
+
+congestion_coef = 1
+
+n_days_without_exits = 4
+
+[parking_rules]
+
+max_vehicles_on_site = 50
+
+max_operations_per_hour = 4 
+
+min_movements_per_day = [0, 4, 4, 4, 4, 4, 4]
+max_movements_per_day = [0, 15, 15, 15, 15, 15, 15]
+
+min_stay_duration = 3
+max_stay_duration = 30
+
+[parking_stats]
+
+mean_stay_duration = 7
+mu_entrances = [15, 10, 10, 10, 10, 10, 15]
+sigma_entrances = [10, 5, 5, 5, 5, 10, 10]
+
+mu_exits =  [15, 10, 10, 10, 10, 10, 15]
+sigma_exits = [10, 5, 5, 5, 5, 10, 10]
+
+entrances_dist_per_hour = [0.01, 0.00, 0.00, 0.00, 0.02, 0.06, 
+                                        0.08, 0.12, 0.09, 0.06, 0.05, 0.03,
+                                        0.02, 0.02, 0.03, 0.05 ,0.07 ,0.09,
+                                        0.10, 0.04, 0.03, 0.01, 0.01, 0.01]
+
+exits_dist_per_hour = [0.01, 0.00, 0.00, 0.00, 0.03, 0.06, 
+                                    0.10, 0.05, 0.03, 0.01, 0.01, 0.01,
+                                        0.08, 0.11, 0.09, 0.06, 0.05, 0.04,
+                                        0.03, 0.03, 0.04, 0.07 ,0.07 ,0.02]

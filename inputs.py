@@ -18,29 +18,15 @@ def getPath():
 #### import des véhicules à partir d'un fichier texte ####
 
 def generateMovements(congestion_coeff):
-
-    with open("input_generator\parking_10lanes\config_script.txt", "r") as config_base:
-        with open("input_generator\config_parkmines.txt", "w") as config:
-            for line in config_base:
-                line.strip()
-                if line[:15] == "congestion_coef":
-                    line = line[:18] + str(congestion_coeff)
-                """
-                if line[:20] == "max_vehicles_on_site":
-                    line = line[:23] + str(int(congestion_coeff*int(line[23:])))
-                if line[:23] == "max_operations_per_hour":
-                    line = line[:26] + str(int(congestion_coeff*int(line[26:])))
-                """
-                print(line, file=config)
         
-    generate("input_generator/config_parkmines.txt", False)
+    generate("input_generator/config_parkmine.txt", False, congestion_coeff)
 
 def importFromFile():
 
     movements_list = []
     path = getPath()
 
-    generateMovements(1.0)
+    generateMovements(5)
 
     with open(path, "r") as movements:
         first_line = True
