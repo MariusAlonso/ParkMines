@@ -17,6 +17,11 @@ class Simulation():
         self.t = t0
         self.parking = parking
         self.print_in_terminal = print_in_terminal
+
+        self.before_deposit_delays = []
+        self.after_deposit_delays = []
+        self.retrieval_delays = []
+
         self.display = display
         self.time_execution = 0
 
@@ -25,7 +30,6 @@ class Simulation():
         for v in self.stock.vehicles.values():
             heapq.heappush(self.events, Event(v, v.order_deposit, "order_deposit"))
             heapq.heappush(self.events, Event(v, v.order_retrieval, "order_retrieval"))
-
 
         self.pending_deposits = []
         self.pending_retrievals = []
@@ -77,6 +81,12 @@ class Simulation():
             else:
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top")
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
+
+                vehicle.effective_deposit = self.t
+
+                # ajout du retard (nul) à la liste des retards au dépôt
+                self.before_deposit_delays.append(datetime.timedelta(0, 0, 0, 0, 0, 0))
+
                 self.wake_up_robots()
                 
                 if self.display:
@@ -133,6 +143,10 @@ class Simulation():
 
                 del self.parking.occupation[moved_vehicle.id]
 
+                if block_id == 0:
+                    # ajout du retard éventuel à la liste des retards au dépôt
+                    self.after_deposit_delays.append(self.t - vehicle.effective_deposit)
+
                 if self.print_in_terminal:
                     print(f"Robot {event.robot} loads {moved_vehicle.id}")
                     print(self.parking)
@@ -144,6 +158,12 @@ class Simulation():
                         event_deposit = heapq.heappop(self.pending_deposits)
                         self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top")
                         self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
+
+                        # ajout du retard éventuel à la liste des retards au dépôt
+                        self.before_deposit_delays.append(self.t - event_deposit.date)
+                        # mise à jour de la date de dépôt effectif du véhicule
+                        event_deposit.vehicle.effective_deposit = self.t
+
                         self.wake_up_robots()
                 
                 event.robot.start_position = event.robot.goal_position
@@ -194,11 +214,15 @@ class Simulation():
                 print(f"{event.robot} places {vehicle.id} ")
                 print(self.parking)
                 print("")
+
+            if block_id == 0:
+                # ajout du retard éventuel à la liste des retards à la sortie
+                self.retrieval_delays.append(self.t - event.robot.target.date)
             
-            # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
-            if block_id == 0 and event.robot.target.date < self.t:
-                self.execute(event.robot.target)
-                self.pending_retrievals.remove(event.robot.target)
+                # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
+                if event.robot.target.date < self.t:
+                    self.execute(event.robot.target)
+                    self.pending_retrievals.remove(event.robot.target)
 
             event.robot.target = None
             self.assign_task(event.robot)
@@ -219,7 +243,8 @@ class Simulation():
                 self.execute(event)
                 self.time_execution += time.time() - time_start
             else:
-                print("THE SIMULATION IS COMPLETED")
+                if self.print_in_terminal:
+                    print("THE SIMULATION IS COMPLETED")
                 break
         return bool(self.events)
             
@@ -235,7 +260,8 @@ class Simulation():
             # si un placement n'a pu être mené à bien
             except ValueError:
                 break
-        print(f"Temps d'exécution : {self.time_execution:.2f}s")
+        if self.print_in_terminal:
+            print(f"Temps d'exécution : {self.time_execution:.2f}s")
     
     def assign_task(self, robot):
         are_available_places_interface = False
@@ -252,6 +278,7 @@ class Simulation():
                     heapq.heappush(self.events, Event(self.stock.vehicles[vehicle.id], robot.goal_time, "robot_arrival", robot))
 
                     event = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "empty_interface", robot)
+
                     robot.target = event
                     
                     return event
