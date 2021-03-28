@@ -7,20 +7,20 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 from sklearn.utils import shuffle
 
-mu_deposit_order = datetim
+mu_deposit_order = None
 sigma_deposit_order = 12
 
-mu_retrieval_order = 
-sigma_retrieval_order = 
+mu_retrieval_order = None
+sigma_retrieval_order = None
 
-mu_stay_duration = 
-sigma_stay_duration = 
+mu_stay_duration = None
+sigma_stay_duration = None
 
-mu_entrances = 
-sigma_entrances = 
+mu_entrances = None
+sigma_entrances = None
 
-mu_exits = 
-sigma_exits = 
+mu_exits = None
+sigma_exits = None
 
 def generate(flux_density=1, time=datetime.timedelta(days=31), start_date=datetime.date(2021, 1, 1)):
 
