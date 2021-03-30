@@ -3,7 +3,7 @@ import random
 from vehicle import Vehicle
 import heapq
 import datetime
-from robot import *
+from robot import Robot
 import time
 
 class Simulation():
@@ -100,7 +100,7 @@ class Simulation():
         elif event.event_type == "retrieval":
             
             if vehicle.id in self.parking.occupation:
-                i_block, i_lane, position = self.parking.occupation[vehicle.id]
+                i_block, i_lane, _ = self.parking.occupation[vehicle.id]
                 if i_block == 0:
                     self.parking.blocks[0].lanes[i_lane].pop("top")
 

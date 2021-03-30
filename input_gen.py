@@ -60,8 +60,8 @@ def generate(flux_density=1, time=datetime.timedelta(days=31), start_date=dateti
         weekday = date.weekday()
         nb_entrances = max(0, int(np.round(flux_density*random.normalvariate(mu_entrances[weekday], sigma_entrances[weekday]))))
 
-        for n in range(nb_entrances):
-            
+        for _ in range(nb_entrances):
+
             days_to_retrieval = max(0, int(np.round(random.normalvariate(mu_stay_duration, sigma_stay_duration))))
 
             while True:
