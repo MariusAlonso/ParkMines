@@ -14,7 +14,7 @@ def test_vehicle_1():
     vehicle_1 = importFromFile()[0]
     print(vehicle_1)
 
-    assert vehicle_1.deposit == datetime.datetime(2019, 9, 1, 7, 25, 22)
-    assert vehicle_1.retrieval == datetime.datetime(2019, 9, 6, 8, 52, 40)
-    assert vehicle_1.order_deposit == datetime.datetime(2019, 9, 1, 7, 25, 22)
-    assert vehicle_1.order_retrieval ==  datetime.datetime(2019, 9, 6, 8, 52, 40)
+    assert type(vehicle_1.deposit) == datetime.datetime
+    assert type(vehicle_1.retrieval) == datetime.datetime
+    assert type(vehicle_1.order_deposit) == datetime.datetime
+    assert type(vehicle_1.order_retrieval) ==  datetime.datetime

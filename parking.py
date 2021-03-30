@@ -7,33 +7,53 @@ class Parking():
         self.blocks = blocks
         self.occupation = dict()
         self.disposal = disposal
+        #self.access = access
+        self.nb_of_places = sum([block.height*block.width for block in self.blocks])
     
     def __repr__(self):
-        return self.blocks[0].__repr__()
+        
+        return " - Interface :\n"+self.blocks[0].__repr__()+"\n - Parking :\n"+self.blocks[1].__repr__()
     
     def travel_time(self, departure, arrival):
-        return 0.1 #datetime.timedelta(0,0,0,0,15)
+        return datetime.timedelta(0,0,0,0,15)
 
 
 class Block():
-    def __init__(self, lanes):
-        self.lanes = lanes
+    def __init__(self, lanes, nb_lanes=None, lane_length=None):
+
+        if nb_lanes:
+            self.lanes = []
+            for i in range(1, nb_lanes+1):
+                self.lanes.append(Lane(i, lane_length))
+        else:
+            self.lanes = lanes
+
+        # dimensions
+        self.height = len(self.lanes) # en nombre de voitures
+        self.width = self.lanes[0].length # en nombre de voitures
+
+        self.x_pos = None
+        self.y_pos = None
     
     def __repr__(self):
-        #on représente les lanes horizontalement pour construire et on transpose avant d'afficher
-        height = len(self.lanes)
-        width = self.lanes[0].length
-        matrix = np.empty((height, width), dtype='<U5')
+        # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
+        
+        matrix = np.empty((self.height, self.width), dtype='<U5')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
             liste = [str(item).replace('None', '-') for item in liste]
             matrix[row_index] = liste
 
-        #les lanes sont les colonnes (la première à gauche)
-        #conformément aux termes top et bottom pour les extrémités
+        # les lanes sont les colonnes (la première à gauche)
+        # conformément aux termes top et bottom pour les extrémités
         return matrix.__repr__()
 
 class BlockInterface(Block):
+
+    def __init__(self, lanes, nb_lanes=None, lane_length=None):
+        super().__init__(lanes, nb_lanes, lane_length)
+        self.nb_places_available = self.height
+
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
         for i_lane, lane in enumerate(self.lanes):
@@ -67,7 +87,7 @@ class Lane() :
         liste = [str(item).replace('None', '-') for item in liste]
         return liste.__repr__()
 
-    def push_top(self, id_vehicle, coté):
+    def push_top(self, id_vehicle):
         if self.top_position == None:
             if not self.bottom_access:
                 self.list_vehicles[-1] = id_vehicle
@@ -87,7 +107,7 @@ class Lane() :
             vehicle_id = self.list_vehicles[self.top_position]
             self.list_vehicles[self.top_position] = None
             self.top_position += 1
-            if self.top_position > self.bottom_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+            if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                 self.top_position = None
                 self.bottom_position = None
             return vehicle_id
@@ -159,7 +179,7 @@ class Lane() :
                 vehicle_id = self.list_vehicles[self.top_position]
                 self.list_vehicles[self.top_position] = None
                 self.top_position += 1
-                if self.top_position > self.bottom_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
                 return vehicle_id
@@ -169,7 +189,7 @@ class Lane() :
                 vehicle_id = self.list_vehicles[self.bottom_position]
                 self.list_vehicles[self.bottom_position] = None
                 self.bottom_position -= 1
-                if self.bottom_position < self.top_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
                 return vehicle_id

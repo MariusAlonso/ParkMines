@@ -3,6 +3,7 @@ from copy import deepcopy
 import argparse
 from vehicle import Vehicle
 import sys
+from input_generator.inputGenerator import generate
 
 #path = "inputs/movements.csv"
 
@@ -16,10 +17,16 @@ def getPath():
 
 #### import des véhicules à partir d'un fichier texte ####
 
-def importFromFile():
+def generateMovements(congestion_coeff):
+        
+    generate("input_generator/config_parkmine.txt", False, congestion_coeff)
+
+def importFromFile(congestion_coeff=1.):
 
     movements_list = []
     path = getPath()
+
+    generateMovements(congestion_coeff)
 
     with open(path, "r") as movements:
         first_line = True
@@ -57,5 +64,3 @@ def importFromFile():
                 movements_list.append(Vehicle(deposit, retrieval, order_deposit, order_retrieval))
 
     return movements_list
-
-print(importFromFile()[0].deposit)
