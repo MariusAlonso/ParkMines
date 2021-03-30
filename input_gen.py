@@ -61,17 +61,21 @@ def generate(flux_density=1, time=datetime.timedelta(days=31), start_date=dateti
         nb_entrances = max(0, int(np.round(flux_density*random.normalvariate(mu_entrances[weekday], sigma_entrances[weekday]))))
 
         for n in range(nb_entrances):
+            
+            days_to_retrieval = max(0, int(np.round(random.normalvariate(mu_stay_duration, sigma_stay_duration))))
 
-            hour_deposit = random_hour("entrance")
-            hour_retrieval = random_hour("exit")
-
-            date_deposit = date + hour_deposit + datetime.timedelta(seconds=int(3600*random.random()))
-
+            while True:
+                hour_deposit = random_hour("entrance") + datetime.timedelta(seconds=int(3600*random.random()))
+                hour_retrieval = random_hour("exit") + datetime.timedelta(seconds=int(3600*random.random()))
+                
+                date_deposit = date + hour_deposit
+                date_retrieval = date + datetime.timedelta(days=days_to_retrieval) + hour_retrieval
+               
+                if datetime.timedelta(hours=1) <= date_retrieval - date_deposit:
+                    break
+            
             seconds_from_order_deposit = max(0, int(86400*random.normalvariate(mu_deposit_order, sigma_deposit_order)))
             date_order_deposit = date_deposit - datetime.timedelta(seconds=seconds_from_order_deposit)
-
-            days_to_retrieval = max(0, int(np.round(random.normalvariate(mu_stay_duration, sigma_stay_duration))))
-            date_retrieval = date + datetime.timedelta(days=days_to_retrieval) + hour_retrieval + datetime.timedelta(seconds=int(3600*random.random()))
 
             seconds_from_order_retrieval = min(max(0, int(86400*random.normalvariate(mu_retrieval_order, sigma_retrieval_order))), (date_retrieval - date_order_deposit).total_seconds())
             date_order_retrieval = date_retrieval - datetime.timedelta(seconds=seconds_from_order_retrieval)
