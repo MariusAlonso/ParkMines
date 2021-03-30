@@ -31,7 +31,7 @@ class TestTest():
     
     def test_inputs_random(self):
         Vehicle.next_id = 1
-        stock = Stock(importFromFile())
+        stock = Stock(importFromFile()[:70])
         parking = Parking([BlockInterface([], 2, 1), Block([], 10, 10)])
         simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1)], parking, AlgorithmRandom, print_in_terminal=False)
         simulation.complete()

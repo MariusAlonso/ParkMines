@@ -368,5 +368,3 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None, c
 
     #save movements.csv and events.csv
     mvts.to_csv(mvts_path, index = False)
-    
-if 
