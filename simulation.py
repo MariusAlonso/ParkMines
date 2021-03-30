@@ -1,6 +1,6 @@
 
 import random
-from vehicle import Vehicle
+from vehicle import Vehicle, Stock
 import heapq
 import datetime
 from robot import Robot
@@ -490,17 +490,4 @@ class AlgorithmRandom(Algorithm):
                 print(self.locked_lanes)
                 raise ValueError("le placement n'a pas pu être effectué")
             
-                                               
 
-class Stock():
-
-    def __init__(self, vehicles):
-        """
-        Construit le dictionnaire self.vehicles associant à un id de véhicule l'objet correspondant
-        """
-        self.vehicles = {}
-        for v in vehicles:
-            self.vehicles[v.id] = v
-    
-    def __len__(self):
-        return len(self.vehicles)
