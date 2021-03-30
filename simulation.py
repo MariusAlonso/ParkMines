@@ -219,10 +219,12 @@ class Simulation():
                 # ajout du retard éventuel à la liste des retards à la sortie
                 self.retrieval_delays.append(self.t - event.robot.target.date)
             
-                # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
-                if event.robot.target.date < self.t:
-                    self.execute(event.robot.target)
-                    self.pending_retrievals.remove(event.robot.target)
+                for pdg_retrieval in self.pending_retrievals:
+                    # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
+                    if pdg_retrieval == event.robot.target:
+                        self.execute(event.robot.target)
+                        self.pending_retrievals.remove(event.robot.target)
+                        break
 
             event.robot.target = None
             self.assign_task(event.robot)
@@ -281,6 +283,8 @@ class Simulation():
 
                     robot.target = event
                     
+                    if self.print_in_terminal:
+                        print(f" -> event {event} assigned to {robot}")
                     return event
             else:
                 are_available_places_interface = True
@@ -288,8 +292,7 @@ class Simulation():
         event = self.find_unassigned_events(are_available_places_interface)
 
         if event:
-            if self.print_in_terminal:
-                print(f" -> event {event} assigned to {robot}")
+
             block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
             lane_vehicle = self.parking.blocks[block_id].lanes[lane_id]
 
@@ -308,6 +311,8 @@ class Simulation():
 
             robot.target = event
 
+            if self.print_in_terminal:
+                print(f" -> event {event} assigned to {robot}")
             return event
         
 
@@ -353,6 +358,7 @@ class Simulation():
 
     def wake_up_robots(self):
         for robot in self.robots:
+            print(robot.target)
             if robot.target == None:
                 self.assign_task(robot)
     
