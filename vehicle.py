@@ -1,4 +1,5 @@
 import datetime
+import time as comptime
 from input_gen import generateStock
 
 
@@ -43,4 +44,8 @@ class RandomStock(Stock):
         Vehicle.next_id = 1
         self.vehicles = generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0))
 
-stock = RandomStock()
+if __name__ == "__main__":
+    t000 = comptime.time()
+    for x in range(1000):
+        stock = RandomStock()
+    print("time to generate 1000 random stocks:", comptime.time()-t000)

@@ -1,8 +1,8 @@
 
-from numpy import round
 import datetime
 import random
 import pandas as pd
+import time as comptime
 
 # En jours
 mu_deposit_order = 2
@@ -123,10 +123,13 @@ def generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31),
             dict_vehicles[vehicle.id] = vehicle
         
         date += datetime.timedelta(days=1)
-
+    
     return dict_vehicles
 
-generate(10)
-
+if __name__ == "__main__":
+    t00 = comptime.time()
+    for _ in range(100):
+        generate(5)
+    print("time to generate 100 csv:", comptime.time()-t00)
 
 
