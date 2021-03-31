@@ -160,6 +160,8 @@ def generate(config_path="parking_10lanes/config_script.txt", show_plots=None, c
         plt.plot(x, stats.norm.pdf(x, mu_entrances[3] , sigma_entrances[3] ))
         plt.title("Entrances distribution on wednesday")
         plt.show()
+    
+    print(mvts_path)
 
 
     ###################################### ENTRANCES AND EXITS DISTRIBUTIONS

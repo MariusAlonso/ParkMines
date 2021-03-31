@@ -43,15 +43,15 @@ class Display():
     def __bool__(self):
         return True
 
-    def __init__(self, t0, stock, nb_robots, parking, AlgorithmType, place_width=15, place_length=20):
+    def __init__(self, t0, stock, robots, parking, AlgorithmType, place_width=15, place_length=20):
         self.stock = stock
-        self.nb_robots = nb_robots
+        self.robots = robots
         self.t = t0
         self.parking = parking
         self.place_length = place_length
         self.place_width = place_width
 
-        self.simulation = Simulation(t0, stock, nb_robots, parking, AlgorithmType, True, self)
+        self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, True, self)
 
 
         pg.init()
@@ -205,6 +205,8 @@ class Display():
         y = y_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
         rect = pg.Rect(x, y, 3*self.place_width//4, 3*self.place_length//4)
         pg.draw.rect(self.screen, (200, 0, 0), rect)
+        
+        # Affichage de l'identifiant du véhicule
         t_surf = self.font.render(str(vehicle.id), True, (0, 0, 0))
         self.screen.blit(t_surf, (x, y))
 
