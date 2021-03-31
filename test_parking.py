@@ -1,50 +1,51 @@
 from parking import *
 from simulation import *
 
-class TestTest() :
+class TestTest():
+
     def test_parking_init(self) :
-        #assert Parking(Block(...)) == ...
+        # assert Parking(Block(...)) == ...
         pass
 
     def test_push_top(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
         lane = Lane(0, 10)
-        lane.push_top(vehicle_1.id) 
+        lane.push(vehicle_1.id, "top") 
         assert lane.list_vehicles[5] == vehicle_1.id
 
     def test_push_top_2(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
-        vehicle_2 = Vehicle(12,22,32,42)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        vehicle_2 = Vehicle(12, 22, 32, 42)
         lane = Lane(0, 10)
-        lane.push_top(vehicle_1.id) 
-        lane.push_top(vehicle_2.id) 
+        lane.push(vehicle_1.id, "top") 
+        lane.push(vehicle_2.id, "top") 
         assert lane.list_vehicles[4] == vehicle_2.id
 
     def test_push_bottom(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
         lane = Lane(0, 10)
-        lane.push_bottom(vehicle_1.id) 
+        lane.push(vehicle_1.id, "bottom") 
         assert lane.list_vehicles[5] == vehicle_1.id
 
     def test_push_bottom_2(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
-        vehicle_2 = Vehicle(12,22,32,42)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        vehicle_2 = Vehicle(12, 22, 32, 42)
         lane = Lane(0, 10)
-        lane.push_bottom(vehicle_1.id) 
-        lane.push_bottom(vehicle_2.id) 
+        lane.push(vehicle_1.id, "bottom") 
+        lane.push(vehicle_2.id, "bottom") 
         assert lane.list_vehicles[6] == vehicle_2.id
 
     def test_pop_top(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
-        vehicle_2 = Vehicle(12,22,32,42)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        vehicle_2 = Vehicle(12, 22, 32, 42)
         lane = Lane(0, 10)
-        lane.push_top(vehicle_1.id) 
-        lane.push_top(vehicle_2.id)
+        lane.push(vehicle_1.id, "top") 
+        lane.push(vehicle_2.id, "top")
         lane.pop_top()
         assert lane.list_vehicles[4] == None
         assert lane.top_position == 5
@@ -54,11 +55,11 @@ class TestTest() :
 
     def test_pop_bottom(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
-        vehicle_2 = Vehicle(12,22,32,42)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        vehicle_2 = Vehicle(12, 22, 32, 42)
         lane = Lane(0, 10)
-        lane.push_bottom(vehicle_1.id) 
-        lane.push_bottom(vehicle_2.id)
+        lane.push(vehicle_1.id, "bottom") 
+        lane.push(vehicle_2.id, "bottom")
         lane.pop_bottom()
         assert lane.list_vehicles[6] == None
         assert lane.bottom_position == 5
@@ -68,23 +69,23 @@ class TestTest() :
 
     def test_is_top_available(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
-        vehicle_2 = Vehicle(12,22,32,42)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        vehicle_2 = Vehicle(12, 22, 32, 42)
         lane = Lane(0, 2)
-        lane.push_top(vehicle_1.id) 
+        lane.push(vehicle_1.id, "top") 
         assert lane.is_top_available() == True
         assert lane.top_position == 1
-        lane.push_top(vehicle_2)
+        lane.push(vehicle_2.id, "top")
         assert lane.is_top_available() == False
         assert lane.top_position == 0
 
     def test_is_bottom_available(self):
         Vehicle.next_id = 1
-        vehicle_1 = Vehicle(1,2,3,4)
-        vehicle_2 = Vehicle(12,22,32,42)
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        vehicle_2 = Vehicle(12, 22, 32, 42)
         lane = Lane(0, 2)
         assert lane.is_bottom_available() == True
-        lane.push_bottom(vehicle_1.id)
+        lane.push(vehicle_1.id, "bottom")
         assert lane.is_bottom_available() == False
         assert lane.bottom_position == 1
       
@@ -92,6 +93,21 @@ class TestTest() :
         lane = Lane(0, 2)
         print(lane)
 
+    def test_push(self):
+        Vehicle.next_id = 1
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        lane = Lane(0, 10)
+        lane.push(vehicle_1.id, "bottom") 
+        assert lane.list_vehicles[5] == vehicle_1.id
+        Vehicle.next_id = 1
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        lane = Lane(0, 10)
+        lane.push(vehicle_1.id, "top") 
+        assert lane.list_vehicles[5] == vehicle_1.id
+    
+    def testNumberOfPlaces(self):
+        parking = Parking([Block([Lane(1, 10), Lane(2, 10)]), Block([Lane(1, 7), Lane(2, 7)])])
+        assert parking.nb_of_places == 34
 
 
 
