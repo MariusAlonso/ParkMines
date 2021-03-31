@@ -39,8 +39,6 @@ def importFromFile(congestion_coeff=1.):
 
                 deposit = movement[0]
                 retrieval = movement[1]
-                # booking_id non utilisé dans la suite
-                booking_id = movement[2].strip()
 
                 if len(movement) > 2:
                     order_deposit = movement[3]

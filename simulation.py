@@ -1,9 +1,9 @@
 
 import random
-from vehicle import Vehicle
+from vehicle import Vehicle, Stock
 import heapq
 import datetime
-from robot import *
+from robot import Robot
 import time
 
 class Simulation():
@@ -100,7 +100,7 @@ class Simulation():
         elif event.event_type == "retrieval":
             
             if vehicle.id in self.parking.occupation:
-                i_block, i_lane, position = self.parking.occupation[vehicle.id]
+                i_block, i_lane, _ = self.parking.occupation[vehicle.id]
                 if i_block == 0:
                     self.parking.blocks[0].lanes[i_lane].pop("top")
 
@@ -490,17 +490,4 @@ class AlgorithmRandom(Algorithm):
                 print(self.locked_lanes)
                 raise ValueError("le placement n'a pas pu être effectué")
             
-                                               
 
-class Stock():
-
-    def __init__(self, vehicles):
-        """
-        Construit le dictionnaire self.vehicles associant à un id de véhicule l'objet correspondant
-        """
-        self.vehicles = {}
-        for v in vehicles:
-            self.vehicles[v.id] = v
-    
-    def __len__(self):
-        return len(self.vehicles)
