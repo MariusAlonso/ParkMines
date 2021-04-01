@@ -52,6 +52,8 @@ class Simulation():
             self.execute(event)
 
     def execute(self, event):
+        if self.display:
+            self.display.show_robot()
         if self.print_in_terminal:
             print(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nEXECUTION at time {self.t}")
             print("event :", event)
