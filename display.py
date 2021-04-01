@@ -225,18 +225,19 @@ class Display():
             rect3 = pg.Rect(700, 40, 200 ,800)
             pg.draw.rect(self.screen, (255,255,255), rect3)
             if x.target:
-                text = self.font_fixed.render(f"Robot {x.id_robot} : {x.target.vehicle.id}", True, (0, 0, 0))
+                text = self.font_fixed.render(f"Robot {x.id_robot} : {x.vehicle.id}", True, (0, 0, 0))
                 self.screen.blit(text, (700, 40)) #placement du texte
 
             #tracer de la jauge d'avancement de l'event
             rect = pg.Rect(700, (i+1)*15 + 80, 100, 30)
             pg.draw.rect(self.screen, (0, 0, 0), rect)
             
-            if x.start_time :
-                print (x.goal_time, x.start_time, self.simulation.t)
-                if x.goal_time > x.start_time: #self.t ne s'actualise pas
-                    pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
-                    print(pourc)
-                    rect2 = pg.Rect(700, (i+1)*15 + 80, pourc*100, 30)
-                    pg.draw.rect(self.screen, (255, 0, 0), rect2)
-                
+            if x.vehicule :
+                if x.start_time :
+                    print (x.goal_time, x.start_time, self.simulation.t)
+                    if x.goal_time > x.start_time:
+                        pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
+                        print(pourc)
+                        rect2 = pg.Rect(700, (i+1)*15 + 80, pourc*100, 30)
+                        pg.draw.rect(self.screen, (255, 0, 0), rect2)
+                    
