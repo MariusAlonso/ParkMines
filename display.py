@@ -231,8 +231,8 @@ class Display():
             pg.draw.rect(self.screen, (0, 0, 0), rect)
             
             if x.start_time :
-                print (x.goal_time, x.start_time, self.t)
-                if self.t > x.start_time:
+                print (x.goal_time, x.start_time, self.simulation.t)
+                if x.goal_time > x.start_time: #self.t ne s'actualise pas
                     pourc = (self.t - x.start_time)/(x.goal_time - x.start_time)
                     print(pourc)
                     rect2 = pg.Rect(700, (i+1)*15 + 80, pourc*100, 30)
