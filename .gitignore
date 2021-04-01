@@ -11,7 +11,7 @@ __pycache__/parking.cpython-38.pyc
 __pycache__/simulation.cpython-38.pyc
 __pycache__/test_simulation.cpython-38-pytest-6.2.2.pyc
 __pycache__/vehicle.cpython-38.pyc
-
+__pycache__/
 __pycache__/parking.cpython-38.pyc
 __pycache__/simulation.cpython-38.pyc
 __pycache__/test_simulation.cpython-38-pytest-6.2.2.pyc
@@ -33,4 +33,17 @@ __pycache__/test_vehicle.cpython-38-pytest-6.2.2.pyc
 __pycache__/vehicle.cpython-38.pyc
 __pycache__/simulation.cpython-38.pyc
 __pycache__/test_simulation.cpython-38-pytest-6.2.2.pyc
+<<<<<<< HEAD
+=======
+__pycache__/display.cpython-38.pyc
+__pycache__/input_gen.cpython-38.pyc
+__pycache__/inputs.cpython-38.pyc
+__pycache__/performances.cpython-38.pyc
+__pycache__/simulation.cpython-38.pyc
+__pycache__/test_display.cpython-38-pytest-6.2.2.pyc
+__pycache__/test_inputs.cpython-38-pytest-6.2.2.pyc
+__pycache__/test_performances.cpython-38-pytest-6.2.2.pyc
+__pycache__/test_vehicle.cpython-38-pytest-6.2.2.pyc
+__pycache__/vehicle.cpython-38.pyc
+>>>>>>> 2b3f6a92f181e57930267e2cc1cffef11984dc7b
 inputs/movements.csv

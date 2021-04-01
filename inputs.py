@@ -3,7 +3,7 @@ from copy import deepcopy
 import argparse
 from vehicle import Vehicle
 import sys
-from input_generator.inputGenerator import generate
+from input_gen import generate
 
 #path = "inputs/movements.csv"
 
@@ -11,22 +11,18 @@ from input_generator.inputGenerator import generate
 
 def getPath():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", nargs='?', default="inputs/movements.csv", help="path of the file to load", type=str)
+    parser.add_argument("--path", nargs='?', default="inputs/mvmts.csv", help="path of the file to load", type=str)
     args = parser.parse_args()
     return args.path
 
 #### import des véhicules à partir d'un fichier texte ####
-
-def generateMovements(congestion_coeff):
-        
-    generate("input_generator/config_parkmine.txt", False, congestion_coeff)
 
 def importFromFile(congestion_coeff=1.):
 
     movements_list = []
     path = getPath()
 
-    generateMovements(congestion_coeff)
+    generate(congestion_coeff)
 
     with open(path, "r") as movements:
         first_line = True
@@ -43,23 +39,30 @@ def importFromFile(congestion_coeff=1.):
 
                 deposit = movement[0]
                 retrieval = movement[1]
-                # booking_id non utilisé dans la suite
-                booking_id = movement[2].strip()
+
+                if len(movement) > 2:
+                    order_deposit = movement[3]
+                    order_retrieval = movement[4]                   
 
                 # reformatage des dates
                 delimiters = [':', 'T', 'Z']
                 for delimiter in delimiters:
                     deposit = deposit.replace(delimiter, '-')
                     retrieval = retrieval.replace(delimiter, '-')
+                    if len(movement) > 2:
+                        order_deposit = order_deposit.replace(delimiter, '-')
+                        order_retrieval = order_retrieval.replace(delimiter, '-') 
                 
                 deposit = deposit.split('-')[:-1]
                 retrieval = retrieval.split('-')[:-1]
+                order_deposit = order_deposit.split('-')[:-1]
+                order_retrieval = order_retrieval.split('-')[:-1]
 
                 # conversion au format datetime
                 deposit = datetime.datetime(*(int(item) for item in deposit))
                 retrieval = datetime.datetime(*(int(item) for item in retrieval))
-                order_deposit = deepcopy(deposit)
-                order_retrieval = deepcopy(retrieval)
+                order_deposit = datetime.datetime(*(int(item) for item in order_deposit))
+                order_retrieval = datetime.datetime(*(int(item) for item in order_retrieval))
 
                 movements_list.append(Vehicle(deposit, retrieval, order_deposit, order_retrieval))
 

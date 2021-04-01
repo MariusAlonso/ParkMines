@@ -1,9 +1,9 @@
 
 import random
-from vehicle import Vehicle
+from vehicle import Vehicle, Stock
 import heapq
 import datetime
-from robot import *
+from robot import Robot
 import time
 
 class Simulation():
@@ -102,7 +102,7 @@ class Simulation():
         elif event.event_type == "retrieval":
             
             if vehicle.id in self.parking.occupation:
-                i_block, i_lane, position = self.parking.occupation[vehicle.id]
+                i_block, i_lane, _ = self.parking.occupation[vehicle.id]
                 if i_block == 0:
                     self.parking.blocks[0].lanes[i_lane].pop("top")
 
@@ -221,10 +221,12 @@ class Simulation():
                 # ajout du retard éventuel à la liste des retards à la sortie
                 self.retrieval_delays.append(self.t - event.robot.target.date)
             
-                # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
-                if event.robot.target.date < self.t:
-                    self.execute(event.robot.target)
-                    self.pending_retrievals.remove(event.robot.target)
+                for pdg_retrieval in self.pending_retrievals:
+                    # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
+                    if pdg_retrieval == event.robot.target:
+                        self.execute(event.robot.target)
+                        self.pending_retrievals.remove(event.robot.target)
+                        break
 
             event.robot.target = None
             self.assign_task(event.robot)
@@ -283,6 +285,8 @@ class Simulation():
 
                     robot.target = event
                     
+                    if self.print_in_terminal:
+                        print(f" -> event {event} assigned to {robot}")
                     return event
             else:
                 are_available_places_interface = True
@@ -290,8 +294,7 @@ class Simulation():
         event = self.find_unassigned_events(are_available_places_interface)
 
         if event:
-            if self.print_in_terminal:
-                print(f" -> event {event} assigned to {robot}")
+
             block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
             lane_vehicle = self.parking.blocks[block_id].lanes[lane_id]
 
@@ -310,6 +313,8 @@ class Simulation():
 
             robot.target = event
 
+            if self.print_in_terminal:
+                print(f" -> event {event} assigned to {robot}")
             return event
         
 
@@ -355,6 +360,7 @@ class Simulation():
 
     def wake_up_robots(self):
         for robot in self.robots:
+            print(robot.target)
             if robot.target == None:
                 self.assign_task(robot)
     
@@ -486,17 +492,4 @@ class AlgorithmRandom(Algorithm):
                 print(self.locked_lanes)
                 raise ValueError("le placement n'a pas pu être effectué")
             
-                                               
 
-class Stock():
-
-    def __init__(self, vehicles):
-        """
-        Construit le dictionnaire self.vehicles associant à un id de véhicule l'objet correspondant
-        """
-        self.vehicles = {}
-        for v in vehicles:
-            self.vehicles[v.id] = v
-    
-    def __len__(self):
-        return len(self.vehicles)

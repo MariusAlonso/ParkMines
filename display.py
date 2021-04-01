@@ -205,6 +205,8 @@ class Display():
         y = y_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
         rect = pg.Rect(x, y, 3*self.place_width//4, 3*self.place_length//4)
         pg.draw.rect(self.screen, (200, 0, 0), rect)
+        
+        # Affichage de l'identifiant du véhicule
         t_surf = self.font.render(str(vehicle.id), True, (0, 0, 0))
         self.screen.blit(t_surf, (x, y))
 
