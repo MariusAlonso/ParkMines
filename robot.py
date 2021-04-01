@@ -11,6 +11,7 @@ class Robot():
 
         # arguments utiles
         self.target = None
+        self.vehicle = None
     
     def __repr__(self):
         return self.id_robot.__repr__()
