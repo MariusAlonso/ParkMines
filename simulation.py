@@ -132,7 +132,7 @@ class Simulation():
                 event.robot.goal_time = None
                     
                 if self.print_in_terminal:
-                    print(f"Robot {event.robot} waits in interface zone")
+                    print(f"Robot {event.robot} waits")
                     print(self.parking)
                     print("")
 
@@ -311,6 +311,9 @@ class Simulation():
 
         if event:
 
+            if self.print_in_terminal:
+                print(f" -> event {event} assigned to {robot}")
+
             block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
             lane_vehicle = self.parking.blocks[block_id].lanes[lane_id]
 
@@ -329,8 +332,6 @@ class Simulation():
 
             robot.target = event
 
-            if self.print_in_terminal:
-                print(f" -> event {event} assigned to {robot}")
             return event
         
 
@@ -360,7 +361,25 @@ class Simulation():
                                 # Calcul du temps de trajet faux
                                 robot.goal_time  = self.t + self.parking.travel_time((block_id, lane_id, side), robot.goal_position)
                                 heapq.heappush(self.events, Event(robot.vehicle, robot.goal_time, "robot_end_task", robot, goal_position=robot.goal_position))
-                        
+                    
+                    else:
+                        for robot in self.robots:
+                            if not (robot.vehicle is None) and robot.vehicle.id == event.vehicle.id:
+                                i_lane = self.parking.blocks[0].empty_lane()
+                                if i_lane != "full":
+                                    self.locked_lanes[robot.goal_position] = False
+                                    self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
+                                    #On place le vehicule a l'interface
+                                    robot.goal_position = (0, i_lane, "bottom")
+                                    self.parking.blocks[0].nb_places_available -= 1
+                                    # Calcul du temps de trajet faux
+                                    robot.goal_time = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
+                                    robot.target = event
+                                    event.unassigned_tasks = 0
+                                                             
+                                    heapq.heappush(self.events, Event(robot.vehicle, robot.goal_time, "robot_end_task", robot, goal_position = (0, i_lane, "bottom")))
+
+
             if event.unassigned_tasks:
                 if event.unassigned_tasks != 1 or are_available_places_interface:                       
                     event.unassigned_tasks -= 1
@@ -375,7 +394,6 @@ class Simulation():
                     if event.vehicle.id in self.parking.occupation:
                         block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
                         vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
-
                         if vehicle_lane.bottom_access and vehicle_lane.bottom_position - position < position - vehicle_lane.top_position:
                             side = "bottom"
                             event.unassigned_tasks = vehicle_lane.bottom_position - position + 1
@@ -390,6 +408,23 @@ class Simulation():
                                 # Calcul du temps de trajet faux
                                 robot.goal_time  = self.t + self.parking.travel_time((block_id, lane_id, side), robot.goal_position)
                                 heapq.heappush(self.events, Event(robot.vehicle, robot.goal_time, "robot_end_task", robot))
+
+                    else:
+                        for robot in self.robots:
+                            if not (robot.vehicle is None) and robot.vehicle.id == event.vehicle.id:
+                                i_lane = self.parking.blocks[0].empty_lane()
+                                if i_lane != "full":
+                                    self.locked_lanes[robot.goal_position] = False
+                                    self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
+                                    #On place le vehicule a l'interface
+                                    robot.goal_position = (0, i_lane, "bottom")
+                                    self.parking.blocks[0].nb_places_available -= 1
+                                    # Calcul du temps de trajet faux
+                                    robot.goal_time = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
+                                    robot.target = event
+                                    event.unassigned_tasks = 0
+                                                             
+                                    heapq.heappush(self.events, Event(robot.vehicle, robot.goal_time, "robot_end_task", robot, goal_position = (0, i_lane, "bottom")))
 
             if event.event_type == "retrieval" and event.unassigned_tasks:
                 if event.unassigned_tasks != 1 or are_available_places_interface:                       
