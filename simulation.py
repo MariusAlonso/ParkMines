@@ -116,7 +116,6 @@ class Simulation():
 
                     self.locked_lanes[(block_id, lane_id, side)] = True
 
-                    print(event,"\n\n\n\nOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
                     # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
                     for robot in self.robots:                           
                         if not (robot.vehicle is None) and robot.goal_position == (block_id, lane_id, side):
@@ -135,6 +134,8 @@ class Simulation():
                     robot.target = None
                     robot.doing.canceled = True
                     robot.doing = None
+                    _, lane_id, _ = robot.goal_position
+                    self.parking.blocks[0].targeted[lane_id] = False
                     robot.goal_position = robot.start_position
                     self.assign_task(robot)
 
@@ -192,7 +193,7 @@ class Simulation():
 
         elif event.event_type == "robot_arrival":
 
-            if not event.canceled:
+            if event == event.robot.doing:
 
                 block_id, lane_id, side = event.robot.goal_position
 
@@ -279,7 +280,7 @@ class Simulation():
         elif event.event_type == "robot_end_task":
 
             # On vérifie que le robot n'ai pas été dérouté
-            if not event.canceled:
+            if event == event.robot.doing:
 
                 event.robot.start_position = event.robot.goal_position
                 event.robot.start_time = self.t
@@ -438,7 +439,7 @@ class Simulation():
 
     def wake_up_robots(self):
         for robot in self.robots:
-            if robot.target == None:
+            if robot.target is None:
                 self.assign_task(robot)
     
     def whistle(self):
