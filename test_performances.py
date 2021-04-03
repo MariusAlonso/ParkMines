@@ -216,61 +216,27 @@ class TestTest():
 
 
 
-    def testAverageDashboard(self,nb_vehicles=60, nb_repetition=500, delays=[i for i in range(300)]):
+    def testAverageDashboard(self, stock_args=(5, ), nb_repetition=100, delays=[i for i in range(300)], display=False):
         # création du parking
         Vehicle.next_id = 1
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
-        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (4, ), [Robot(1)], parking, AlgorithmRandom, delays=delays)
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1)], parking, AlgorithmRandom, delays=delays)
 
         # test
+        if display:
+            performance.printAverageDashboard(nb_repetition)
+        else:
+            performance.averageDashboard(nb_repetition)
+        assert 0 == 0
+    
+    def testVariableStockAndRobots(self, stock_args=(5, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
+        # création du parking
+        Vehicle.next_id = 1
+        parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1)], parking, AlgorithmRandom, delays=delays)
 
-        # means: {une grandeur moyenne: sa valeur}
-        means = performance.averageDashboard(nb_repetition=nb_repetition)
-        for key in means:
-
-            if key == "average_deposit_delay_rates":
-
-                average_deposit_delay_rates = means[key]
-
-                delays = np.zeros(len(average_deposit_delay_rates))
-                ratios = np.zeros(len(average_deposit_delay_rates))
-                i = 0
-
-                for delay, ratio in average_deposit_delay_rates.items():
-                    delays[i] = delay
-                    ratios[i] = ratio
-                    i += 1
-
-                plt.figure()
-                plt.plot(delays, ratios)
-                plt.xlabel("minorant du temps d'attente pour le dépôt")
-                plt.ylabel("part des clients concernés")
-                plt.title("average_deposit_delay_rates")
-                plt.show()
-
-            elif key == "average_retrieval_delay_rates":
-
-                average_retrieval_delay_rates = means[key]
-
-                delays = np.zeros(len(average_retrieval_delay_rates))
-                ratios = np.zeros(len(average_retrieval_delay_rates))
-                i = 0
-
-                for delay, ratio in average_retrieval_delay_rates.items():
-                    delays[i] = delay
-                    ratios[i] = ratio
-                    i += 1
-
-                plt.figure()
-                plt.plot(delays, ratios)
-                plt.xlabel("minorant du temps d'attente pour la sortie")
-                plt.ylabel("part des clients concernés")
-                plt.title("average_retrieval_delay_rates")
-                plt.show()
-
-            else:
-                print(key, means[key])
-        
+        # test
+        performance.variableStockAndRobots(nb_repetition)
         assert 0 == 0
 
 
@@ -278,5 +244,5 @@ class TestTest():
 
 test = TestTest()
 
-# test.testDepositDelaysRates(delays=[i for i in range(120)], nb_vehicles=100)
-test.testAverageDashboard()
+#test.testAverageDashboard(stock_args=(4.5, ), display=True)
+test.testVariableStockAndRobots(nb_repetition=100)

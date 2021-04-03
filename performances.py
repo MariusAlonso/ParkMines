@@ -4,6 +4,8 @@ from inputs import *
 from vehicle import RandomStock
 import datetime
 from copy import deepcopy
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 class Dashboard():
 
@@ -52,7 +54,7 @@ class Dashboard():
         else:
             return datetime.timedelta()
     
-    def depositDelaysRates(self, delays=[1, 5, 60]):
+    def depositDelaysRates(self, delays=[i for i in range(300)]):
         """
         renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
         """
@@ -97,7 +99,7 @@ class Performance():
         self.algorithm = AlgorithmType
         self.delays = delays
     
-    def averageDashboard(self, nb_repetition=10, congestion_coeff=1.):
+    def averageDashboard(self, nb_repetition=10):
         """
         renvoie les données du Dashboard de la simulation de référence,
         moyennées sur nb_repetition répétitions
@@ -116,14 +118,8 @@ class Performance():
             dashboard = Dashboard(simulation)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
                 average_intermediate_mpv += dashboard.averageIntermediateMovesPerVehicle()
-                #print("average_before_deposit_delay", average_before_deposit_delay)
-                #print("dashboard.averageBeforeDepositDelay()", dashboard.averageBeforeDepositDelay())
                 average_before_deposit_delay += dashboard.averageBeforeDepositDelay()
-                #print("average_after_deposit_delay", average_after_deposit_delay)
-                #print("dashboard.averageAfterDepositDelay()", dashboard.averageAfterDepositDelay())
                 average_after_deposit_delay += dashboard.averageAfterDepositDelay()
-                #print("average_retrieval_delay", average_retrieval_delay)
-                #print("dashboard.averageRetrievalDelay()", dashboard.averageRetrievalDelay())
                 average_retrieval_delay += dashboard.averageRetrievalDelay()
 
                 deposit_delay_rates = dashboard.depositDelaysRates(self.delays)
@@ -146,18 +142,196 @@ class Performance():
         average_dashboard["average_before_deposit_delay"] = average_before_deposit_delay / effective_nb_repetition
         average_dashboard["average_after_deposit_delay"] = average_after_deposit_delay / effective_nb_repetition
         average_dashboard["average_retrieval_delay"] = average_retrieval_delay / effective_nb_repetition
+        average_dashboard["success_rate"] = effective_nb_repetition / nb_repetition
         average_dashboard["average_deposit_delay_rates"] = average_deposit_delay_rates # attention, c'est un dictionnaire
         average_dashboard["average_retrieval_delay_rates"] = average_retrieval_delay_rates # attention, c'est un dictionnaire
-        print(f"{effective_nb_repetition}/{nb_repetition} simulations réussies")
 
         return average_dashboard
+    
+    def printAverageDashboard(self, nb_repetition=10):
+        """
+        affiche les résulats de averageDashboard
+        """
+        means = self.averageDashboard(nb_repetition=nb_repetition)
+        for key in means:
 
-    def variableStock(self, list_congestion_coeffs, nb_repetition=10):
+            if key == "average_deposit_delay_rates":
+
+                average_deposit_delay_rates = means[key]
+
+                delays = np.zeros(len(average_deposit_delay_rates))
+                ratios = np.zeros(len(average_deposit_delay_rates))
+                i = 0
+
+                for delay, ratio in average_deposit_delay_rates.items():
+                    delays[i] = delay
+                    ratios[i] = ratio
+                    i += 1
+
+                plt.figure()
+                plt.plot(delays, ratios)
+                plt.xlabel("minorant du temps d'attente pour le dépôt")
+                plt.ylabel("part des clients concernés")
+                plt.title("average_deposit_delay_rates")
+                plt.show()
+
+            elif key == "average_retrieval_delay_rates":
+
+                average_retrieval_delay_rates = means[key]
+
+                delays = np.zeros(len(average_retrieval_delay_rates))
+                ratios = np.zeros(len(average_retrieval_delay_rates))
+                i = 0
+
+                for delay, ratio in average_retrieval_delay_rates.items():
+                    delays[i] = delay
+                    ratios[i] = ratio
+                    i += 1
+
+                plt.figure()
+                plt.plot(delays, ratios)
+                plt.xlabel("minorant du temps d'attente pour la sortie")
+                plt.ylabel("part des clients concernés")
+                plt.title("average_retrieval_delay_rates")
+                plt.show()
+
+            else:
+                print(key, means[key])
+
+    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-5, 3)], nb_robots_max=1):
         """
         regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetition répétitions
         """
-        list_dashboards = []
-        for congestion_coeff in list_congestion_coeffs:
-            list_dashboards.append(self.averageDashboard(nb_repetition, congestion_coeff))
+        # curves = {(factor, nb_robots): dictionnaire des performances pour ce facteur et ce nombre de robots}
+        curves = {}
+
+        # remplissage du dictionnaire curves
+        for factor in factors:
+            stock_args = tuple(factor*np.array(self.stock_args))
+            for nb_robots in range(1, nb_robots_max + 1):
+                # génération de toutes les sorties
+                performance = Performance(self.t, stock_args, [Robot(i) for i in range(1, nb_robots + 1)], deepcopy(self.parking), deepcopy(self.algorithm))
+                curves[(factor, nb_robots)] = performance.averageDashboard(nb_repetition)
+
+        # tracé
+        ref_flow = self.stock_args[0]
+
+        ### before deposit ###
+
+        before_deposit = plt.subplot(1, 3, 1)
+        # abscisses : le flow journalier moyen
+        flow = []
+        # ordonnées : liste (indexée par le nombre de robots) des listes de retards
+        delay = [[] for i in range(nb_robots)]
+        for factor, nb_robots in curves:
+            flow.append(factor*ref_flow)
+            delay[nb_robots-1].append(curves[factor, nb_robots]['average_before_deposit_delay'])
+        # construction des tableaux à tracer
+        x = np.array(flow)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
+            before_deposit.plot(x, y)
         
-        return list_dashboards
+        # titre et légende
+        #before_deposit.legend()
+        before_deposit.set_xlabel("flux journalier moyen")
+        before_deposit.set_ylabel("temps d'attente (min)")
+        before_deposit.set_title("attente client avant dépôt")
+
+        ### after deposit ###
+        
+        after_deposit = plt.subplot(1, 3, 2)
+        # abscisses : le flow journalier moyen
+        flow = []
+        # ordonnées : liste (indexée par le nombre de robots) des listes de retards
+        delay = [[] for i in range(nb_robots)]
+        for factor, nb_robots in curves:
+            flow.append(factor*ref_flow)
+            delay[nb_robots-1].append(curves[factor, nb_robots]['average_after_deposit_delay'])
+        # construction des tableaux à tracer
+        x = np.array(flow)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
+            after_deposit.plot(x, y)
+        
+        # titre et légende
+        #after_deposit.legend()
+        after_deposit.set_xlabel("flux journalier moyen")
+        after_deposit.set_ylabel("temps d'attente (min)")
+        after_deposit.set_title("attente véhicule dans interface après dépôt")
+
+        ### retrieval ###
+        
+        retrieval = plt.subplot(1, 3, 3)
+        # abscisses : le flow journalier moyen
+        flow = []
+        # ordonnées : liste (indexée par le nombre de robots) des listes de retards
+        delay = [[] for i in range(nb_robots)]
+        for factor, nb_robots in curves:
+            flow.append(factor*ref_flow)
+            delay[nb_robots-1].append(curves[factor, nb_robots]['average_retrieval_delay'])
+        # construction des tableaux à tracer
+        x = np.array(flow)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
+            retrieval.plot(x, y)
+        
+        # titre et légende
+        #retrieval.legend()
+        retrieval.set_xlabel("flux journalier moyen")
+        retrieval.set_ylabel("temps d'attente (min)")
+        retrieval.set_title("attente client avant récupération")
+
+        plt.show()
+
+
+        
+
+        #############
+        """
+        means = self.averageDashboard(nb_repetition)
+        for key in means:
+
+            if key == "average_deposit_delay_rates":
+
+                average_deposit_delay_rates = means[key]
+
+                delays = np.zeros(len(average_deposit_delay_rates))
+                ratios = np.zeros(len(average_deposit_delay_rates))
+                i = 0
+
+                for delay, ratio in average_deposit_delay_rates.items():
+                    delays[i] = delay
+                    ratios[i] = ratio
+                    i += 1
+
+                plt.figure()
+                plt.plot(delays, ratios)
+                plt.xlabel("minorant du temps d'attente pour le dépôt")
+                plt.ylabel("part des clients concernés")
+                plt.title("average_deposit_delay_rates")
+                plt.show()
+
+            elif key == "average_retrieval_delay_rates":
+
+                average_retrieval_delay_rates = means[key]
+
+                delays = np.zeros(len(average_retrieval_delay_rates))
+                ratios = np.zeros(len(average_retrieval_delay_rates))
+                i = 0
+
+                for delay, ratio in average_retrieval_delay_rates.items():
+                    delays[i] = delay
+                    ratios[i] = ratio
+                    i += 1
+
+                plt.figure()
+                plt.plot(delays, ratios)
+                plt.xlabel("minorant du temps d'attente pour la sortie")
+                plt.ylabel("part des clients concernés")
+                plt.title("average_retrieval_delay_rates")
+                plt.show()
+
+            else:
+                print(key, means[key])
+            """
