@@ -174,7 +174,7 @@ class TestTest():
         Vehicle.next_id = 1
         stock = Stock(importFromFile()[:70])
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
-        simulation = Simulation(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock, [Robot(1)], parking, AlgorithmRandom)
+        simulation = Simulation(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (5,), [Robot(1)], parking, AlgorithmRandom)
         
         # test
         dashboard = Dashboard(simulation)
@@ -216,11 +216,11 @@ class TestTest():
 
 
 
-    def testAverageDashboard(self,nb_vehicles=60, nb_repetition=10, delays=[i for i in range(300)]):
+    def testAverageDashboard(self,nb_vehicles=60, nb_repetition=500, delays=[i for i in range(300)]):
         # création du parking
         Vehicle.next_id = 1
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
-        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (), [Robot(1)], parking, AlgorithmRandom, delays=delays)
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (4, ), [Robot(1)], parking, AlgorithmRandom, delays=delays)
 
         # test
 

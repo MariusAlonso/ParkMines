@@ -1,6 +1,6 @@
 
 import random
-from vehicle import Vehicle, Stock
+from vehicle import Vehicle, Stock, RandomStock
 import heapq
 import datetime
 from robot import Robot
@@ -41,7 +41,7 @@ class Simulation():
                 self.locked_lanes[(block_id, lane_id, "top")] = not lane.top_access
                 self.locked_lanes[(block_id, lane_id, "bottom")] = not lane.bottom_access
         
-        self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes)
+        self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes) # /!\ provisoire
 
         # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
@@ -58,7 +58,7 @@ class Simulation():
             if not (event.robot is None) and not (event.robot.target is None) and event.event_type != event.robot.target.event_type:
                 print("target of the robot:", event.robot.target)
             print("-------------")
-            #print([k for k in self.locked_lanes if self.locked_lanes[k]])
+            # print([k for k in self.locked_lanes if self.locked_lanes[k]])
 
 
         vehicle = event.vehicle
@@ -255,13 +255,14 @@ class Simulation():
         Finit la simulation
         """
         while True:
-            try:
-                if not self.next_event():
-                    break
-            
-            # si un placement n'a pu être mené à bien
-            except ValueError:
+            if not self.next_event():
                 break
+        
+        # simulation terminée : on nettoie les dictionnaires d'état du parking et des robots
+        self.parking.occupation = {}
+        for robot in self.robots:
+            robot = Robot(robot.id_robot)
+
         if self.print_in_terminal:
             print(f"Temps d'exécution : {self.time_execution:.2f}s")
     
@@ -358,7 +359,6 @@ class Simulation():
 
     def wake_up_robots(self):
         for robot in self.robots:
-            print(robot.target)
             if robot.target == None:
                 self.assign_task(robot)
     
@@ -401,13 +401,14 @@ class Event():
 
 class Algorithm():
 
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes):
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False):
         self.robots = robots
         self.stock = stock
         self.t0 = t0
         self.parking = parking
         self.events = events
         self.locked_lanes = locked_lanes
+        self.print_in_terminal = print_in_terminal
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
@@ -485,19 +486,8 @@ class AlgorithmRandom(Algorithm):
                         return (rand_i_block, rand_i_lane, "bottom")
             nb_iter += 1
             if nb_iter == max_iter:
-                print("ERREUR DE PLACEMENT")
-                print(self.parking)
-                print(self.locked_lanes)
+                if self.print_in_terminal:
+                    print("ERREUR DE PLACEMENT")
+                    print(self.parking)
+                    print(self.locked_lanes)
                 raise ValueError("le placement n'a pas pu être effectué")
-            
-
-    def __init__(self, vehicles):
-        """
-        Construit le dictionnaire self.vehicles associant à un id de véhicule l'objet correspondant
-        """
-        self.vehicles = {}
-        for v in vehicles:
-            self.vehicles[v.id] = v
-    
-    def __len__(self):
-        return len(self.vehicles)

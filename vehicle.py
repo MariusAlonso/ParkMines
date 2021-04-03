@@ -42,7 +42,7 @@ class RandomStock(Stock):
 
     def __init__(self, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0)):
         Vehicle.next_id = 1
-        self.vehicles = generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0))
+        self.vehicles = generateStock(Vehicle, vehicles_per_day, time, start_date)
 
 if __name__ == "__main__":
     t000 = comptime.time()
