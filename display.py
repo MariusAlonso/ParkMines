@@ -145,7 +145,7 @@ class Display():
         complete = False
 
         while running:
-            clock.tick(200)
+            clock.tick(1000)
 
             # on itère sur tous les évênements qui ont eu lieu depuis le précédent appel
             # ici donc tous les évènements survenus durant la seconde précédente
