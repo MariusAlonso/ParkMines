@@ -221,6 +221,8 @@ class Display():
         pg.draw.rect(self.screen, (100, 100, 100), rect)
 
     def show_robot(self):
+        pass
+        """
         for i, x in enumerate(self.robots):
             rect3 = pg.Rect(700, 40, 200 ,800)
             pg.draw.rect(self.screen, (255,255,255), rect3)
@@ -239,4 +241,5 @@ class Display():
                     print(pourc)
                     rect2 = pg.Rect(700, (i+1)*15 + 80, pourc*100, 30)
                     pg.draw.rect(self.screen, (255, 0, 0), rect2)
+        """
                 
