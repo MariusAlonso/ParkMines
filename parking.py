@@ -137,10 +137,10 @@ class Lane() :
             return vehicle_id
 
     def is_top_available(self):
-        return self.top_access and (self.top_position == None or self.top_position != 0)
+        return self.top_access and (self.top_position == None or self.top_position > 0)
 
     def is_bottom_available(self):
-        return self.bottom_access and (self.top_position == None or self.bottom_position != self.length - 1)
+        return self.bottom_access and (self.top_position == None or self.bottom_position < self.length - 1)
 
 
     def push(self, id_vehicle, coté):
