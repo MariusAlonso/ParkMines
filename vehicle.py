@@ -47,5 +47,5 @@ class RandomStock(Stock):
 if __name__ == "__main__":
     t000 = comptime.time()
     for x in range(1000):
-        stock = RandomStock()
+        stock = RandomStock(10)
     print("time to generate 1000 random stocks:", comptime.time()-t000)
