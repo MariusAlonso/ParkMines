@@ -133,7 +133,8 @@ class Display():
 
                 print(x0,y0)
 
-
+        self.x0 = x0
+        self.y0 = y0
         self.font = pg.font.SysFont(None, 2*self.place_length//4)
         self.font_fixed = pg.font.SysFont(None, 30)
         """
