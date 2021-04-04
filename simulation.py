@@ -87,7 +87,9 @@ class Simulation():
                 if not (robot.vehicle is None) and robot.vehicle.id == event.vehicle.id:
                     i_lane = self.parking.blocks[0].empty_lane()
                     if i_lane != "full":
-                        self.locked_lanes[robot.goal_position] = False
+                        block_id, lane_id, side = robot.goal_position
+                        self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
+                        self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
                         self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
                         #On place le vehicule a l'interface
                         robot.goal_position = (0, i_lane, "bottom")
@@ -121,9 +123,10 @@ class Simulation():
                     # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
                     for robot in self.robots:                           
                         if not (robot.vehicle is None) and robot.goal_position == (block_id, lane_id, side):
+                            self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
                             robot.goal_position = self.algorithm.place(robot.vehicle)
                             # Calcul du temps de trajet faux
-                            robot.goal_time  = self.t + self.parking.travel_time((block_id, lane_id, side), robot.goal_position)
+                            robot.goal_time  = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
                             event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
                             heapq.heappush(self.events, event_end_task)
 
@@ -152,6 +155,7 @@ class Simulation():
             if lane_id == "full":
                 heapq.heappush(self.pending_deposits, event)
             else:
+                self.parking.blocks[0].lanes[lane_id].push_reserve("top")
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top")
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
 
@@ -213,10 +217,25 @@ class Simulation():
                         print("")
 
                 else :
-                    moved_vehicle = self.stock.vehicles[self.parking.blocks[block_id].lanes[lane_id].pop(side)]
+                    if side == "top":
+                        position = self.parking.blocks[block_id].lanes[lane_id].top_position
+                    else:
+                        position = self.parking.blocks[block_id].lanes[lane_id].bottom_position
+                    moved_vehicle = self.stock.vehicles[self.parking.blocks[block_id].lanes[lane_id].list_vehicles[position]]
+
+                    # Dans le cas où le robot ne peut pas placer dans l'interface le véhicule attendu pour un retrieval
+                    if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
+                        i_lane = self.parking.blocks[0].empty_lane()
+                        if i_lane == "full":
+                            event.robot.target.unassigned_tasks += 1
+                            event.robot.target = None
+                            event.robot.doing = None
+                            return None                                             
 
                     if self.display:
                         self.display.erase_vehicle(moved_vehicle)
+                    
+                    self.parking.blocks[block_id].lanes[lane_id].pop(side)
 
                     del self.parking.occupation[moved_vehicle.id]
                     event.robot.vehicle = moved_vehicle
@@ -236,6 +255,7 @@ class Simulation():
                         self.parking.blocks[0].nb_places_available += 1
                         if self.pending_deposits:
                             event_deposit = heapq.heappop(self.pending_deposits)
+                            self.parking.blocks[0].lanes[lane_id].push_reserve("top")
                             self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top")
                             self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
 
@@ -249,25 +269,20 @@ class Simulation():
                     event.robot.start_position = event.robot.goal_position
                     event.robot.start_time = self.t
 
-                    if event.robot.vehicle.order_retrieval <= self.t and event.robot.vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
+                    if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
                         i_lane = self.parking.blocks[0].empty_lane()
-                        if i_lane != "full":
-                            self.locked_lanes[event.robot.goal_position] = False
-                            self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
-                            #On place le vehicule a l'interface
-                            event.robot.goal_position = (0, i_lane, "bottom")
-                            self.parking.blocks[0].nb_places_available -= 1
-                            
-                            event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
-                            event_end_task = Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot)
-                            heapq.heappush(self.events, Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot))
-                            event.robot.doing = event_end_task
+                        self.locked_lanes[event.robot.goal_position] = False
+                        self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
+                        self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
+                        #On place le vehicule a l'interface
+                        event.robot.goal_position = (0, i_lane, "bottom")
+                        self.parking.blocks[0].nb_places_available -= 1
+                        
+                        event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
+                        event_end_task = Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot)
+                        heapq.heappush(self.events, Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot))
+                        event.robot.doing = event_end_task
 
-                        else:
-                            event.robot.target = None
-                            event.robot.doing = None
-                            self.assign_task(event.robot)
-                            self.whistle()
                     else:
                         # Effet de bord de l'appel : bloque le side de la lane si avec l'ajout du moved_vehicle il est rempli
                         event.robot.goal_position = self.algorithm.place(moved_vehicle, event.robot.goal_position)
@@ -290,7 +305,7 @@ class Simulation():
                 
                 block_id, lane_id, side = event.robot.start_position
                 lane = self.parking.blocks[block_id].lanes[lane_id]
-                
+
                 lane.push(vehicle.id, side)
                 event.robot.vehicle = None
                 if side == "top":
@@ -562,15 +577,13 @@ class AlgorithmRandom(Algorithm):
                 if not self.locked_lanes[(rand_i_block, rand_i_lane, "top")]:
                     #if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "top" == forbidden_access[1]):
                     if lane_chosen.is_top_available():
-                        if not (lane_chosen.top_position is None) and lane_chosen.top_position == 1:
-                            self.locked_lanes[(rand_i_block, rand_i_lane, "top")] = True
+                        lane_chosen.push_reserve("top")
                         return (rand_i_block, rand_i_lane, "top")
             else:
                 if not self.locked_lanes[(rand_i_block, rand_i_lane, "bottom")]:
                     #if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "bottom" == forbidden_access[1]):
                     if lane_chosen.is_bottom_available():
-                        if not (lane_chosen.bottom_position is None) and lane_chosen.length - lane_chosen.bottom_position == 2:
-                            self.locked_lanes[(rand_i_block, rand_i_lane, "bottom")] = True
+                        lane_chosen.push_reserve("bottom")
                         return (rand_i_block, rand_i_lane, "bottom")
             nb_iter += 1
             if nb_iter == max_iter:

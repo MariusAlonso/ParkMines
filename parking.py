@@ -7,8 +7,42 @@ class Parking():
         self.blocks = blocks
         self.occupation = dict()
         self.disposal = disposal
-        #self.access = access
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
+
+        self.place_ratio = 2
+
+        max_i_disposal = len(self.disposal)
+        max_j_disposal = len(self.disposal[0])
+        self.x_in_pw = [0]*max_j_disposal
+        self.y_in_pw = [0]*max_i_disposal
+
+        for i_disposal in range(1, max_i_disposal):   
+
+            for j_disposal in range(max_j_disposal):
+
+                block_id = self.disposal[i_disposal][j_disposal]
+
+                if self.disposal[i_disposal-1][j_disposal] != block_id:
+                    k = i_disposal - 1
+                    while k >=0 and self.disposal[k][j_disposal] == self.disposal[i_disposal-1][j_disposal]:
+                        k -= 1
+                    self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_height(self.disposal[k+1][j_disposal]))
+
+                print("y_in_pw",self.y_in_pw)
+
+        for j_disposal in range(1, max_j_disposal):   
+
+            for i_disposal in range(max_i_disposal):
+
+                block_id = self.disposal[i_disposal][j_disposal]
+
+                if self.disposal[i_disposal][j_disposal-1] != block_id:
+                    k = j_disposal - 1
+                    while k >=0 and self.disposal[i_disposal][k] == self.disposal[i_disposal][j_disposal-1]:
+                        k -= 1
+                    self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(self.disposal[i_disposal][k+1]))
+                
+                print("x_in_pw",self.x_in_pw)
     
     def __repr__(self):
         s = ""
@@ -18,8 +52,23 @@ class Parking():
         return " - Interface :\n"+self.blocks[0].__repr__()+"\n - Parking :"+s
     
     def travel_time(self, departure, arrival):
+        if departure == arrival:
+            return datetime.timedelta(0)
         return datetime.timedelta(0,0,0,0,15)
+    
+    def block_width(self, block_id):
+        if block_id == "s":
+            return 1
+        if block_id == "e":
+            return 0
+        return len(self.blocks[block_id].lanes)+1
 
+    def block_height(self, block_id):
+        if block_id == "s":
+            return 1
+        if block_id == "e":
+            return 0
+        return self.blocks[block_id].lanes[0].length*self.place_ratio + 1
 
 class Block():
     def __init__(self, lanes, nb_lanes=None, lane_length=None):
@@ -50,6 +99,7 @@ class Block():
         # les lanes sont les colonnes (la première à gauche)
         # conformément aux termes top et bottom pour les extrémités
         return matrix.__repr__()
+
 
 class BlockInterface(Block):
 
@@ -82,6 +132,8 @@ class Lane() :
         self.list_vehicles = np.array([None]*self.length)  
         self.top_position = None                # indice de la premiere voiture occupée dans la lane (None si pas de voiture)
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
+        self.future_top_position = None  
+        self.future_bottom_position = None      
         self.top_access = top_access
         self.bottom_access = bottom_access
 
@@ -90,60 +142,11 @@ class Lane() :
         liste = [str(item).replace('None', '-') for item in liste]
         return liste.__repr__()
 
-    def push_top(self, id_vehicle):
-        if self.top_position == None:
-            if not self.bottom_access:
-                self.list_vehicles[-1] = id_vehicle
-                self.top_position = self.length - 1
-                self.bottom_position = self.length -1
-            else:
-                self.list_vehicles[self.length//2] = id_vehicle
-                self.top_position = self.length//2
-                self.bottom_position = self.length//2
-        else:
-            self.list_vehicles[self.top_position-1] = id_vehicle
-            self.top_position -= 1
-        
-
-    def pop_top(self):
-        if self.top_position != None:
-            vehicle_id = self.list_vehicles[self.top_position]
-            self.list_vehicles[self.top_position] = None
-            self.top_position += 1
-            if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
-                self.top_position = None
-                self.bottom_position = None
-            return vehicle_id
-    
-    def push_bottom(self, id_vehicle):
-        if self.bottom_position == None:
-            if not self.top_access:
-                self.list_vehicles[0] = id_vehicle
-                self.top_position = 0
-                self.bottom_position = 0
-            else:
-                self.list_vehicles[self.length//2] = id_vehicle
-                self.top_position = self.length//2
-                self.bottom_position = self.length//2
-        else:
-            self.list_vehicles[self.bottom_position + 1] = id_vehicle
-            self.bottom_position += 1
-
-    def pop_bottom(self):
-        if self.bottom_position != None:
-            vehicle_id = self.list_vehicles[self.bottom_position]
-            self.list_vehicles[self.bottom_position] = None
-            self.bottom_position -= 1
-            if self.bottom_position < self.top_position: #si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
-                self.bottom_position = None
-                self.top_position = None
-            return vehicle_id
-
     def is_top_available(self):
-        return self.top_access and (self.top_position == None or self.top_position > 0)
+        return self.top_access and (self.future_top_position == None or self.future_top_position > 0)
 
     def is_bottom_available(self):
-        return self.bottom_access and (self.top_position == None or self.bottom_position < self.length - 1)
+        return self.bottom_access and (self.future_top_position == None or self.future_bottom_position < self.length - 1)
 
 
     def push(self, id_vehicle, coté):
@@ -175,6 +178,45 @@ class Lane() :
                 self.list_vehicles[self.bottom_position + 1] = id_vehicle
                 self.bottom_position += 1
 
+    def push_reserve(self, coté):
+        if coté == "top":
+            if self.future_top_position == None:
+                if not self.bottom_access:
+                    self.future_top_position = self.length - 1
+                    self.future_bottom_position = self.length -1
+                else:
+                    self.future_top_position = self.length//2
+                    self.future_bottom_position = self.length//2
+            else:
+                self.future_top_position -= 1
+
+        elif coté == "bottom":
+            if self.future_bottom_position == None:
+                if not self.top_access:
+                    self.future_top_position = 0
+                    self.future_bottom_position = 0
+                else:
+                    self.future_top_position = self.length//2
+                    self.future_bottom_position = self.length//2
+            else:
+                self.future_bottom_position += 1
+
+    def push_cancel_reserve(self, coté):
+        if coté == "top":
+            if self.future_top_position != None:
+                self.future_top_position += 1
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                    self.future_top_position = None
+                    self.future_bottom_position = None
+
+        elif coté == "bottom":
+            if self.future_bottom_position != None:
+                self.future_bottom_position -= 1
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                    self.future_top_position = None
+                    self.future_bottom_position = None
+
+
 
     def pop(self, coté):
         if coté == "top":
@@ -182,9 +224,13 @@ class Lane() :
                 vehicle_id = self.list_vehicles[self.top_position]
                 self.list_vehicles[self.top_position] = None
                 self.top_position += 1
+                self.future_top_position += 1
                 if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                    self.future_top_position = None
+                    self.future_bottom_position = None
                 return vehicle_id
 
         elif coté == "bottom":
@@ -192,9 +238,13 @@ class Lane() :
                 vehicle_id = self.list_vehicles[self.bottom_position]
                 self.list_vehicles[self.bottom_position] = None
                 self.bottom_position -= 1
+                self.future_bottom_position -= 1
                 if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                    self.future_top_position = None
+                    self.future_bottom_position = None
                 return vehicle_id
 
 
