@@ -245,4 +245,4 @@ class TestTest():
 test = TestTest()
 
 #test.testAverageDashboard(stock_args=(4.5, ), display=True)
-test.testVariableStockAndRobots(nb_repetition=100)
+test.testVariableStockAndRobots(nb_repetition=1000)
