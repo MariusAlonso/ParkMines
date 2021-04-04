@@ -7,8 +7,42 @@ class Parking():
         self.blocks = blocks
         self.occupation = dict()
         self.disposal = disposal
-        #self.access = access
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
+
+        self.place_ratio = 2
+
+        max_i_disposal = len(self.disposal)
+        max_j_disposal = len(self.disposal[0])
+        self.x_in_pw = [0]*max_j_disposal
+        self.y_in_pw = [0]*max_i_disposal
+
+        for i_disposal in range(1, max_i_disposal):   
+
+            for j_disposal in range(max_j_disposal):
+
+                block_id = self.disposal[i_disposal][j_disposal]
+
+                if self.disposal[i_disposal-1][j_disposal] != block_id:
+                    k = i_disposal - 1
+                    while k >=0 and self.disposal[k][j_disposal] == self.disposal[i_disposal-1][j_disposal]:
+                        k -= 1
+                    self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_height(self.disposal[k+1][j_disposal]))
+
+                print("y_in_pw",self.y_in_pw)
+
+        for j_disposal in range(1, max_j_disposal):   
+
+            for i_disposal in range(max_i_disposal):
+
+                block_id = self.disposal[i_disposal][j_disposal]
+
+                if self.disposal[i_disposal][j_disposal-1] != block_id:
+                    k = j_disposal - 1
+                    while k >=0 and self.disposal[i_disposal][k] == self.disposal[i_disposal][j_disposal-1]:
+                        k -= 1
+                    self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(self.disposal[i_disposal][k+1]))
+                
+                print("x_in_pw",self.x_in_pw)
     
     def __repr__(self):
         s = ""
@@ -21,7 +55,20 @@ class Parking():
         if departure == arrival:
             return datetime.timedelta(0)
         return datetime.timedelta(0,0,0,0,15)
+    
+    def block_width(self, block_id):
+        if block_id == "s":
+            return 1
+        if block_id == "e":
+            return 0
+        return len(self.blocks[block_id].lanes)+1
 
+    def block_height(self, block_id):
+        if block_id == "s":
+            return 1
+        if block_id == "e":
+            return 0
+        return self.blocks[block_id].lanes[0].length*self.place_ratio + 1
 
 class Block():
     def __init__(self, lanes, nb_lanes=None, lane_length=None):
@@ -52,6 +99,7 @@ class Block():
         # les lanes sont les colonnes (la première à gauche)
         # conformément aux termes top et bottom pour les extrémités
         return matrix.__repr__()
+
 
 class BlockInterface(Block):
 
