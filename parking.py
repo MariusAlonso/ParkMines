@@ -11,8 +11,11 @@ class Parking():
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
     
     def __repr__(self):
+        s = ""
+        for block in self.blocks[1:]:
+            s += "\n" + block.__repr__()
         
-        return " - Interface :\n"+self.blocks[0].__repr__()+"\n - Parking :\n"+self.blocks[1].__repr__()
+        return " - Interface :\n"+self.blocks[0].__repr__()+"\n - Parking :"+s
     
     def travel_time(self, departure, arrival):
         return datetime.timedelta(0,0,0,0,15)
@@ -53,6 +56,7 @@ class BlockInterface(Block):
     def __init__(self, lanes, nb_lanes=None, lane_length=None):
         super().__init__(lanes, nb_lanes, lane_length)
         self.nb_places_available = self.height
+        self.targeted = [False]*self.height
 
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
@@ -76,7 +80,6 @@ class Lane() :
         self.length = length
         self.id = id_lane
         self.list_vehicles = np.array([None]*self.length)  
-        self.length = length
         self.top_position = None                # indice de la premiere voiture occupée dans la lane (None si pas de voiture)
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
         self.top_access = top_access

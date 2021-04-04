@@ -43,7 +43,7 @@ class Display():
     def __bool__(self):
         return True
 
-    def __init__(self, t0, stock, robots, parking, AlgorithmType, place_width=15, place_length=20):
+    def __init__(self, t0, stock, robots, parking, AlgorithmType, place_width=15, place_length=20, print_in_terminal=False):
         self.stock = stock
         self.robots = robots
         self.t = t0
@@ -51,7 +51,7 @@ class Display():
         self.place_length = place_length
         self.place_width = place_width
 
-        self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, True, self)
+        self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
 
 
         pg.init()
@@ -145,7 +145,7 @@ class Display():
         complete = False
 
         while running:
-            clock.tick(60)
+            clock.tick(1000)
 
             # on itère sur tous les évênements qui ont eu lieu depuis le précédent appel
             # ici donc tous les évènements survenus durant la seconde précédente
