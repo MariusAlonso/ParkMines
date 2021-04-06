@@ -28,7 +28,6 @@ class Parking():
                         k -= 1
                     self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_height(self.disposal[k+1][j_disposal]))
 
-                print("y_in_pw",self.y_in_pw)
 
         for j_disposal in range(1, max_j_disposal):   
 
@@ -42,7 +41,7 @@ class Parking():
                         k -= 1
                     self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(self.disposal[i_disposal][k+1]))
                 
-                print("x_in_pw",self.x_in_pw)
+                
     
     def __repr__(self):
         s = ""
@@ -72,14 +71,18 @@ class Parking():
 
 class Block():
     def __init__(self, lanes, nb_lanes=None, lane_length=None):
-
         if nb_lanes:
             self.lanes = []
             for i in range(1, nb_lanes+1):
                 self.lanes.append(Lane(i, lane_length))
+            self.nb_lanes = nb_lanes
+            self.lane_length = lane_length
         else:
             self.lanes = lanes
+            self.nb_lanes = len(self.lanes)
+            self.lane_length = self.lanes[0].length
 
+        self.lane_length = lane_length
         # dimensions
         self.height = len(self.lanes) # en nombre de voitures
         self.width = self.lanes[0].length # en nombre de voitures
