@@ -4,6 +4,7 @@ from inputs import *
 from vehicle import RandomStock
 import datetime
 from copy import deepcopy
+from math import isclose
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
@@ -66,7 +67,7 @@ class Dashboard():
         
         return delays_rates
     
-    def retrievalDelaysRates(self, delays=[1, 5, 60]):
+    def retrievalDelaysRates(self, delays=[i for i in range(180)]):
         """
         renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
         """
@@ -82,7 +83,7 @@ class Dashboard():
 
 class Performance():
 
-    def __init__(self, t0, stock_args, robots, parking, AlgorithmType, delays=[1, 5, 60]):
+    def __init__(self, t0, stock_args, robots, parking, AlgorithmType, delays=[i for i in range(180)]):
         """
         Dans la classe performance, on se donne une simulation de référence
         et on se donne des méthodes qui étudient la réponse à la variation 
@@ -198,7 +199,7 @@ class Performance():
             else:
                 print(key, means[key])
 
-    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-5, 3)], nb_robots_max=1):
+    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-4, 3)], nb_robots_max=3):
         """
         regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetition répétitions
         """
@@ -218,120 +219,216 @@ class Performance():
 
         ### before deposit ###
 
-        before_deposit = plt.subplot(1, 3, 1)
+        before_deposit = plt.subplot(3, 3, 1)
         # abscisses : le flow journalier moyen
         flow = []
         # ordonnées : liste (indexée par le nombre de robots) des listes de retards
         delay = [[] for i in range(nb_robots)]
         for factor, nb_robots in curves:
-            flow.append(factor*ref_flow)
+            if nb_robots == nb_robots_max:
+                flow.append(factor*ref_flow)
             delay[nb_robots-1].append(curves[factor, nb_robots]['average_before_deposit_delay'])
         # construction des tableaux à tracer
         x = np.array(flow)
         for nb_robots in range(1, nb_robots_max + 1):
             y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
-            before_deposit.plot(x, y)
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot '
+            else:
+                label = str(nb_robots) + ' robots'
+            before_deposit.plot(x, y, label=label)
         
         # titre et légende
-        #before_deposit.legend()
+        before_deposit.legend()
         before_deposit.set_xlabel("flux journalier moyen")
         before_deposit.set_ylabel("temps d'attente (min)")
         before_deposit.set_title("attente client avant dépôt")
+        before_deposit.autoscale(tight=True)
 
         ### after deposit ###
         
-        after_deposit = plt.subplot(1, 3, 2)
+        after_deposit = plt.subplot(3, 3, 2)
         # abscisses : le flow journalier moyen
         flow = []
         # ordonnées : liste (indexée par le nombre de robots) des listes de retards
         delay = [[] for i in range(nb_robots)]
         for factor, nb_robots in curves:
-            flow.append(factor*ref_flow)
+            if nb_robots == nb_robots_max:
+                flow.append(factor*ref_flow)
             delay[nb_robots-1].append(curves[factor, nb_robots]['average_after_deposit_delay'])
         # construction des tableaux à tracer
         x = np.array(flow)
         for nb_robots in range(1, nb_robots_max + 1):
             y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
-            after_deposit.plot(x, y)
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
+            else:
+                label = str(nb_robots) + ' robots'
+            after_deposit.plot(x, y, label=label)
         
         # titre et légende
-        #after_deposit.legend()
+        after_deposit.legend()
         after_deposit.set_xlabel("flux journalier moyen")
         after_deposit.set_ylabel("temps d'attente (min)")
         after_deposit.set_title("attente véhicule dans interface après dépôt")
+        after_deposit.autoscale(tight=True)
 
         ### retrieval ###
         
-        retrieval = plt.subplot(1, 3, 3)
+        retrieval = plt.subplot(3, 3, 3)
         # abscisses : le flow journalier moyen
         flow = []
         # ordonnées : liste (indexée par le nombre de robots) des listes de retards
         delay = [[] for i in range(nb_robots)]
         for factor, nb_robots in curves:
-            flow.append(factor*ref_flow)
+            if nb_robots == nb_robots_max:
+                flow.append(factor*ref_flow)
             delay[nb_robots-1].append(curves[factor, nb_robots]['average_retrieval_delay'])
         # construction des tableaux à tracer
         x = np.array(flow)
         for nb_robots in range(1, nb_robots_max + 1):
             y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
-            retrieval.plot(x, y)
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
+            else:
+                label = str(nb_robots) + ' robots'
+            retrieval.plot(x, y, label=label)
         
         # titre et légende
-        #retrieval.legend()
+        retrieval.legend()
         retrieval.set_xlabel("flux journalier moyen")
         retrieval.set_ylabel("temps d'attente (min)")
         retrieval.set_title("attente client avant récupération")
+        retrieval.autoscale(tight=True)
 
-        plt.show()
-
-
+        ### average_intermediate_mpv ###
         
-
-        #############
-        """
-        means = self.averageDashboard(nb_repetition)
-        for key in means:
-
-            if key == "average_deposit_delay_rates":
-
-                average_deposit_delay_rates = means[key]
-
-                delays = np.zeros(len(average_deposit_delay_rates))
-                ratios = np.zeros(len(average_deposit_delay_rates))
-                i = 0
-
-                for delay, ratio in average_deposit_delay_rates.items():
-                    delays[i] = delay
-                    ratios[i] = ratio
-                    i += 1
-
-                plt.figure()
-                plt.plot(delays, ratios)
-                plt.xlabel("minorant du temps d'attente pour le dépôt")
-                plt.ylabel("part des clients concernés")
-                plt.title("average_deposit_delay_rates")
-                plt.show()
-
-            elif key == "average_retrieval_delay_rates":
-
-                average_retrieval_delay_rates = means[key]
-
-                delays = np.zeros(len(average_retrieval_delay_rates))
-                ratios = np.zeros(len(average_retrieval_delay_rates))
-                i = 0
-
-                for delay, ratio in average_retrieval_delay_rates.items():
-                    delays[i] = delay
-                    ratios[i] = ratio
-                    i += 1
-
-                plt.figure()
-                plt.plot(delays, ratios)
-                plt.xlabel("minorant du temps d'attente pour la sortie")
-                plt.ylabel("part des clients concernés")
-                plt.title("average_retrieval_delay_rates")
-                plt.show()
-
+        average_intermediate_mpv = plt.subplot(3, 3, 4)
+        # abscisses : le flow journalier moyen
+        flow = []
+        # ordonnées : liste (indexée par le nombre de robots) des nombres de mouvements
+        moves = [[] for i in range(nb_robots)]
+        for factor, nb_robots in curves:
+            if nb_robots == nb_robots_max:
+                flow.append(factor*ref_flow)
+            moves[nb_robots-1].append(curves[factor, nb_robots]['average_intermediate_mpv'])
+        # construction des tableaux à tracer
+        x = np.array(flow)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array(moves[nb_robots-1])
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
             else:
-                print(key, means[key])
-            """
+                label = str(nb_robots) + ' robots'
+            average_intermediate_mpv.plot(x, y, label=label)
+        
+        # titre et légende
+        average_intermediate_mpv.legend()
+        average_intermediate_mpv.set_xlabel("flux journalier moyen")
+        average_intermediate_mpv.set_ylabel("nombre de mouvements")
+        average_intermediate_mpv.set_title("nombre de mouvements intermédiaires")
+        average_intermediate_mpv.autoscale(tight=True)
+
+        ### success_rate ###
+        
+        success_rate = plt.subplot(3, 3, 7)
+        # abscisses : le flow journalier moyen
+        flow = []
+        # ordonnées : liste (indexée par le nombre de robots) des taux de succès
+        rate = [[] for i in range(nb_robots)]
+        for factor, nb_robots in curves:
+            if nb_robots == nb_robots_max:
+                flow.append(factor*ref_flow)
+            rate[nb_robots-1].append(curves[factor, nb_robots]['success_rate'])
+        # construction des tableaux à tracer
+        x = np.array(flow)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array(rate[nb_robots-1])
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
+            else:
+                label = str(nb_robots) + ' robots'
+            success_rate.plot(x, y, label=label)
+        
+        # titre et légende
+        success_rate.set_ylim(0., 1.1)
+        success_rate.legend()
+        success_rate.set_xlabel("flux journalier moyen")
+        success_rate.set_ylabel("taux de succès")
+        success_rate.set_title("taux de succès de l'algorithme")
+        success_rate.autoscale(tight=True)
+
+        ### average_deposit_delay_rates ###
+        
+        deposit_delays = plt.subplot(3, 3, (5, 8))
+        
+        for factor, nb_robots in curves:
+            # abscisses : le retard
+            delays = []
+            # ordonnées : la part des clients concernés
+            ratios = []
+            # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
+            if isclose(factor*ref_flow, int(factor*ref_flow)):
+                #on récupère la courbe pour ce flux et ce nombre de robots
+                average_deposit_delay_rates = curves[factor, nb_robots]['average_deposit_delay_rates']
+                # construction des tableaux à tracer
+                for delay, ratio in average_deposit_delay_rates.items():
+                    delays.append(delay)
+                    ratios.append(ratio)
+                
+                # tracé
+                x = np.array(delays)
+                y = np.array(ratios)
+
+                label = f"r={nb_robots}, f={int(factor*ref_flow)}"
+
+                deposit_delays.plot(x, y, label=label)        
+        
+        # titre et légende
+        deposit_delays.legend()
+        deposit_delays.set_xlabel("minorant du temps d'attente pour la sortie (min)")
+        deposit_delays.set_ylabel("part des clients concernés")
+        deposit_delays.set_title("temps d'attente moyen au dépôt")
+        deposit_delays.autoscale(tight=True)
+
+        ### average_retrieval_delay_rates ###
+        
+        retrieval_delays = plt.subplot(3, 3, (6, 9))
+        
+        for factor, nb_robots in curves:
+            # abscisses : le retard
+            delays = []
+            # ordonnées : la part des clients concernés
+            ratios = []
+            # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
+            if isclose(factor*ref_flow, int(factor*ref_flow)):
+                #on récupère la courbe pour ce flux et ce nombre de robots
+                average_retrieval_delay_rates = curves[factor, nb_robots]['average_retrieval_delay_rates']
+                # construction des tableaux à tracer
+                for delay, ratio in average_retrieval_delay_rates.items():
+                    delays.append(delay)
+                    ratios.append(ratio)
+                
+                # tracé
+                x = np.array(delays)
+                y = np.array(ratios)
+
+                label = f"r={nb_robots}, f={int(factor*ref_flow)}"
+
+                retrieval_delays.plot(x, y, label=label)        
+        
+        # titre et légende
+        retrieval_delays.legend()
+        retrieval_delays.set_xlabel("minorant du temps d'attente pour la sortie (min)")
+        retrieval_delays.set_ylabel("part des clients concernés")
+        retrieval_delays.set_title("temps d'attente moyen au dépôt")
+        retrieval_delays.autoscale(tight=True)
+
+        plt.subplots_adjust(left=0.05,
+                    bottom=0.065,
+                    right=0.985,
+                    top=0.955,
+                    wspace=0.175,
+                    hspace=0.4)
+        plt.show()
+        
