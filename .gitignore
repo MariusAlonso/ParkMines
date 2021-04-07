@@ -45,3 +45,7 @@ __pycache__/test_vehicle.cpython-38-pytest-6.2.2.pyc
 __pycache__/vehicle.cpython-38.pyc
 inputs/movements.csv
 log.txt
+__pycache__/display.cpython-38.pyc
+__pycache__/robot.cpython-38.pyc
+__pycache__/simulation.cpython-38.pyc
+__pycache__/vehicle.cpython-38.pyc
