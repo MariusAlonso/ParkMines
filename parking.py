@@ -26,15 +26,15 @@ class Parking():
 
             for j_disposal in range(max_j_disposal):
 
-                block_id = self.parking.disposal[i_disposal][j_disposal]
+                block_id = self.disposal[i_disposal][j_disposal]
 
-                if self.parking.disposal[i_disposal-1][j_disposal] != block_id:
+                if self.disposal[i_disposal-1][j_disposal] != block_id:
                     k = i_disposal - 1
-                    while k >=0 and self.parking.disposal[k][j_disposal] == self.parking.disposal[i_disposal-1][j_disposal]:
+                    while k >=0 and self.disposal[k][j_disposal] == self.disposal[i_disposal-1][j_disposal]:
                         k -= 1
 
-                    block_id = self.parking.disposal[k+1][j_disposal]
-                    if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
+                    block_id = self.disposal[k+1][j_disposal]
+                    if type(block_id) == str or self.blocks[block_id].direction == "topbottom":
                         self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_height(block_id))
                     else:
                         self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_width(block_id))
@@ -43,15 +43,15 @@ class Parking():
 
             for i_disposal in range(max_i_disposal):
 
-                block_id = self.parking.disposal[i_disposal][j_disposal]
+                block_id = self.disposal[i_disposal][j_disposal]
 
-                if self.parking.disposal[i_disposal][j_disposal-1] != block_id:
+                if self.disposal[i_disposal][j_disposal-1] != block_id:
                     k = j_disposal - 1
-                    while k >=0 and self.parking.disposal[i_disposal][k] == self.parking.disposal[i_disposal][j_disposal-1]:
+                    while k >=0 and self.disposal[i_disposal][k] == self.disposal[i_disposal][j_disposal-1]:
                         k -= 1
 
-                    block_id = self.parking.disposal[k+1][j_disposal]
-                    if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
+                    block_id = self.disposal[k+1][j_disposal]
+                    if type(block_id) == str or self.blocks[block_id].direction == "topbottom":
                         self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(block_id))
                     else:
                         self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_height(block_id))
@@ -92,7 +92,7 @@ class Parking():
         if block_id == "s":
             return 1
         if block_id == "l":
-            return 7
+            return 9
         elif block_id == "e":
             return 0
         elif type(block_id) == str and block_id[0] == "f":
@@ -103,7 +103,7 @@ class Parking():
         if block_id == "s":
             return 1
         if block_id == "l":
-            return 5
+            return 7
         elif block_id == "e":
             return 0
         elif type(block_id) == str and block_id[0] == "f":
