@@ -100,7 +100,7 @@ class Display():
                     if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
                         x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_width(block_id))
                     else:
-                        y0[i_disposal] = max(y0[i_disposal], y0[k+1] + self.block_height(block_id))
+                        x0[j_disposal] = max(x0[j_disposal], y0[k+1] + self.block_height(block_id))
                 
                 print("x0",x0)
         
@@ -159,7 +159,8 @@ class Display():
                         pg.draw.line(self.screen, (0, 0, 0), (x0[j_disposal], y), (x0[j_disposal]+block_height-1, y))
                         y += place_width+1
 
-
+        self.x0 = x0
+        self.y0 = y0
         self.font = pg.font.SysFont(None, 2*self.place_length//4)
         self.font_fixed = pg.font.SysFont(None, 30)
         """
@@ -212,6 +213,8 @@ class Display():
     def block_width(self, block_id):
         if block_id == "s":
             return self.place_width
+        if block_id == "l":
+            return 7*self.place_width
         elif block_id == "e":
             return 0
         elif type(block_id) == str and block_id[0] == "f":
@@ -220,6 +223,8 @@ class Display():
 
     def block_height(self, block_id):
         if block_id == "s":
+            return self.place_width
+        if block_id == "l":
             return self.place_width
         elif block_id == "e":
             return 0

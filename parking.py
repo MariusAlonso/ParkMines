@@ -1,6 +1,7 @@
 from simulation import Vehicle
 import numpy as np
 import datetime
+import distance as dist
 
 class Parking():
     def __init__(self, blocks, disposal=[[]]):
@@ -8,6 +9,11 @@ class Parking():
         self.occupation = dict()
         self.disposal = disposal
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
+
+        L = []
+        for block in self.blocks:
+            L.append(len(block.lanes))
+        self.nb_max_lanes = max(L)          #lane plus longue du parking
 
         self.place_ratio = 2
 
@@ -20,29 +26,41 @@ class Parking():
 
             for j_disposal in range(max_j_disposal):
 
-                block_id = self.disposal[i_disposal][j_disposal]
+                block_id = self.parking.disposal[i_disposal][j_disposal]
 
-                if self.disposal[i_disposal-1][j_disposal] != block_id:
+                if self.parking.disposal[i_disposal-1][j_disposal] != block_id:
                     k = i_disposal - 1
-                    while k >=0 and self.disposal[k][j_disposal] == self.disposal[i_disposal-1][j_disposal]:
+                    while k >=0 and self.parking.disposal[k][j_disposal] == self.parking.disposal[i_disposal-1][j_disposal]:
                         k -= 1
-                    self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_height(self.disposal[k+1][j_disposal]))
 
-                print("y_in_pw",self.y_in_pw)
+                    block_id = self.parking.disposal[k+1][j_disposal]
+                    if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
+                        self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_height(block_id))
+                    else:
+                        self.y_in_pw[i_disposal] = max(self.y_in_pw[i_disposal], self.y_in_pw[k+1] + self.block_width(block_id))
 
         for j_disposal in range(1, max_j_disposal):   
 
             for i_disposal in range(max_i_disposal):
 
-                block_id = self.disposal[i_disposal][j_disposal]
+                block_id = self.parking.disposal[i_disposal][j_disposal]
 
-                if self.disposal[i_disposal][j_disposal-1] != block_id:
+                if self.parking.disposal[i_disposal][j_disposal-1] != block_id:
                     k = j_disposal - 1
-                    while k >=0 and self.disposal[i_disposal][k] == self.disposal[i_disposal][j_disposal-1]:
+                    while k >=0 and self.parking.disposal[i_disposal][k] == self.parking.disposal[i_disposal][j_disposal-1]:
                         k -= 1
-                    self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(self.disposal[i_disposal][k+1]))
+
+                    block_id = self.parking.disposal[k+1][j_disposal]
+                    if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
+                        self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(block_id))
+                    else:
+                        self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_height(block_id))
+
+        distance = dist.Distance(self)
+        distance.fill_matrix_time()
+        self.matrix_time = distance.matrix_time
                 
-                print("x_in_pw",self.x_in_pw)
+                
     
     def __repr__(self):
         s = ""
@@ -58,11 +76,23 @@ class Parking():
         """
         if departure == arrival:
             return datetime.timedelta(0)
-        return datetime.timedelta(0,0,0,0,15)
+        else:
+            if departure[2] == 'top':
+                place1 = (departure[0], departure[1], 0)
+            else:
+                place1 = (departure[0], departure[1], 1)
+            if arrival[2] == 'top':
+                place2 = (arrival[0], arrival[1], 0)
+            else:
+                place2 = (arrival[0], arrival[1], 1)
+            duree = self.matrix_time[place1[0]][place1[1]][place1[2]][place2[0]][place2[1]][place2[2]]
+        return datetime.timedelta(0,duree) + datetime.timedelta(0,30, minutes=1)
     
     def block_width(self, block_id):
         if block_id == "s":
             return 1
+        if block_id == "l":
+            return 7
         elif block_id == "e":
             return 0
         elif type(block_id) == str and block_id[0] == "f":
@@ -72,6 +102,8 @@ class Parking():
     def block_height(self, block_id):
         if block_id == "s":
             return 1
+        if block_id == "l":
+            return 5
         elif block_id == "e":
             return 0
         elif type(block_id) == str and block_id[0] == "f":
@@ -85,9 +117,14 @@ class Block():
             self.lanes = []
             for i in range(1, nb_lanes+1):
                 self.lanes.append(Lane(i, lane_length))
+            self.nb_lanes = nb_lanes
+            self.lane_length = lane_length
         else:
             self.lanes = lanes
+            self.nb_lanes = len(self.lanes)
+            self.lane_length = self.lanes[0].length
 
+        self.lane_length = lane_length
         # dimensions
         self.height = len(self.lanes) # en nombre de voitures
         self.width = self.lanes[0].length # en nombre de voitures
