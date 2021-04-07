@@ -3,12 +3,9 @@ from parking import *
 from simulation import *
 from inputs import *
 from robot import *
-<<<<<<< HEAD
 import numpy as np
 import matplotlib.pyplot as plt
-=======
 from vehicle import *
->>>>>>> 08eecb17a7d788881d50898262cbc17434d84345
 
 class TestTest():
     def test_stock_simulation_init(self):

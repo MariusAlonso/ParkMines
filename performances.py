@@ -430,6 +430,6 @@ class Performance():
                     right=0.985,
                     top=0.955,
                     wspace=0.175,
-                    hspace=0.4)
+                    hspace=0.45)
         plt.show()
         
