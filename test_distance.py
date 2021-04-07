@@ -27,7 +27,6 @@ class TestTest():
         distance = dist.Distance(parking)
         distance.fill_matrix_time()
         result = np.zeros((len(parking.blocks), parking.nb_max_lanes, 2, len(parking.blocks), parking.nb_max_lanes, 2))
-        print(parking.x_in_pw[1], parking.y_in_pw[1])
         result[0][0][0][0][0][0] = 0.
         result[0][0][1][0][0][1] = 0.
         result[0][0][0][0][0][1] = 2.4
@@ -44,8 +43,7 @@ class TestTest():
         result[1][0][1][0][0][1] = 4*1.2
         result[1][0][0][0][0][1] = 2*1.2
         result[1][0][1][0][0][0] = 6*1.2
-        print(distance.matrix_time)
-        print(result)
+        print(datetime.timedelta(0, distance.matrix_time[1][0][1][0][0][1]))
         assert np.all(distance.matrix_time == result)
 
 

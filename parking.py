@@ -1,6 +1,7 @@
 from simulation import Vehicle
 import numpy as np
 import datetime
+import distance as dist
 
 class Parking():
     def __init__(self, blocks, disposal=[[]]):
@@ -45,6 +46,10 @@ class Parking():
                     while k >=0 and self.disposal[i_disposal][k] == self.disposal[i_disposal][j_disposal-1]:
                         k -= 1
                     self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(self.disposal[i_disposal][k+1]))
+
+        distance = dist.Distance(self)
+        distance.fill_matrix_time()
+        self.matrix_time = distance.matrix_time
                 
                 
     
@@ -58,11 +63,23 @@ class Parking():
     def travel_time(self, departure, arrival):
         if departure == arrival:
             return datetime.timedelta(0)
-        return datetime.timedelta(0,0,0,0,15)
+        else:
+            if departure[2] == 'top':
+                place1 = (departure[0], departure[1], 0)
+            else:
+                place1 = (departure[0], departure[1], 1)
+            if arrival[2] == 'top':
+                place2 = (arrival[0], arrival[1], 0)
+            else:
+                place2 = (arrival[0], arrival[1], 1)
+            duree = self.matrix_time[place1[0]][place1[1]][place1[2]][place2[0]][place2[1]][place2[2]]
+        return datetime.timedelta(0,duree) + datetime.timedelta(0,30, minutes=1)
     
     def block_width(self, block_id):
         if block_id == "s":
             return 1
+        if block_id == "l":
+            return 7
         if block_id == "e":
             return 0
         return len(self.blocks[block_id].lanes)+1
@@ -70,6 +87,8 @@ class Parking():
     def block_height(self, block_id):
         if block_id == "s":
             return 1
+        if block_id == "l":
+            return 5
         if block_id == "e":
             return 0
         return self.blocks[block_id].lanes[0].length*self.place_ratio + 1

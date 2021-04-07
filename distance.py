@@ -1,11 +1,11 @@
 from parking import *
+import datetime
 
 
 class Distance():
     def __init__(self, parking):
         self.parking = parking
         self.time_per_pw = 1.2 #secondes pour parcourir une pw a vitesse croisière
-        
         self.matrix_time = np.zeros((len(self.parking.blocks), self.parking.nb_max_lanes, 2, len(self.parking.blocks), self.parking.nb_max_lanes, 2))  #tenseur d'ordre 6 representant toutes les possibilités de Block-lane-top/bottom
                                                                                                                             #top=0, bottom=1
     def __repr__(self):

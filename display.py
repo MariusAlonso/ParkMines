@@ -98,7 +98,7 @@ class Display():
             
             for j_disposal, block_id in enumerate(list_block_id):
 
-                if block_id in ["e", "s"] :
+                if block_id in ["e", "s", "l"] :
                     continue
 
                 if j_disposal and block_id == self.parking.disposal[i_disposal][j_disposal-1]:
@@ -186,12 +186,16 @@ class Display():
     def block_width(self, block_id):
         if block_id == "s":
             return self.place_width
+        if block_id == "l":
+            return 7*self.place_width
         if block_id == "e":
             return 0
         return (len(self.parking.blocks[block_id].lanes)+1)*(self.place_width+1)
 
     def block_height(self, block_id):
         if block_id == "s":
+            return self.place_width
+        if block_id == "l":
             return self.place_width
         if block_id == "e":
             return 0

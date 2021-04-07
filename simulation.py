@@ -6,6 +6,7 @@ import datetime
 from robot import Robot
 import time
 
+
 class Simulation():
 
     def __init__(self, t0, stock, robots, parking, AlgorithmType, print_in_terminal=False, display=None):
@@ -423,7 +424,7 @@ class Simulation():
             robot.start_position = robot.goal_position
             robot.goal_position = block_id, lane_id, side
             robot.start_time = self.t
-            robot.goal_time = self.t + self.parking.travel_time(position, robot.goal_position)
+            robot.goal_time = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
 
             event.robot = robot
             event_arrival = Event(event.vehicle, robot.goal_time, "robot_arrival", robot)
