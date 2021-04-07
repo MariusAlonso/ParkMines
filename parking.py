@@ -153,10 +153,20 @@ class Lane() :
         return liste.__repr__()
 
     def is_top_available(self):
-        return self.top_access and (self.future_top_position == None or self.future_top_position > 0)
+        m = 1 # Maxint
+        if not self.future_top_position is None:
+            m = self.future_top_position
+        if not self.top_position is None:
+            m = min(m, self.top_position)
+        return self.top_access and m > 0
 
     def is_bottom_available(self):
-        return self.bottom_access and (self.future_top_position == None or self.future_bottom_position < self.length - 1)
+        M = -1 # Minint
+        if not self.future_bottom_position is None:
+            M = self.future_bottom_position
+        if not self.bottom_position is None:
+            M = max(M, self.bottom_position)   
+        return self.bottom_access and M < self.length - 1
 
 
     def push(self, id_vehicle, coté):
