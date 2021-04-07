@@ -52,6 +52,10 @@ class Parking():
         return " - Interface :\n"+self.blocks[0].__repr__()+"\n - Parking :"+s
     
     def travel_time(self, departure, arrival):
+        """
+        departure : (block_id, lane_id, side)
+        arrival : (block_id, lane_id, side)
+        """
         if departure == arrival:
             return datetime.timedelta(0)
         return datetime.timedelta(0,0,0,0,15)
@@ -217,6 +221,14 @@ class Lane() :
                     self.future_bottom_position = None
 
 
+    def pop_reserve(self, coté):
+        self.push_cancel_reserve(coté)
+
+
+    def pop_cancel_reserve(self, coté):
+        self.push_reserve(coté)
+
+
 
     def pop(self, coté):
         if coté == "top":
@@ -224,13 +236,9 @@ class Lane() :
                 vehicle_id = self.list_vehicles[self.top_position]
                 self.list_vehicles[self.top_position] = None
                 self.top_position += 1
-                self.future_top_position += 1
                 if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
-                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
-                    self.future_top_position = None
-                    self.future_bottom_position = None
                 return vehicle_id
 
         elif coté == "bottom":
@@ -238,13 +246,9 @@ class Lane() :
                 vehicle_id = self.list_vehicles[self.bottom_position]
                 self.list_vehicles[self.bottom_position] = None
                 self.bottom_position -= 1
-                self.future_bottom_position -= 1
                 if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
-                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
-                    self.future_top_position = None
-                    self.future_bottom_position = None
                 return vehicle_id
 
 
