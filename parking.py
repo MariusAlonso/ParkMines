@@ -63,19 +63,23 @@ class Parking():
     def block_width(self, block_id):
         if block_id == "s":
             return 1
-        if block_id == "e":
+        elif block_id == "e":
             return 0
+        elif type(block_id) == str and block_id[0] == "f":
+            return int(block_id[1:].split(":")[0])
         return len(self.blocks[block_id].lanes)+1
 
     def block_height(self, block_id):
         if block_id == "s":
             return 1
-        if block_id == "e":
+        elif block_id == "e":
             return 0
+        elif type(block_id) == str and block_id[0] == "f":
+            return int(block_id[1:].split(":")[1])
         return self.blocks[block_id].lanes[0].length*self.place_ratio + 1
 
 class Block():
-    def __init__(self, lanes, nb_lanes=None, lane_length=None):
+    def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
 
         if nb_lanes:
             self.lanes = []
@@ -90,6 +94,8 @@ class Block():
 
         self.x_pos = None
         self.y_pos = None
+
+        self.direction = direction
     
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
