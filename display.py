@@ -100,7 +100,7 @@ class Display():
                     if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
                         x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_width(block_id))
                     else:
-                        y0[i_disposal] = max(y0[i_disposal], y0[k+1] + self.block_height(block_id))
+                        x0[j_disposal] = max(x0[j_disposal], y0[k+1] + self.block_height(block_id))
                 
                 print("x0",x0)
         
