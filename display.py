@@ -76,7 +76,12 @@ class Display():
                     k = i_disposal - 1
                     while k >=0 and self.parking.disposal[k][j_disposal] == self.parking.disposal[i_disposal-1][j_disposal]:
                         k -= 1
-                    y0[i_disposal] = max(y0[i_disposal], y0[k+1] + self.block_height(self.parking.disposal[k+1][j_disposal]))
+
+                    block_id = self.parking.disposal[k+1][j_disposal]
+                    if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
+                        y0[i_disposal] = max(y0[i_disposal], y0[k+1] + self.block_height(block_id))
+                    else:
+                        y0[i_disposal] = max(y0[i_disposal], y0[k+1] + self.block_width(block_id))
 
                 print("y0",y0)
 
@@ -90,7 +95,12 @@ class Display():
                     k = j_disposal - 1
                     while k >=0 and self.parking.disposal[i_disposal][k] == self.parking.disposal[i_disposal][j_disposal-1]:
                         k -= 1
-                    x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_width(self.parking.disposal[i_disposal][k+1]))
+
+                    block_id = self.parking.disposal[k+1][j_disposal]
+                    if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
+                        x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_width(block_id))
+                    else:
+                        y0[i_disposal] = max(y0[i_disposal], y0[k+1] + self.block_height(block_id))
                 
                 print("x0",x0)
         
@@ -98,7 +108,7 @@ class Display():
             
             for j_disposal, block_id in enumerate(list_block_id):
 
-                if block_id in ["e", "s", "l"] :
+                if type(block_id) == str:
                     continue
 
                 if j_disposal and block_id == self.parking.disposal[i_disposal][j_disposal-1]:
@@ -117,21 +127,37 @@ class Display():
                 block_width = nb_lanes*(place_width+1)+1
                 block_height = lane_length*(place_length+1)+1
 
-                rect = pg.Rect(x0[j_disposal], y0[i_disposal], block_width, block_height)
-                pg.draw.rect(self.screen, (100, 100, 100), rect)
+
                 
+                if self.parking.blocks[block_id].direction == "topbottom":
 
-                x = x0[j_disposal]
-                for i in range(nb_lanes+1):
-                    pg.draw.line(self.screen, (0, 0, 0), (x, y0[i_disposal]), (x, y0[i_disposal]+block_height-1))
-                    x += place_width+1
+                    rect = pg.Rect(x0[j_disposal], y0[i_disposal], block_width, block_height)
+                    pg.draw.rect(self.screen, (100, 100, 100), rect)
 
-                y = y0[i_disposal]
-                for j in range(lane_length+1):
-                    pg.draw.line(self.screen, (0, 0, 0), (x0[j_disposal], y), (x0[j_disposal]+block_width-1, y))
-                    y += place_length+1
+                    x = x0[j_disposal]
+                    for i in range(nb_lanes+1):
+                        pg.draw.line(self.screen, (0, 0, 0), (x, y0[i_disposal]), (x, y0[i_disposal]+block_height-1))
+                        x += place_width+1
 
-                print(x0,y0)
+                    y = y0[i_disposal]
+                    for j in range(lane_length+1):
+                        pg.draw.line(self.screen, (0, 0, 0), (x0[j_disposal], y), (x0[j_disposal]+block_width-1, y))
+                        y += place_length+1
+
+                else:
+                    
+                    rect = pg.Rect(x0[j_disposal], y0[i_disposal], block_height, block_width)
+                    pg.draw.rect(self.screen, (100, 100, 100), rect)
+
+                    x = x0[j_disposal]
+                    for i in range(lane_length+1):
+                        pg.draw.line(self.screen, (0, 0, 0), (x, y0[i_disposal]), (x, y0[i_disposal]+block_width-1))
+                        x += place_length+1
+
+                    y = y0[i_disposal]
+                    for j in range(nb_lanes+1):
+                        pg.draw.line(self.screen, (0, 0, 0), (x0[j_disposal], y), (x0[j_disposal]+block_height-1, y))
+                        y += place_width+1
 
         self.x0 = x0
         self.y0 = y0
@@ -189,8 +215,10 @@ class Display():
             return self.place_width
         if block_id == "l":
             return 7*self.place_width
-        if block_id == "e":
+        elif block_id == "e":
             return 0
+        elif type(block_id) == str and block_id[0] == "f":
+            return int(block_id[1:].split(":")[0])*self.place_width
         return (len(self.parking.blocks[block_id].lanes)+1)*(self.place_width+1)
 
     def block_height(self, block_id):
@@ -198,17 +226,24 @@ class Display():
             return self.place_width
         if block_id == "l":
             return self.place_width
-        if block_id == "e":
+        elif block_id == "e":
             return 0
+        elif type(block_id) == str and block_id[0] == "f":
+            return int(block_id[1:].split(":")[1])*self.place_width
         return self.parking.blocks[block_id].lanes[0].length*(self.place_length+1) + 1 + self.place_width
 
     def draw_vehicle(self, vehicle):
         block_id, lane_id, position = self.parking.occupation[vehicle.id]
         x_block = self.parking.blocks[block_id].x_pos
         y_block = self.parking.blocks[block_id].y_pos
-        x = x_block + (self.place_width+1)*lane_id + (self.place_width - 3*self.place_width//4)//2 + 1
-        y = y_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
-        rect = pg.Rect(x, y, 3*self.place_width//4, 3*self.place_length//4)
+        if self.parking.blocks[block_id].direction == "topbottom":
+            x = x_block + (self.place_width+1)*lane_id + (self.place_width - 3*self.place_width//4)//2 + 1
+            y = y_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
+            rect = pg.Rect(x, y, 3*self.place_width//4, 3*self.place_length//4)
+        else:
+            x = x_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
+            y = y_block + (self.place_width+1)*lane_id + (self.place_width - 3*self.place_width//4)//2 + 1
+            rect = pg.Rect(x, y, 3*self.place_length//4, 3*self.place_width//4)           
         pg.draw.rect(self.screen, (200, 0, 0), rect)
         
         # Affichage de l'identifiant du véhicule
@@ -220,9 +255,14 @@ class Display():
         block_id, lane_id, position = self.parking.occupation[vehicle.id]
         x_block = self.parking.blocks[block_id].x_pos
         y_block = self.parking.blocks[block_id].y_pos
-        x = x_block + (self.place_width+1)*lane_id + 1
-        y = y_block + (self.place_length+1)*position + 1
-        rect = pg.Rect(x, y, self.place_width, self.place_length)
+        if self.parking.blocks[block_id].direction == "topbottom":
+            x = x_block + (self.place_width+1)*lane_id + 1
+            y = y_block + (self.place_length+1)*position + 1
+            rect = pg.Rect(x, y, self.place_width, self.place_length)
+        else:
+            x = x_block + (self.place_length+1)*position + 1
+            y = y_block + (self.place_width+1)*lane_id + 1
+            rect = pg.Rect(x, y, self.place_length, self.place_width)           
         pg.draw.rect(self.screen, (100, 100, 100), rect)
 
     def show_robot(self):

@@ -41,8 +41,8 @@ class Simulation():
         self.locked_lanes = {}
         for block_id, block in enumerate(self.parking.blocks):
             for lane_id, lane in enumerate(block.lanes):
-                self.locked_lanes[(block_id, lane_id, "top")] = not lane.top_access
-                self.locked_lanes[(block_id, lane_id, "bottom")] = not lane.bottom_access
+                self.locked_lanes[(block_id, lane_id, "top")] = int(not lane.top_access)
+                self.locked_lanes[(block_id, lane_id, "bottom")] = int(not lane.bottom_access)
         
         self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes)
 
@@ -74,7 +74,9 @@ class Simulation():
         vehicle = event.vehicle
         if event.event_type == "order_deposit":
             heapq.heappush(self.events, Event(vehicle, vehicle.deposit, "deposit"))
-        
+            time_wake_up = max(self.t, vehicle.deposit - datetime.timedelta(hours=0.25))
+            heapq.heappush(self.events, Event(vehicle, time_wake_up, "wake_up_robots_deposit"))
+          
         elif event.event_type == "order_retrieval":
             event_retrieval = Event(vehicle, vehicle.retrieval, "retrieval")
             heapq.heappush(self.events, event_retrieval)
@@ -111,15 +113,15 @@ class Simulation():
                 block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
                 if block_id != 0:
                     vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
-
+                    
                     if vehicle_lane.bottom_access and vehicle_lane.bottom_position - position < position - vehicle_lane.top_position:
                         side = "bottom"
-                        event.event_retrieval.unassigned_tasks = vehicle_lane.bottom_position - position + 1
+                        # event.event_retrieval.unassigned_tasks = vehicle_lane.bottom_position - position + 1
                     else:
                         side = "top"
-                        event.event_retrieval.unassigned_tasks = position - vehicle_lane.top_position + 1
-
-                    self.locked_lanes[(block_id, lane_id, side)] = True
+                        # event.event_retrieval.unassigned_tasks = position - vehicle_lane.top_position + 1
+                    
+                    self.locked_lanes[(block_id, lane_id, side)] += 1
 
                     # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
                     for robot in self.robots:                           
@@ -142,13 +144,15 @@ class Simulation():
                     robot.doing = None
                     _, lane_id, _ = robot.goal_position
                     self.parking.blocks[0].targeted[lane_id] = False
+                    self.parking.blocks[0].lanes[lane_id].pop_cancel_reserve("bottom")
                     robot.goal_position = robot.start_position
                     self.assign_task(robot)
 
             self.wake_up_robots()
 
-        elif event.event_type == "wake_up_robots":
-            self.wake_up_robots()
+        elif event.event_type == "wake_up_robots_deposit":
+            pass
+            # self.wake_up_robots()
 
         elif event.event_type == "deposit":
 
@@ -228,7 +232,7 @@ class Simulation():
                     if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
                         i_lane = self.parking.blocks[0].empty_lane()
                         if i_lane == "full":
-                            event.robot.target.unassigned_tasks += 1
+                            self.parking.blocks[block_id].lanes[lane_id].pop_cancel_reserve(side)
                             event.robot.target = None
                             event.robot.doing = None
                             return None                                             
@@ -272,7 +276,7 @@ class Simulation():
 
                     if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
                         i_lane = self.parking.blocks[0].empty_lane()
-                        self.locked_lanes[event.robot.goal_position] = False
+                        self.locked_lanes[event.robot.goal_position] -= 1
                         self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
                         self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
                         #On place le vehicule a l'interface
@@ -332,9 +336,6 @@ class Simulation():
                             self.execute(event.robot.target)
                             self.pending_retrievals.remove(event.robot.target)
                             break
-                
-                else:
-                    self.locked_lanes[lane_id] = False
 
 
                 event.robot.target = None
@@ -386,8 +387,9 @@ class Simulation():
                 if vehicle.order_retrieval > self.t or vehicle.retrieval - self.t > datetime.timedelta(hours=1):
                     robot.start_position = robot.goal_position
                     robot.goal_position = (0, lane_id, "bottom")
-                    robot.start_time = self.t
+                    lane.pop_reserve("bottom")
 
+                    robot.start_time = self.t
                     robot.goal_time = self.t + self.parking.travel_time((0, lane_id, "bottom"), robot.goal_position)
 
                     event_arrival = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "robot_arrival", robot)
@@ -422,7 +424,9 @@ class Simulation():
                 side = "top"
 
             robot.start_position = robot.goal_position
-            robot.goal_position = block_id, lane_id, side
+            robot.goal_position = (block_id, lane_id, side)
+            lane_vehicle.pop_reserve(side)
+
             robot.start_time = self.t
             robot.goal_time = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
 
@@ -435,7 +439,7 @@ class Simulation():
 
             return event
         
-
+    """
     def find_unassigned_events(self, are_available_places_interface):
         i = 0
         while i < len(self.pending_retrievals):
@@ -453,6 +457,41 @@ class Simulation():
                 if event.unassigned_tasks != 1 or are_available_places_interface:                       
                     event.unassigned_tasks -= 1
                     return event
+            i += 1
+    """
+    def find_unassigned_events(self, are_available_places_interface):
+        i = 0
+        while i < len(self.pending_retrievals):
+            event = self.pending_retrievals[i]
+            if event.vehicle.id in self.parking.occupation:
+                block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
+                if block_id != 0:
+                    vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
+
+                    if vehicle_lane.bottom_access and (not vehicle_lane.future_bottom_position is None) and vehicle_lane.future_bottom_position - position < position - vehicle_lane.future_top_position:
+                        if vehicle_lane.future_bottom_position - position >= 0:
+                            return event
+                    elif not vehicle_lane.future_top_position is None:
+                        if position - vehicle_lane.future_top_position >= 0:
+                            return event
+            i += 1
+
+        i = 0
+        while i < len(self.events):
+            event = self.events[i]
+            if event.date - self.t > datetime.timedelta(hours=1):
+                break
+            if event.event_type == "retrieval" and event.vehicle.id in self.parking.occupation:
+                block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
+                if block_id != 0:
+                    vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
+
+                    if vehicle_lane.bottom_access and (not vehicle_lane.future_bottom_position is None) and vehicle_lane.future_bottom_position - position < position - vehicle_lane.future_top_position:
+                        if vehicle_lane.future_bottom_position - position >= 0:
+                            return event
+                    elif not vehicle_lane.future_top_position is None:
+                        if position - vehicle_lane.future_top_position >= 0:
+                            return event
             i += 1
 
     def wake_up_robots(self):
@@ -512,27 +551,6 @@ class Algorithm():
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
-    """
-    def pick(self, vehicle):
-        i_block, i_lane, position = self.parking.occupation[vehicle.id]
-        lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
-        if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
-            while True:
-                moved_vehicle = self.stock.vehicles[lane_vehicle.pop_bottom()]
-                del self.parking.occupation[moved_vehicle.id]
-                if lane_vehicle.bottom_position != None and lane_vehicle.bottom_position - position >= 0:
-                    self.place(moved_vehicle, forbidden_access = (lane_vehicle, "bottom"))
-                else:
-                    break
-        else:
-            while True:
-                moved_vehicle = self.stock.vehicles[lane_vehicle.pop_top()]
-                del self.parking.occupation[moved_vehicle.id]
-                if lane_vehicle.top_position != None and position - lane_vehicle.top_position >= 0:
-                    self.place(moved_vehicle, forbidden_access = (lane_vehicle, "top"))
-                else:
-                    break
-    """
 
 class AlgorithmRandom(Algorithm):
     
