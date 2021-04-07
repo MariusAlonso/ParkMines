@@ -9,6 +9,11 @@ class Parking():
         self.disposal = disposal
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
 
+        L = []
+        for block in self.blocks:
+            L.append(len(block.lanes))
+        self.nb_max_lanes = max(L)          #lane plus longue du parking
+
         self.place_ratio = 2
 
         max_i_disposal = len(self.disposal)

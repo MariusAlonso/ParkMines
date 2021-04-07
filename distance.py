@@ -5,11 +5,8 @@ class Distance():
     def __init__(self, parking):
         self.parking = parking
         self.time_per_pw = 1.2 #secondes pour parcourir une pw a vitesse croisière
-        L = []
-        for block in self.parking.blocks:
-            L.append(len(block.lanes))
-        nb_max_lanes = max(L)
-        self.matrix_time = np.empty((len(self.parking.blocks), nb_max_lanes, 2, len(self.parking.blocks), nb_max_lanes, 2))  #tenseur d'ordre 6 representant toutes les possibilités de Block-lane-top/bottom
+        
+        self.matrix_time = np.zeros((len(self.parking.blocks), self.parking.nb_max_lanes, 2, len(self.parking.blocks), self.parking.nb_max_lanes, 2))  #tenseur d'ordre 6 representant toutes les possibilités de Block-lane-top/bottom
                                                                                                                             #top=0, bottom=1
     def __repr__(self):
         return self.parking
@@ -42,20 +39,20 @@ class Distance():
                             if lane2.top_access:
                                 place1 = [id_block1, id_lane1, 0]
                                 place2 = [id_block2, id_lane2, 0]
-                                matrix[id_block1][id_lane1][0][id_block2][id_lane2][0] == self.time_manhattan(place1, place2)
+                                matrix[id_block1][id_lane1][0][id_block2][id_lane2][0] = self.time_manhattan(place1, place2)
                             if lane2.bottom_access:
                                 place1 = [id_block1, id_lane1, 0]
                                 place2 = [id_block2, id_lane2, 1]
-                                matrix[id_block1][id_lane1][0][id_block2][id_lane2][1] == self.time_manhattan(place1, place2)
+                                matrix[id_block1][id_lane1][0][id_block2][id_lane2][1] = self.time_manhattan(place1, place2)
                         if lane1.bottom_access:
                             if lane2.top_access:
                                 place1 = [id_block1, id_lane1, 1]
                                 place2 = [id_block2, id_lane2, 0]
-                                matrix[id_block1][id_lane1][1][id_block2][id_lane2][0] == self.time_manhattan(place1, place2)
+                                matrix[id_block1][id_lane1][1][id_block2][id_lane2][0] = self.time_manhattan(place1, place2)
                             if lane2.bottom_access:
                                 place1 = [id_block1, id_lane1, 1]
                                 place2 = [id_block2, id_lane2, 1]
-                                matrix[id_block1][id_lane1][1][id_block2][id_lane2][1] == self.time_manhattan(place1, place2)
+                                matrix[id_block1][id_lane1][1][id_block2][id_lane2][1] = self.time_manhattan(place1, place2)
 
 
 
