@@ -2,6 +2,8 @@ from parking import *
 from simulation import *
 from inputs import *
 from robot import *
+import numpy as np
+import matplotlib.pyplot as plt
 
 class TestTest():
     def test_stock_simulation_init(self):
@@ -36,6 +38,31 @@ class TestTest():
         simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1)], parking, AlgorithmRandom, print_in_terminal=False)
         simulation.complete()
         assert 1 not in simulation.parking.occupation
+    
+    def testNbEvents(self):
+        # création du parking
+        Vehicle.next_id = 1
+        parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
+        simulation = Simulation(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), RandomStock(*(5, )), [Robot(1)], parking, AlgorithmRandom, print_in_terminal=False)
+        
+        # test
+        simulation.complete()
+
+        dates = []
+        lengths = []
+
+        for date, length in simulation.nb_events_tracker.items():
+            dates.append(date)
+            lengths.append(length)
+        
+        dates = np.array(dates)
+        lengths = np.array(lengths)
+
+        plt.plot(dates, lengths)
+        plt.xlabel("date")
+        plt.ylabel("nombre d'évènements dans la pile")
+        plt.title("évolution du nombre d'évènements dans la pile au cours du temps")
+        plt.show()
 
 test = TestTest()
-test.test_inputs_random()
+test.testNbEvents()

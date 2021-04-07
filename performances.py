@@ -199,7 +199,7 @@ class Performance():
             else:
                 print(key, means[key])
 
-    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-4, 3)], nb_robots_max=3):
+    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.05*i for i in range(-8, 5)], nb_robots_max=3):
         """
         regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetition répétitions
         """
@@ -351,7 +351,7 @@ class Performance():
             success_rate.plot(x, y, label=label)
         
         # titre et légende
-        success_rate.set_ylim(0., 1.1)
+        success_rate.set_ylim([0., 1.1])
         success_rate.legend()
         success_rate.set_xlabel("flux journalier moyen")
         success_rate.set_ylabel("taux de succès")
@@ -424,6 +424,7 @@ class Performance():
         retrieval_delays.set_title("temps d'attente moyen au dépôt")
         retrieval_delays.autoscale(tight=True)
 
+        # ajustement des espaces pour tout afficher
         plt.subplots_adjust(left=0.05,
                     bottom=0.065,
                     right=0.985,

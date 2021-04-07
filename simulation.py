@@ -25,6 +25,9 @@ class Simulation():
         self.display = display
         self.time_execution = 0
 
+        # nb_events_tracker : dictionnaire contenant le nombre d'évènements dans la file de priorité à chaque date
+        self.nb_events_tracker = {}
+
         # Création de la file d'événements : ajout des commandes
         self.events = []
         for v in self.stock.vehicles.values():
@@ -338,6 +341,7 @@ class Simulation():
                 time_start = time.time()
                 event = heapq.heappop(self.events)
                 self.t = event.date
+                self.nb_events_tracker[self.t] = len(self.events)
                 self.execute(event)
                 self.time_execution += time.time() - time_start
             else:
@@ -419,14 +423,13 @@ class Simulation():
             robot.target = event
 
             return event
-        
 
     def find_unassigned_events(self, are_available_places_interface):
         i = 0
         while i < len(self.pending_retrievals):
             event = self.pending_retrievals[i]
             if event.unassigned_tasks and event.vehicle.id in self.parking.occupation:
-                if event.unassigned_tasks != 1 or are_available_places_interface:                       
+                if event.unassigned_tasks != 1 or are_available_places_interface:                   
                     event.unassigned_tasks -= 1
                     return event
             i += 1
@@ -434,6 +437,8 @@ class Simulation():
         i = 0
         while i < len(self.events):
             event = self.events[i]
+            if event.date - self.t > datetime.timedelta(hours=1):
+                break
             if event.event_type == "retrieval" and event.unassigned_tasks and event.vehicle.id in self.parking.occupation:
                 if event.unassigned_tasks != 1 or are_available_places_interface:                       
                     event.unassigned_tasks -= 1
