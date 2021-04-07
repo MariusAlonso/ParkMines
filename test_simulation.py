@@ -1,9 +1,11 @@
+import sys
 from parking import *
 from simulation import *
 from inputs import *
 from robot import *
 import numpy as np
 import matplotlib.pyplot as plt
+from vehicle import *
 
 class TestTest():
     def test_stock_simulation_init(self):
@@ -66,3 +68,18 @@ class TestTest():
 
 test = TestTest()
 test.testNbEvents()
+
+if __name__ == "__main__":
+    N = 200
+    terminal = sys.stdout
+    for n in range(N):
+        with open("log.txt", "w") as log_file:
+            sys.stdout = log_file
+            Vehicle.next_id = 1
+            stock = RandomStock(10)
+            parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10, "leftright"), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+            simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], parking, AlgorithmRandom, print_in_terminal=True)
+            simulation.complete()
+        if 100*n % N < 100:
+            sys.stdout = terminal
+            print(f"{int(round(n*100/N, 0))+1}% des simulations effectué")
