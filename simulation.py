@@ -550,27 +550,6 @@ class Algorithm():
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
-    """
-    def pick(self, vehicle):
-        i_block, i_lane, position = self.parking.occupation[vehicle.id]
-        lane_vehicle = self.parking.blocks[i_block].lanes[i_lane]
-        if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
-            while True:
-                moved_vehicle = self.stock.vehicles[lane_vehicle.pop_bottom()]
-                del self.parking.occupation[moved_vehicle.id]
-                if lane_vehicle.bottom_position != None and lane_vehicle.bottom_position - position >= 0:
-                    self.place(moved_vehicle, forbidden_access = (lane_vehicle, "bottom"))
-                else:
-                    break
-        else:
-            while True:
-                moved_vehicle = self.stock.vehicles[lane_vehicle.pop_top()]
-                del self.parking.occupation[moved_vehicle.id]
-                if lane_vehicle.top_position != None and position - lane_vehicle.top_position >= 0:
-                    self.place(moved_vehicle, forbidden_access = (lane_vehicle, "top"))
-                else:
-                    break
-    """
 
 class AlgorithmRandom(Algorithm):
     
