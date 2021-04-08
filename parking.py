@@ -54,7 +54,7 @@ class Parking():
     def travel_time(self, departure, arrival):
         if departure == arrival:
             return datetime.timedelta(0)
-        return datetime.timedelta(0,0,0,0,np.random.randint(10,15))
+        return datetime.timedelta(0,0,0,0,15)
     
     def block_width(self, block_id):
         if block_id == "s":
