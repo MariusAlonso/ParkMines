@@ -124,6 +124,8 @@ class Block():
             self.nb_lanes = len(self.lanes)
             self.lane_length = self.lanes[0].length
 
+        
+
         self.lane_length = lane_length
         # dimensions
         self.height = len(self.lanes) # en nombre de voitures
@@ -133,6 +135,9 @@ class Block():
         self.y_pos = None
 
         self.direction = direction
+
+        self.nb_places_available = self.height
+        self.targeted = [False]*self.height
     
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
@@ -150,10 +155,7 @@ class Block():
 
 class BlockInterface(Block):
 
-    def __init__(self, lanes, nb_lanes=None, lane_length=None):
-        super().__init__(lanes, nb_lanes, lane_length)
-        self.nb_places_available = self.height
-        self.targeted = [False]*self.height
+   
 
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
