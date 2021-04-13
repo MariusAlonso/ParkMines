@@ -266,25 +266,25 @@ class Display():
         pg.draw.rect(self.screen, (100, 100, 100), rect)
 
     def show_robot(self):
-        pass
-        """
-        for i, x in enumerate(self.robots):
-            rect3 = pg.Rect(700, 40, 200 ,800)
-            pg.draw.rect(self.screen, (255,255,255), rect3)
-            if x.target:
-                text = self.font_fixed.render(f"Robot {x.id_robot} : {x.target.vehicle.id}", True, (0, 0, 0))
-                self.screen.blit(text, (700, 40)) #placement du texte
+        rect3 = pg.Rect(700, 40, 200 ,800)
+        pg.draw.rect(self.screen, (255,255,255), rect3) #on actualise en couvrant avec un rectangle blanc
+        
+        for i, x in enumerate(self.robots): #on parcourt tous les robots utilisés
+            pg.display.update()             
+            if x.vehicle: #le robot transporte un véhicule
+                if x.target: #le robot a une cible en tête
+                    text = self.font_fixed.render(f"Robot {x.id_robot} : {x.vehicle.id}", True, (0, 0, 0))
+                    self.screen.blit(text, (700, i*70 + 40)) #placement du texte
 
-            #tracer de la jauge d'avancement de l'event
-            rect = pg.Rect(700, (i+1)*15 + 80, 100, 30)
-            pg.draw.rect(self.screen, (0, 0, 0), rect)
+                #tracer le fond de la jauge proportionnelle à la durée de la tâche
+                L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
+                rect = pg.Rect(700, i*70 + 60, L*9000 + 100, 30)
+                pg.draw.rect(self.screen, (0, 0, 0), rect)
             
-            if x.start_time :
-                print (x.goal_time, x.start_time, self.simulation.t)
-                if x.goal_time > x.start_time: #self.t ne s'actualise pas
-                    pourc = (self.t - x.start_time)/(x.goal_time - x.start_time)
-                    print(pourc)
-                    rect2 = pg.Rect(700, (i+1)*15 + 80, pourc*100, 30)
-                    pg.draw.rect(self.screen, (255, 0, 0), rect2)
-        """
-                
+                if x.start_time :
+                    if x.goal_time > x.start_time:
+                        pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
+                        rect2 = pg.Rect(700, i*70 + 60, pourc*(L*9000+100), 30)
+                        pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
+            pg.display.update()
+                    
