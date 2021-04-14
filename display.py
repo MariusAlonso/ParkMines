@@ -55,14 +55,14 @@ class Display():
 
 
         pg.init()
-        self.screen = pg.display.set_mode((1000, 800))
+        self.screen = pg.display.set_mode((1200, 800))
         self.screen.fill((255, 255, 255))
         clock = pg.time.Clock()
 
         max_i_disposal = len(self.parking.disposal)
         max_j_disposal = len(self.parking.disposal[0])
-        x0 = [0]*max_j_disposal
-        y0 = [0]*max_i_disposal
+        x0 = [20]*max_j_disposal
+        y0 = [20]*max_i_disposal
 
         print(self.parking.disposal)
 
@@ -85,6 +85,8 @@ class Display():
 
                 print("y0",y0)
 
+        print(self.parking.disposal)
+
         for j_disposal in range(1, max_j_disposal):   
 
             for i_disposal in range(max_i_disposal):
@@ -96,11 +98,12 @@ class Display():
                     while k >=0 and self.parking.disposal[i_disposal][k] == self.parking.disposal[i_disposal][j_disposal-1]:
                         k -= 1
 
-                    block_id = self.parking.disposal[k+1][j_disposal]
+                    block_id = self.parking.disposal[i_disposal][k+1]
+                    print(k, block_id, i_disposal, j_disposal, self.block_height(block_id))
                     if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
                         x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_width(block_id))
                     else:
-                        x0[j_disposal] = max(x0[j_disposal], y0[k+1] + self.block_height(block_id))
+                        x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_height(block_id))
                 
                 print("x0",x0)
         
@@ -200,9 +203,9 @@ class Display():
             group.update(event_list)
             group.draw(self.screen)
             """
-            pg.draw.rect(self.screen, (255, 255, 255), pg.Rect(700,10,300,30))
+            pg.draw.rect(self.screen, (255, 255, 255), pg.Rect(900,10,300,30))
             t_surf = self.font_fixed.render(str(self.simulation.t), True, (0, 0, 0))
-            self.screen.blit(t_surf, (700, 10))
+            self.screen.blit(t_surf, (900, 10))
 
             pg.display.update()
 
@@ -266,7 +269,7 @@ class Display():
         pg.draw.rect(self.screen, (100, 100, 100), rect)
 
     def show_robot(self):
-        rect3 = pg.Rect(700, 40, 200 ,800)
+        rect3 = pg.Rect(900, 40, 200 ,700)
         pg.draw.rect(self.screen, (255,255,255), rect3) #on actualise en couvrant avec un rectangle blanc
         
         for i, x in enumerate(self.robots): #on parcourt tous les robots utilisés
@@ -274,17 +277,17 @@ class Display():
             if x.vehicle: #le robot transporte un véhicule
                 if x.target: #le robot a une cible en tête
                     text = self.font_fixed.render(f"Robot {x.id_robot} : {x.vehicle.id}", True, (0, 0, 0))
-                    self.screen.blit(text, (700, i*70 + 40)) #placement du texte
+                    self.screen.blit(text, (900, i*70 + 40)) #placement du texte
 
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
                 L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
-                rect = pg.Rect(700, i*70 + 60, L*9000 + 100, 30)
+                rect = pg.Rect(900, i*70 + 60, L*9000 + 100, 30)
                 pg.draw.rect(self.screen, (0, 0, 0), rect)
             
                 if x.start_time :
                     if x.goal_time > x.start_time:
                         pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
-                        rect2 = pg.Rect(700, i*70 + 60, pourc*(L*9000+100), 30)
+                        rect2 = pg.Rect(900, i*70 + 60, pourc*(L*9000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
             pg.display.update()
                     
