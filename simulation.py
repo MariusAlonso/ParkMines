@@ -29,6 +29,8 @@ class Simulation():
         # nb_events_tracker : dictionnaire contenant le nombre d'évènements dans la file de priorité à chaque date
         self.nb_events_tracker = {}
 
+        self.side_chosen_to_retrieve = {}
+
         # Création de la file d'événements : ajout des commandes
         self.events = []
         for v in self.stock.vehicles.values():
@@ -75,7 +77,8 @@ class Simulation():
                 print(f"vehicle carrying:", robot.vehicle)
                 print(f"goal_position:", robot.goal_position)
             print("-------------")
-            # print([k for k in self.locked_lanes if self.locked_lanes[k]])
+            print([(k,self.locked_lanes[k]) for k in self.locked_lanes if self.locked_lanes[k]])
+            print("-------------")
 
 
         vehicle = event.vehicle
@@ -231,7 +234,8 @@ class Simulation():
 
                     if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
                         i_lane = self.parking.blocks[0].empty_lane()
-                        self.locked_lanes[event.robot.goal_position] -= 1
+                        side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
+                        self.locked_lanes[event.robot.goal_position[:2] + (side_chosen_initially,)] -= 1
                         self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
                         self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
                         #On place le vehicule a l'interface
@@ -255,68 +259,85 @@ class Simulation():
 
 
         elif event.event_type == "robot_end_task":
-
-            # On vérifie que le robot n'ai pas été dérouté
-            if event == event.robot.doing:
-
-                event.robot.start_position = event.robot.goal_position
-                event.robot.start_time = self.t
-
-                
-                block_id, lane_id, side = event.robot.start_position
-                lane = self.parking.blocks[block_id].lanes[lane_id]
-
-                lane.push(vehicle.id, side)
-                event.robot.vehicle = None
-                if side == "top":
-                    self.parking.occupation[event.vehicle.id] = (block_id, lane_id, lane.top_position)
-                else:
-                    self.parking.occupation[event.vehicle.id] = (block_id, lane_id, lane.bottom_position)
-
-                if self.display:
-                    self.display.draw_vehicle(vehicle)
-
-                if self.print_in_terminal:
-                    print(f"{event.robot} places {vehicle.id} ")
-                    print(self.parking)
-                    print("")
-
-                if block_id == 0:
-                    # ajout du retard éventuel à la liste des retards à la sortie
-                    self.retrieval_delays.append(self.t - event.robot.target.date)
-                
-                    for pdg_retrieval in self.pending_retrievals:
-                        # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
-                        if pdg_retrieval == event.robot.target:
-                            self.execute(event.robot.target)
-                            self.pending_retrievals.remove(event.robot.target)
-                            break
+            self.execute_robot_end_task(event, vehicle)
 
 
-                event.robot.target = None
-                event.robot.doing = None
-                self.assign_task(event.robot)
-                
-                self.whistle()
+    def execute_robot_end_task(self, event, vehicle):
+
+        # On vérifie que le robot n'ai pas été dérouté
+        if event == event.robot.doing:
+
+            event.robot.start_position = event.robot.goal_position
+            event.robot.start_time = self.t
+
+            
+            block_id, lane_id, side = event.robot.start_position
+            lane = self.parking.blocks[block_id].lanes[lane_id]
+
+            lane.push(vehicle.id, side)
+            event.robot.vehicle = None
+            if side == "top":
+                self.parking.occupation[event.vehicle.id] = (block_id, lane_id, lane.top_position)
+            else:
+                self.parking.occupation[event.vehicle.id] = (block_id, lane_id, lane.bottom_position)
+
+            if self.display:
+                self.display.draw_vehicle(vehicle)
+
+            if self.print_in_terminal:
+                print(f"{event.robot} places {vehicle.id} ")
+                print(self.parking)
+                print("")
+
+            if block_id == 0:
+                # ajout du retard éventuel à la liste des retards à la sortie
+                self.retrieval_delays.append(self.t - vehicle.retrieval)
+            
+                for pdg_retrieval in self.pending_retrievals:
+                    # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
+                    if pdg_retrieval.vehicle.id == vehicle.id:
+                        self.execute(pdg_retrieval)
+                        self.pending_retrievals.remove(pdg_retrieval)
+                        break
 
 
+            event.robot.target = None
+            event.robot.doing = None
+            self.assign_task(event.robot)
+            
+            self.whistle()
 
-    def next_event(self, repeat = 1):
+
+    def next_event(self, until = None, repeat = 1):
         """
         Exécute un nombre d'évènements égal à repeat
         """
-        for _ in range(repeat):
-            if self.events:
-                time_start = time.time()
-                event = heapq.heappop(self.events)
-                self.t = event.date
-                self.nb_events_tracker[self.t] = len(self.events)
-                self.execute(event)
-                self.time_execution += time.time() - time_start
-            else:
-                if self.print_in_terminal:
-                    print("THE SIMULATION IS COMPLETED")
-                break
+        if until is None:
+            for _ in range(repeat):
+                if self.events:
+                    time_start = time.time()
+                    event = heapq.heappop(self.events)
+                    self.t = event.date
+                    self.nb_events_tracker[self.t] = len(self.events)
+                    self.execute(event)
+                    self.time_execution += time.time() - time_start
+                else:
+                    if self.print_in_terminal:
+                        print("THE SIMULATION IS COMPLETED")
+                    break
+        else:
+            while self.t < until:
+                if self.events:
+                    time_start = time.time()
+                    event = heapq.heappop(self.events)
+                    self.t = event.date
+                    self.nb_events_tracker[self.t] = len(self.events)
+                    self.execute(event)
+                    self.time_execution += time.time() - time_start
+                else:
+                    if self.print_in_terminal:
+                        print("THE SIMULATION IS COMPLETED")
+                    break       
         return bool(self.events)
             
     def complete(self):
@@ -500,6 +521,7 @@ class Simulation():
                     # event.event_retrieval.unassigned_tasks = position - vehicle_lane.top_position + 1
                 
                 self.locked_lanes[(block_id, lane_id, side)] += 1
+                self.side_chosen_to_retrieve[event.vehicle.id] = side
 
                 # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
                 for robot in self.robots:                           
@@ -554,7 +576,7 @@ class Event():
         return True
     
     def __eq__(self, other):
-        return (not (other is None)) and self.date == other.date
+        return (not (other is None)) and self.date == other.date and self.vehicle.id == other.vehicle.id
     
     def __lt__(self, other):
         return self.date < other.date

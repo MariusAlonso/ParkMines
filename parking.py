@@ -86,7 +86,7 @@ class Parking():
             else:
                 place2 = (arrival[0], arrival[1], 1)
             duree = self.matrix_time[place1[0]][place1[1]][place1[2]][place2[0]][place2[1]][place2[2]]
-        return datetime.timedelta(0,duree) + datetime.timedelta(0,30, minutes=1)
+        return datetime.timedelta(0,int(duree)) + datetime.timedelta(0,30, minutes=1)
     
     def block_width(self, block_id):
         if block_id == "s":
@@ -124,6 +124,8 @@ class Block():
             self.nb_lanes = len(self.lanes)
             self.lane_length = self.lanes[0].length
 
+        
+
         self.lane_length = lane_length
         # dimensions
         self.height = len(self.lanes) # en nombre de voitures
@@ -133,11 +135,14 @@ class Block():
         self.y_pos = None
 
         self.direction = direction
+
+        self.nb_places_available = self.height
+        self.targeted = [False]*self.height
     
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
         
-        matrix = np.empty((self.height, self.width), dtype='<U5')
+        matrix = np.empty((self.height, self.width), dtype='<U6')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
             liste = [str(item).replace('None', '-') for item in liste]
@@ -150,10 +155,7 @@ class Block():
 
 class BlockInterface(Block):
 
-    def __init__(self, lanes, nb_lanes=None, lane_length=None):
-        super().__init__(lanes, nb_lanes, lane_length)
-        self.nb_places_available = self.height
-        self.targeted = [False]*self.height
+   
 
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
