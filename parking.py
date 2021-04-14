@@ -150,7 +150,7 @@ class Block():
 
 class BlockInterface(Block):
 
-    def __init__(self, lanes, nb_lanes=None, lane_length=None):
+    def __init__(self, lanes, nb_lanes=None, lane_length=1):
         super().__init__(lanes, nb_lanes, lane_length)
         self.nb_places_available = self.height
         self.targeted = [False]*self.height

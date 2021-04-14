@@ -55,7 +55,7 @@ class Dashboard():
         else:
             return datetime.timedelta()
     
-    def depositDelaysRates(self, delays=[i for i in range(300)]):
+    def depositDelaysRates(self, delays=[i for i in range(180)]):
         """
         renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
         """
@@ -429,7 +429,248 @@ class Performance():
                     bottom=0.065,
                     right=0.985,
                     top=0.955,
-                    wspace=0.175,
-                    hspace=0.45)
+                    wspace=0.185,
+                    hspace=0.35)
         plt.show()
+
+
+
+    def variableInterfaceAndRobots(self, nb_repetition=10, interface_delta_sizes=[i for i in range(-2, 4)], nb_robots_max=3):
+        """
+        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetition répétitions
+        """
+        # curves = {(interface_size, nb_robots): dictionnaire des performances pour cette taille d'interface et ce nombre de robots}
+        curves = {}
+        ref_nb_lanes = self.parking.blocks[0].nb_lanes
+
+        # remplissage du dictionnaire curves
+        for interface_delta_size in interface_delta_sizes:
+            # génération du parking avec la bonne interface
+            interface_size = int(ref_nb_lanes+interface_delta_size)
+            interface = BlockInterface(None, nb_lanes=interface_size)
+            blocks = [interface] + self.parking.blocks[1:]
+            disposal = self.parking.disposal[:]
+            parking = Parking(blocks, disposal)
+
+            for nb_robots in range(1, nb_robots_max + 1):
+                # génération de toutes les sorties
+                performance = Performance(self.t, self.stock_args, [Robot(i) for i in range(1, nb_robots + 1)], parking, deepcopy(self.algorithm))
+                curves[(interface_size, nb_robots)] = performance.averageDashboard(nb_repetition)
+
+        # tracé
+
+        ### before deposit ###
+
+        before_deposit = plt.subplot(3, 3, 1)
+        # abscisses : la taille de l'interface
+        interface_sizes = []
+        # ordonnées : liste (indexée par le nombre de robots) des listes de retards
+        delay = [[] for i in range(nb_robots)]
+        for interface_size, nb_robots in curves:
+            if nb_robots == nb_robots_max:
+                interface_sizes.append(interface_size)
+            delay[nb_robots-1].append(curves[interface_size, nb_robots]['average_before_deposit_delay'])
+        # construction des tableaux à tracer
+        x = np.array(interface_sizes)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot '
+            else:
+                label = str(nb_robots) + ' robots'
+            before_deposit.plot(x, y, label=label)
         
+        # titre et légende
+        before_deposit.legend()
+        before_deposit.set_xlabel("taille de l'interface")
+        before_deposit.set_ylabel("temps d'attente (min)")
+        before_deposit.set_title("attente client avant dépôt")
+        before_deposit.autoscale(tight=True)
+
+        ### after deposit ###
+        
+        after_deposit = plt.subplot(3, 3, 2)
+        # abscisses : la taille de l'interface
+        interface_sizes = []
+        # ordonnées : liste (indexée par le nombre de robots) des listes de retards
+        delay = [[] for i in range(nb_robots)]
+        for interface_size, nb_robots in curves:
+            if nb_robots == nb_robots_max:
+                interface_sizes.append(interface_size)
+            delay[nb_robots-1].append(curves[interface_size, nb_robots]['average_after_deposit_delay'])
+        # construction des tableaux à tracer
+        x = np.array(interface_sizes)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
+            else:
+                label = str(nb_robots) + ' robots'
+            after_deposit.plot(x, y, label=label)
+        
+        # titre et légende
+        after_deposit.legend()
+        after_deposit.set_xlabel("taille de l'interface")
+        after_deposit.set_ylabel("temps d'attente (min)")
+        after_deposit.set_title("attente véhicule dans interface après dépôt")
+        after_deposit.autoscale(tight=True)
+
+        ### retrieval ###
+        
+        retrieval = plt.subplot(3, 3, 3)
+        # abscisses : la taille de l'interface
+        interface_sizes = []
+        # ordonnées : liste (indexée par le nombre de robots) des listes de retards
+        delay = [[] for i in range(nb_robots)]
+        for interface_size, nb_robots in curves:
+            if nb_robots == nb_robots_max:
+                interface_sizes.append(interface_size)
+            delay[nb_robots-1].append(curves[interface_size, nb_robots]['average_retrieval_delay'])
+        # construction des tableaux à tracer
+        x = np.array(interface_sizes)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[nb_robots-1]])
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
+            else:
+                label = str(nb_robots) + ' robots'
+            retrieval.plot(x, y, label=label)
+        
+        # titre et légende
+        retrieval.legend()
+        retrieval.set_xlabel("taille de l'interface")
+        retrieval.set_ylabel("temps d'attente (min)")
+        retrieval.set_title("attente client avant récupération")
+        retrieval.autoscale(tight=True)
+
+        ### average_intermediate_mpv ###
+        
+        average_intermediate_mpv = plt.subplot(3, 3, 4)
+        # abscisses : la taille de l'interface
+        interface_sizes = []
+        # ordonnées : liste (indexée par le nombre de robots) des nombres de mouvements
+        moves = [[] for i in range(nb_robots)]
+        for interface_size, nb_robots in curves:
+            if nb_robots == nb_robots_max:
+                interface_sizes.append(interface_size)
+            moves[nb_robots-1].append(curves[interface_size, nb_robots]['average_intermediate_mpv'])
+        # construction des tableaux à tracer
+        x = np.array(interface_sizes)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array(moves[nb_robots-1])
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
+            else:
+                label = str(nb_robots) + ' robots'
+            average_intermediate_mpv.plot(x, y, label=label)
+        
+        # titre et légende
+        average_intermediate_mpv.legend()
+        average_intermediate_mpv.set_xlabel("taille de l'interface")
+        average_intermediate_mpv.set_ylabel("nombre de mouvements")
+        average_intermediate_mpv.set_title("nombre de mouvements intermédiaires")
+        average_intermediate_mpv.autoscale(tight=True)
+
+        ### success_rate ###
+        
+        success_rate = plt.subplot(3, 3, 7)
+        # abscisses : la taille de l'interface
+        interface_sizes = []
+        # ordonnées : liste (indexée par le nombre de robots) des taux de succès
+        rate = [[] for i in range(nb_robots)]
+        for interface_size, nb_robots in curves:
+            if nb_robots == nb_robots_max:
+                interface_sizes.append(interface_size)
+            rate[nb_robots-1].append(curves[interface_size, nb_robots]['success_rate'])
+        # construction des tableaux à tracer
+        x = np.array(interface_sizes)
+        for nb_robots in range(1, nb_robots_max + 1):
+            y = np.array(rate[nb_robots-1])
+            if nb_robots == 1:
+                label = str(nb_robots) + ' robot'
+            else:
+                label = str(nb_robots) + ' robots'
+            success_rate.plot(x, y, label=label)
+        
+        # titre et légende
+        success_rate.set_ylim([0., 1.1])
+        success_rate.legend()
+        success_rate.set_xlabel("taille de l'interface")
+        success_rate.set_ylabel("taux de succès")
+        success_rate.set_title("taux de succès de l'algorithme")
+        success_rate.autoscale(tight=True)
+
+        ### average_deposit_delay_rates ###
+        
+        deposit_delays = plt.subplot(3, 3, (5, 8))
+        
+        for interface_size, nb_robots in curves:
+            # abscisses : le retard
+            delays = []
+            # ordonnées : la part des clients concernés
+            ratios = []
+            # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
+            if isclose(interface_size, int(interface_size)):
+                #on récupère la courbe pour ce flux et ce nombre de robots
+                average_deposit_delay_rates = curves[interface_size, nb_robots]['average_deposit_delay_rates']
+                # construction des tableaux à tracer
+                for delay, ratio in average_deposit_delay_rates.items():
+                    delays.append(delay)
+                    ratios.append(ratio)
+                
+                # tracé
+                x = np.array(delays)
+                y = np.array(ratios)
+
+                label = f"r={nb_robots}, i={int(interface_size)}"
+
+                deposit_delays.plot(x, y, label=label)        
+        
+        # titre et légende
+        deposit_delays.legend()
+        deposit_delays.set_xlabel("minorant du temps d'attente pour la sortie (min)")
+        deposit_delays.set_ylabel("part des clients concernés")
+        deposit_delays.set_title("temps d'attente moyen au dépôt")
+        deposit_delays.autoscale(tight=True)
+
+        ### average_retrieval_delay_rates ###
+        
+        retrieval_delays = plt.subplot(3, 3, (6, 9))
+        
+        for interface_size, nb_robots in curves:
+            # abscisses : le retard
+            delays = []
+            # ordonnées : la part des clients concernés
+            ratios = []
+            # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
+            if isclose(interface_size, int(interface_size)):
+                #on récupère la courbe pour ce flux et ce nombre de robots
+                average_retrieval_delay_rates = curves[interface_size, nb_robots]['average_retrieval_delay_rates']
+                # construction des tableaux à tracer
+                for delay, ratio in average_retrieval_delay_rates.items():
+                    delays.append(delay)
+                    ratios.append(ratio)
+                
+                # tracé
+                x = np.array(delays)
+                y = np.array(ratios)
+
+                label = f"r={nb_robots}, i={int(interface_size)}"
+
+                retrieval_delays.plot(x, y, label=label)        
+        
+        # titre et légende
+        retrieval_delays.legend()
+        retrieval_delays.set_xlabel("minorant du temps d'attente pour la sortie (min)")
+        retrieval_delays.set_ylabel("part des clients concernés")
+        retrieval_delays.set_title("temps d'attente moyen au dépôt")
+        retrieval_delays.autoscale(tight=True)
+
+        # ajustement des espaces pour tout afficher
+        plt.subplots_adjust(left=0.05,
+                    bottom=0.065,
+                    right=0.985,
+                    top=0.955,
+                    wspace=0.185,
+                    hspace=0.35)
+        plt.show()

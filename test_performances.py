@@ -238,6 +238,16 @@ class TestTest():
         # test
         performance.variableStockAndRobots(nb_repetition)
         assert 0 == 0
+    
+    def testVariableInterfaceAndRobots(self, stock_args=(15, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
+        # création du parking
+        Vehicle.next_id = 1
+        parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1)], parking, AlgorithmRandom, delays=delays)
+
+        # test
+        performance.variableInterfaceAndRobots(nb_repetition)
+        assert 0 == 0
 
 
 # exécution hors pytest
@@ -245,4 +255,5 @@ class TestTest():
 test = TestTest()
 
 #test.testAverageDashboard(stock_args=(5, ), display=True)
-test.testVariableStockAndRobots(nb_repetition=10)
+#test.testVariableStockAndRobots(nb_repetition=10)
+test.testVariableInterfaceAndRobots(nb_repetition=100)
