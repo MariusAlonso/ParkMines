@@ -142,7 +142,7 @@ class Block():
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
         
-        matrix = np.empty((self.height, self.width), dtype='<U5')
+        matrix = np.empty((self.height, self.width), dtype='<U6')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
             liste = [str(item).replace('None', '-') for item in liste]

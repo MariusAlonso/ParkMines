@@ -53,7 +53,7 @@ class Display():
 
         self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
         self.speed = 0
-        self.time_interval = 0.1
+        self.time_interval = 0
 
         pg.init()
         self.screen = pg.display.set_mode((1200, 800))
