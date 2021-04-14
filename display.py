@@ -1,6 +1,9 @@
 import pygame as pg
 from simulation import *
 import numpy as np
+from sim_analysis import Analysis
+import matplotlib.pyplot as plt
+plt.ion()
 
 class TextInputBox(pg.sprite.Sprite):
 
@@ -51,20 +54,25 @@ class Display():
         self.place_length = place_length
         self.place_width = place_width
 
+        self.last_update_day = 0
+
         self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
 
+        self.analysis = Analysis(self.simulation)
 
         pg.init()
         self.screen = pg.display.set_mode((1000, 800))
         self.screen.fill((255, 255, 255))
         clock = pg.time.Clock()
 
+        self.figure = plt.figure()
+
         max_i_disposal = len(self.parking.disposal)
         max_j_disposal = len(self.parking.disposal[0])
         x0 = [0]*max_j_disposal
         y0 = [0]*max_i_disposal
 
-        print(self.parking.disposal)
+        #print(self.parking.disposal)
 
         for i_disposal in range(1, max_i_disposal):   
 
@@ -212,6 +220,16 @@ class Display():
 
             pg.display.update()
 
+            #on trace la figure de plt
+            if self.simulation.t.day != self.last_update_day:
+                self.analysis.entree_vehicle()
+                self.analysis.sortie_vehicle()
+                self.analysis.count_vehicle()
+                self.analysis.flux()
+                self.update_figure()
+                self.figure.canvas.draw()
+                self.last_update_day = self.simulation.t.day
+
         # Enfin on rajoute un appel à pg.quit()
         # Cet appel va permettre à pg de "bien s'éteindre" et éviter des bugs sous Windows
         pg.quit()
@@ -287,7 +305,7 @@ class Display():
 
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
                 L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
-                print(L*30000)
+                
                 rect = pg.Rect(700, i*70 + 60, L*30000 + 100, 30)
                 pg.draw.rect(self.screen, (0, 0, 0), rect)
             
@@ -297,4 +315,23 @@ class Display():
                         rect2 = pg.Rect(700, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
             pg.display.update()
-                    
+
+    def update_figure(self):
+        
+        self.analysis.first_day, self.analysis.last_day = self.stock.duration_simu()
+        n = (self.analysis.last_day - self.analysis.first_day).days
+        #t = np.zeros(n)
+        #t[0] = self.analysis.first_day.day
+        #for i in range(1, n): 
+            #t[i] = t[i-1] + datetime.datetime(days=1)
+        
+        print("############", (self.simulation.t - self.analysis.first_day).days)
+        #plt.plot((self.simulation.t - self.analysis.first_day).days*np.ones(5))
+
+        print(self.analysis.nb_entree_array[:5])
+        plt.plot(np.arange(len(self.analysis.nb_entree_array)), self.analysis.nb_entree_array)
+        """
+        plt.plot(self.analysis.nb_sortie_array)
+        plt.plot(self.analysis.nb_voiture_array)
+        plt.plot(self.analysis.taux_occupation_array)
+        plt.plot(self.analysis.flux_moyen_array)"""

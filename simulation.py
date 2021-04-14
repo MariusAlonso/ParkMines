@@ -49,6 +49,10 @@ class Simulation():
         
         self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes) # /!\ provisoire
 
+        # Dictionnaires pour l'analyse de flux
+        self.nb_entree = {}
+        self.nb_sortie = {}
+
         # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
             if self.events[0].date >= t0:
@@ -96,6 +100,11 @@ class Simulation():
             # self.wake_up_robots()
 
         elif event.event_type == "deposit":
+            nb_jour = (self.t - self.stock.first_day).days
+            if nb_jour in self.nb_entree.keys():
+                self.nb_entree[nb_jour] += 1
+            else:
+                self.nb_entree[nb_jour] = 1
 
             lane_id = self.parking.blocks[0].empty_lane()
             if lane_id == "full":
@@ -121,6 +130,11 @@ class Simulation():
                 print("")
 
         elif event.event_type == "retrieval":
+            nb_jour = (self.t - self.stock.first_day).days
+            if nb_jour in self.nb_sortie.keys():
+                self.nb_sortie[nb_jour] += 1
+            else:
+                self.nb_sortie[nb_jour] = 1
             
             if vehicle.id in self.parking.occupation:
                 i_block, i_lane, _ = self.parking.occupation[vehicle.id]
