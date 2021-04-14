@@ -52,7 +52,8 @@ class Display():
         self.place_width = place_width
 
         self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
-
+        self.speed = 0
+        self.time_interval = 0.1
 
         pg.init()
         self.screen = pg.display.set_mode((1000, 800))
@@ -96,11 +97,11 @@ class Display():
                     while k >=0 and self.parking.disposal[i_disposal][k] == self.parking.disposal[i_disposal][j_disposal-1]:
                         k -= 1
 
-                    block_id = self.parking.disposal[k+1][j_disposal]
+                    block_id = self.parking.disposal[i_disposal][k+1]
                     if type(block_id) == str or self.parking.blocks[block_id].direction == "topbottom":
                         x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_width(block_id))
                     else:
-                        x0[j_disposal] = max(x0[j_disposal], y0[k+1] + self.block_height(block_id))
+                        x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_height(block_id))
                 
                 print("x0",x0)
         
@@ -161,6 +162,7 @@ class Display():
 
         self.x0 = x0
         self.y0 = y0
+        print(x0, y0)
         self.font = pg.font.SysFont(None, 2*self.place_length//4)
         self.font_fixed = pg.font.SysFont(None, 30)
         """
@@ -170,9 +172,10 @@ class Display():
 
         running = True
         complete = False
+        last_display_t = time.time()
 
         while running:
-            clock.tick(1000)
+            clock.tick(100)
 
             # on itère sur tous les évênements qui ont eu lieu depuis le précédent appel
             # ici donc tous les évènements survenus durant la seconde précédente
@@ -191,10 +194,22 @@ class Display():
 
                     if event.key == pg.K_c:
                         complete = not complete
-            
+
+                    if event.key == pg.K_s:
+                        self.speed += 1
+                        self.speed %= 4
             if complete:
-                complete = self.simulation.next_event()
-            
+                if time.time() - last_display_t > self.time_interval:
+                    if self.speed == 0:
+                        complete = self.simulation.next_event()
+                    if self.speed == 1:
+                        complete = self.simulation.next_event(self.simulation.t + datetime.timedelta(minutes=15))
+                    if self.speed == 2:
+                        complete = self.simulation.next_event(self.simulation.t.replace(minute=0, second=0) + datetime.timedelta(hours=1))
+                    if self.speed == 3:
+                        complete = self.simulation.next_event(self.simulation.t.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1))
+                    last_display_t = time.time()        
+           
             #self.screen.fill(0)
             """
             group.update(event_list)
@@ -270,7 +285,7 @@ class Display():
         pg.draw.rect(self.screen, (255,255,255), rect3) #on actualise en couvrant avec un rectangle blanc
         
         for i, x in enumerate(self.robots): #on parcourt tous les robots utilisés
-            pg.display.update()             
+            # pg.display.update()             
             if x.vehicle: #le robot transporte un véhicule
                 if x.target: #le robot a une cible en tête
                     text = self.font_fixed.render(f"Robot {x.id_robot} : {x.vehicle.id}", True, (0, 0, 0))
@@ -286,5 +301,5 @@ class Display():
                         pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
                         rect2 = pg.Rect(700, i*70 + 60, pourc*(L*9000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
-            pg.display.update()
+            # pg.display.update()
                     
