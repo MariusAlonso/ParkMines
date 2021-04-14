@@ -88,69 +88,7 @@ class Simulation():
         
         elif event.event_type == "wake_up_robots_retrieval":
 
-            # Si un robot est en train de transporter un véhicule cible d'un retrieval
-            for robot in self.robots:
-                if not (robot.vehicle is None) and robot.vehicle.id == event.vehicle.id:
-                    i_lane = self.parking.blocks[0].empty_lane()
-                    if i_lane != "full":
-                        block_id, lane_id, side = robot.goal_position
-                        self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
-                        self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
-                        self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
-                        #On place le vehicule a l'interface
-                        robot.goal_position = (0, i_lane, "bottom")
-                        self.parking.blocks[0].nb_places_available -= 1
-                        # Calcul du temps de trajet faux
-                        robot.goal_time = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
-                        robot.target = event.event_retrieval
-                        event.event_retrieval.unassigned_tasks = 0
-                        
-                        event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
-                        heapq.heappush(self.events, event_end_task)
-
-                        robot.doing.canceled = True
-                        robot.doing = event_end_task
-
-            # Si un véhicule cible d'un retrieval est garé sur le parking
-            if event.vehicle.id in self.parking.occupation:
-                block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
-                if block_id != 0:
-                    vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
-                    
-                    if vehicle_lane.bottom_access and vehicle_lane.bottom_position - position < position - vehicle_lane.top_position:
-                        side = "bottom"
-                        # event.event_retrieval.unassigned_tasks = vehicle_lane.bottom_position - position + 1
-                    else:
-                        side = "top"
-                        # event.event_retrieval.unassigned_tasks = position - vehicle_lane.top_position + 1
-                    
-                    self.locked_lanes[(block_id, lane_id, side)] += 1
-
-                    # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
-                    for robot in self.robots:                           
-                        if not (robot.vehicle is None) and robot.goal_position == (block_id, lane_id, side):
-                            self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
-                            robot.goal_position = self.algorithm.place(robot.vehicle)
-                            # Calcul du temps de trajet faux
-                            robot.goal_time  = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
-                            event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
-                            heapq.heappush(self.events, event_end_task)
-
-                            robot.doing.canceled = True
-                            robot.doing = event_end_task
-
-            # Si un robot veut retirer de l'interface un véhicule cible d'un retrieval   
-            for robot in self.robots:
-                if (not robot.target is None) and robot.target.event_type == "empty_interface" and robot.target.vehicle.id == event.vehicle.id:
-                    robot.target = None
-                    robot.doing.canceled = True
-                    robot.doing = None
-                    _, lane_id, _ = robot.goal_position
-                    self.parking.blocks[0].targeted[lane_id] = False
-                    self.parking.blocks[0].lanes[lane_id].pop_cancel_reserve("bottom")
-                    robot.goal_position = robot.start_position
-                    self.assign_task(robot)
-
+            self.check_redirections(event)
             self.wake_up_robots()
 
         elif event.event_type == "wake_up_robots_deposit":
@@ -508,7 +446,72 @@ class Simulation():
     
     def whistle(self):
         pass
-            
+
+    def check_redirections(self, event):
+
+        # Si un robot est en train de transporter un véhicule cible d'un retrieval
+        for robot in self.robots:
+            if not (robot.vehicle is None) and robot.vehicle.id == event.vehicle.id:
+                i_lane = self.parking.blocks[0].empty_lane()
+                if i_lane != "full":
+                    block_id, lane_id, side = robot.goal_position
+                    self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
+                    self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
+                    self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
+                    #On place le vehicule a l'interface
+                    robot.goal_position = (0, i_lane, "bottom")
+                    self.parking.blocks[0].nb_places_available -= 1
+                    # Calcul du temps de trajet faux
+                    robot.goal_time = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
+                    robot.target = event.event_retrieval
+                    event.event_retrieval.unassigned_tasks = 0
+                    
+                    event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
+                    heapq.heappush(self.events, event_end_task)
+
+                    robot.doing.canceled = True
+                    robot.doing = event_end_task
+
+        # Si un véhicule cible d'un retrieval est garé sur le parking
+        if event.vehicle.id in self.parking.occupation:
+            block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
+            if block_id != 0:
+                vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
+                
+                if vehicle_lane.bottom_access and vehicle_lane.bottom_position - position < position - vehicle_lane.top_position:
+                    side = "bottom"
+                    # event.event_retrieval.unassigned_tasks = vehicle_lane.bottom_position - position + 1
+                else:
+                    side = "top"
+                    # event.event_retrieval.unassigned_tasks = position - vehicle_lane.top_position + 1
+                
+                self.locked_lanes[(block_id, lane_id, side)] += 1
+
+                # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
+                for robot in self.robots:                           
+                    if not (robot.vehicle is None) and robot.goal_position == (block_id, lane_id, side):
+                        self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
+                        robot.goal_position = self.algorithm.place(robot.vehicle)
+                        # Calcul du temps de trajet faux
+                        robot.goal_time  = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
+                        event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
+                        heapq.heappush(self.events, event_end_task)
+
+                        robot.doing.canceled = True
+                        robot.doing = event_end_task
+
+        # Si un robot veut retirer de l'interface un véhicule cible d'un retrieval   
+        for robot in self.robots:
+            if (not robot.target is None) and robot.target.event_type == "empty_interface" and robot.target.vehicle.id == event.vehicle.id:
+                robot.target = None
+                robot.doing.canceled = True
+                robot.doing = None
+                _, lane_id, _ = robot.goal_position
+                self.parking.blocks[0].targeted[lane_id] = False
+                self.parking.blocks[0].lanes[lane_id].pop_cancel_reserve("bottom")
+                robot.goal_position = robot.start_position
+                self.assign_task(robot)
+         
 
     
 
