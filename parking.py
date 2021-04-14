@@ -86,7 +86,7 @@ class Parking():
             else:
                 place2 = (arrival[0], arrival[1], 1)
             duree = self.matrix_time[place1[0]][place1[1]][place1[2]][place2[0]][place2[1]][place2[2]]
-        return datetime.timedelta(0,duree) + datetime.timedelta(0,30, minutes=1)
+        return datetime.timedelta(0,int(duree)) + datetime.timedelta(0,30, minutes=1)
     
     def block_width(self, block_id):
         if block_id == "s":
