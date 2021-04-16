@@ -9,7 +9,7 @@ class TestTest():
     def test_display_parking(self):
         
         Vehicle.next_id = 1
-        stock = RandomStock(29, time = datetime.timedelta(days=5000))
+        stock = RandomStock(10, time = datetime.timedelta(days=50))
         print(len(stock.vehicles))
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         real_parking2 = Parking([BlockInterface([],10,1,"leftrigth"), Block([], 15, 7), Block([], 14, 7), Block([], 13, 6), Block([], 8, 7), Block([], 18, 7), Block([], 10, 11,"leftrigth")], [['s', 'f7:0',1,1,1],['s', 'f3:0',1,1,1], ['s','f3:0',0,2,2], ['s','f3:0',3,3,3], ['s',5,5,4,4], ['s','f3:0',6,6,6]])

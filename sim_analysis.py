@@ -36,7 +36,7 @@ class Analysis():
         for jour in self.simulation.nb_entree.keys():
             nb_vehicle = nb_vehicle + self.simulation.nb_entree.get(jour, 0) - self.simulation.nb_sortie.get(jour, 0) 
             self.nb_voiture_array[jour] = nb_vehicle
-            self.taux_occupation_array[jour] = nb_vehicle/self.simulation.parking.nb_of_places
+            self.taux_occupation_array[jour] = 100*nb_vehicle/self.simulation.parking.nb_of_places
 
     def flux(self):
         for jour in self.simulation.nb_entree.keys():

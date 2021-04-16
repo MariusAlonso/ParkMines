@@ -57,13 +57,10 @@ class Display():
         self.last_update_day = 0
 
         self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
-<<<<<<< HEAD
-
         self.analysis = Analysis(self.simulation)
-=======
         self.speed = 0
         self.time_interval = 0
->>>>>>> c49410a481e463980ed02a40bea41a5113c270d2
+
 
         pg.init()
         self.screen = pg.display.set_mode((1200, 800))
@@ -346,13 +343,19 @@ class Display():
         #for i in range(1, n): 
             #t[i] = t[i-1] + datetime.datetime(days=1)
         
-        print("############", (self.simulation.t - self.analysis.first_day).days)
+        #print("############", (self.simulation.t - self.analysis.first_day).days)
         #plt.plot((self.simulation.t - self.analysis.first_day).days*np.ones(5))
 
         print(self.analysis.nb_entree_array[:5])
+        plt.clf()
+        plt.subplot(2,1,1)
         plt.plot(np.arange(len(self.analysis.nb_entree_array)), self.analysis.nb_entree_array)
+        plt.plot(np.arange(len(self.analysis.nb_entree_array)), self.analysis.nb_sortie_array)
+        plt.subplot(2,1,2)
+        plt.plot(np.arange(len(self.analysis.nb_entree_array)), self.analysis.taux_occupation_array)
+        
         """
-        plt.plot(self.analysis.nb_sortie_array)
+        
         plt.plot(self.analysis.nb_voiture_array)
-        plt.plot(self.analysis.taux_occupation_array)
+        
         plt.plot(self.analysis.flux_moyen_array)"""
