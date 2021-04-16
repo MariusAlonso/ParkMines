@@ -39,7 +39,7 @@ class Stock():
     def remove(self, vehicle):
         del self.vehicles[vehicle.id]
 
-    def duration_simu(self, margin = datetime.timedelta(days=7)):
+    def duration_simu(self):
         first_day = self.vehicles[1].order_deposit
         last_day = self.vehicles[1].retrieval
         for _, vehicle in self.vehicles.items():
@@ -47,7 +47,7 @@ class Stock():
                 first_day = vehicle.order_deposit
             if vehicle.retrieval > last_day:
                 last_day = vehicle.retrieval
-        return first_day, last_day + margin
+        return first_day, last_day
 
 
 class RandomStock(Stock):

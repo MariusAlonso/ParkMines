@@ -173,7 +173,7 @@ class Display():
 
         self.x0 = x0
         self.y0 = y0
-        print(x0, y0)
+        #print(x0, y0)
         self.font = pg.font.SysFont(None, 2*self.place_length//4)
         self.font_fixed = pg.font.SysFont(None, 30)
         """
@@ -243,6 +243,7 @@ class Display():
                 self.analysis.entree_vehicle()
                 self.analysis.sortie_vehicle()
                 self.analysis.count_vehicle()
+                self.analysis.count_vehicle_interface()
                 self.analysis.flux()
                 self.update_figure()
                 self.figure.canvas.draw()
@@ -338,24 +339,24 @@ class Display():
         
         self.analysis.first_day, self.analysis.last_day = self.stock.duration_simu()
         n = (self.analysis.last_day - self.analysis.first_day).days
-        #t = np.zeros(n)
-        #t[0] = self.analysis.first_day.day
-        #for i in range(1, n): 
-            #t[i] = t[i-1] + datetime.datetime(days=1)
-        
-        #print("############", (self.simulation.t - self.analysis.first_day).days)
-        #plt.plot((self.simulation.t - self.analysis.first_day).days*np.ones(5))
-
-        print(self.analysis.nb_entree_array[:5])
+        t = [k for k in range(n)]
         plt.clf()
-        plt.subplot(2,1,1)
-        plt.plot(np.arange(len(self.analysis.nb_entree_array)), self.analysis.nb_entree_array)
-        plt.plot(np.arange(len(self.analysis.nb_entree_array)), self.analysis.nb_sortie_array)
-        plt.subplot(2,1,2)
-        plt.plot(np.arange(len(self.analysis.nb_entree_array)), self.analysis.taux_occupation_array)
-        
-        """
-        
-        plt.plot(self.analysis.nb_voiture_array)
-        
-        plt.plot(self.analysis.flux_moyen_array)"""
+
+        plt.subplot(3,1,1)
+        plt.plot(t, [0]*n, color='white') #permet de tracer la fenêtre aux bonnes dimensions
+        plt.plot(self.analysis.nb_entree_array, label="Nombre d'entrées")
+        plt.plot(self.analysis.nb_sortie_array, label="Nombre de sorties")
+        plt.ylabel('Nombre de voitures')
+        plt.legend()
+
+        plt.subplot(3,1,2)
+        plt.plot(t, [1] + [0]*(n-1), color='white')
+        plt.plot(self.analysis.taux_occupation_array, label="Taux d'occupation du parking")
+        plt.plot(self.analysis.taux_occupation_interface_array, label="Taux d'occupation de l'interface")
+        plt.legend()
+
+        plt.subplot(3,1,3)
+        plt.plot(t, [0]*n, color='white')
+        plt.plot(self.analysis.flux_moyen_array)
+        plt.xlabel('Jour')
+        plt.ylabel("Flux moyen")

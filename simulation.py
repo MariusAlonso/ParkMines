@@ -54,6 +54,7 @@ class Simulation():
         # Dictionnaires pour l'analyse de flux
         self.nb_entree = {}
         self.nb_sortie = {}
+        self.nb_sortie_interface = {}
 
         # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
@@ -134,15 +135,16 @@ class Simulation():
 
         elif event.event_type == "retrieval":
             nb_jour = (self.t - self.stock.first_day).days
-            if nb_jour in self.nb_sortie.keys():
-                self.nb_sortie[nb_jour] += 1
-            else:
-                self.nb_sortie[nb_jour] = 1
-            
+
             if vehicle.id in self.parking.occupation:
                 i_block, i_lane, _ = self.parking.occupation[vehicle.id]
                 if i_block == 0:
-                    # Le client récupère son véhicle (seul endroit dans simulation où cela se produit)
+                    if nb_jour in self.nb_sortie.keys():
+                        self.nb_sortie[nb_jour] += 1
+                    else:
+                        self.nb_sortie[nb_jour] = 1
+
+                    # Le client récupère son véhicule (seul endroit dans simulation où cela se produit)
                     self.parking.blocks[0].lanes[i_lane].pop("top")
 
                     if self.display:
@@ -173,6 +175,12 @@ class Simulation():
                     event.robot.goal_time = None
                     event.robot.target = None
                     event.robot.doing = None
+
+                    nb_jour = (self.t - self.stock.first_day).days
+                    if nb_jour in self.nb_sortie_interface.keys():
+                        self.nb_sortie_interface[nb_jour] += 1
+                    else:
+                        self.nb_sortie_interface[nb_jour] = 1
                         
                     if self.print_in_terminal:
                         print(f"Robot {event.robot} waits in interface zone")
@@ -323,7 +331,7 @@ class Simulation():
                     self.time_execution += time.time() - time_start
                 else:
                     if self.print_in_terminal:
-                        print("THE SIMULATION IS COMPLETED")
+                        print("THE SIMULATION IS COMPETED")
                     break
         else:
             while self.t < until:

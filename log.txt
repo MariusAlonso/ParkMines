@@ -109,32 +109,483 @@ i 6 0
 6 4
 i 6 5
 i 6 6
-[20, 54, 138, 214, 374, 513, 673] [20, 92, 137, 161, 300, 319, 319]
-[None None None None None]
-[None None None None None]
-[None None None None None]
-[None None None None None]
-[None None None None None]
-[None None None None None]
-[None None None 7 6]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
-[None None None 7 11]
+[None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None] {}
+[None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None] {}
+[None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None] {}
+[None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None] {}
+[None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None] {}
+[None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None] {}
+[None None None None 2 None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None] {4: 2}
+[None None None None 2 2.5 None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None] {4: 2, 5: 3}
+[None None None None 2 2.5 2.0 None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None] {4: 2, 5: 3, 6: 1}
+[None None None None 2 2.5 2.5 4.5 None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7}
+[None None None None 2 2.5 2.5 4.5 4.5 None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 6.5 None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.0 None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 8.5 None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 11}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.0 None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 12}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 None None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 5.5 None None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 5}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 None
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ None None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 None None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 None None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 None None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 None None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 None None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 None None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 None None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 None None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 None None None None None
+ None None None None None None None None None None None None None None
+ None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 None None None None
+ None None None None None None None None None None None None None None
+ None None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 None None None None
+ None None None None None None None None None None None None None None
+ None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 None None None
+ None None None None None None None None None None None None None None
+ None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 None None
+ None None None None None None None None None None None None None None
+ None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 None
+ None None None None None None None None None None None None None None
+ None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5
+ None None None None None None None None None None None None None None
+ None None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ None None None None None None None None None None None None None None
+ None None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 None None None None None None None None None None None None None None
+ None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 None None None None None None None None None None None None None
+ None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 None None None None None None None None None None None None
+ None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 None None None None None None None None None None None
+ None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 4.0 None None None None None None None None None None
+ None None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2, 71: 6}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 4.0 4.0 None None None None None None None None None None
+ None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2, 71: 6, 72: 2}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 4.0 4.0 1.5 None None None None None None None None None
+ None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2, 71: 6, 72: 2, 73: 1}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 4.0 4.0 1.5 1.0 None None None None None None None None
+ None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2, 71: 6, 72: 2, 73: 1, 74: 1}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 4.0 4.0 1.5 1.0 1.0 None None None None None None None
+ None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2, 71: 6, 72: 2, 73: 1, 74: 1, 75: 1}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 4.0 4.0 1.5 1.0 1.0 None None 1.0 None None None None
+ None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2, 71: 6, 72: 2, 73: 1, 74: 1, 75: 1, 78: 1}
+[None None None None 2 2.5 2.5 4.5 4.5 2.5 4.5 5.0 4.5 6.5 6.5 5.0 6.0 7.0
+ 7.0 9.0 10.5 13.0 12.0 9.0 10.0 8.5 9.0 8.5 9.0 13.0 13.0 11.0 14.5 17.0
+ 11.5 9.0 11.5 15.5 14.0 7.5 5.5 8.0 11.5 11.5 8.0 9.0 9.0 6.0 7.0 12.0
+ 17.5 14.5 11.0 12.0 8.0 8.5 14.5 12.5 9.5 9.5 7.0 5.5 7.0 7.0 6.0 5.5 4.0
+ 5.5 5.0 4.0 4.0 4.0 4.0 1.5 1.0 1.0 None None 1.0 None None None None
+ None] {4: 2, 5: 3, 6: 2, 7: 7, 8: 2, 9: 3, 10: 6, 11: 4, 12: 5, 13: 8, 14: 5, 15: 5, 16: 7, 17: 7, 18: 7, 19: 11, 20: 10, 21: 16, 22: 8, 23: 10, 24: 10, 25: 7, 26: 11, 27: 6, 28: 12, 29: 14, 30: 12, 31: 10, 32: 19, 33: 15, 34: 8, 35: 10, 36: 13, 37: 18, 38: 10, 39: 5, 40: 6, 41: 10, 42: 13, 43: 10, 44: 6, 45: 12, 46: 6, 47: 6, 48: 8, 49: 16, 50: 19, 51: 10, 52: 12, 53: 12, 54: 4, 55: 13, 56: 16, 57: 9, 58: 10, 59: 9, 60: 5, 61: 6, 62: 8, 63: 6, 64: 6, 65: 5, 66: 3, 67: 8, 68: 2, 69: 6, 70: 2, 71: 6, 72: 2, 73: 1, 74: 1, 75: 1, 78: 1}
