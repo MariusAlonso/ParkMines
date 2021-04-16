@@ -225,7 +225,7 @@ class Display():
                         complete = self.simulation.next_event(self.simulation.t.replace(minute=0, second=0) + datetime.timedelta(hours=1))
                     if self.speed == 3:
                         complete = self.simulation.next_event(self.simulation.t.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1))
-                    last_display_t = time.time()        
+                    last_display_t = time.time()      
            
             #self.screen.fill(0)
             """
@@ -235,6 +235,9 @@ class Display():
             pg.draw.rect(self.screen, (255, 255, 255), pg.Rect(900,10,300,30))
             t_surf = self.font_fixed.render(str(self.simulation.t), True, (0, 0, 0))
             self.screen.blit(t_surf, (900, 10))
+
+            for vehicle_id in self.parking.occupation:
+                self.draw_vehicle(self.stock.vehicles[vehicle_id])  
 
             pg.display.update()
 
@@ -286,8 +289,17 @@ class Display():
         else:
             x = x_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
             y = y_block + (self.place_width+1)*lane_id + (self.place_width - 3*self.place_width//4)//2 + 1
-            rect = pg.Rect(x, y, 3*self.place_length//4, 3*self.place_width//4)           
-        pg.draw.rect(self.screen, (200, 0, 0), rect)
+            rect = pg.Rect(x, y, 3*self.place_length//4, 3*self.place_width//4)  
+
+        if self.simulation.t < vehicle.order_retrieval:
+            color = (75,200,0)
+        else:
+            k = (vehicle.retrieval - self.simulation.t).total_seconds()/86400
+            if k >= 0:
+                color = (max(150-k*150/30,0),min(150+k*100/30,255),0)
+            else:
+                color = (min(255,150-24*k*100),max(0,150+24*k*150,0),0)
+        pg.draw.rect(self.screen, color, rect)
         
         # Affichage de l'identifiant du véhicule
         t_surf = self.font.render(str(vehicle.id), True, (0, 0, 0))
