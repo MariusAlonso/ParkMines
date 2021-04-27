@@ -79,7 +79,7 @@ if __name__ == "__main__":
                 Vehicle.next_id = 1
                 stock = RandomStock(10)
                 parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10, "leftright"), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-                simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], parking, AlgorithmRandom, print_in_terminal=False)
+                simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], parking, AlgorithmUnivoke, print_in_terminal=False)
                 simulation.complete()
             except:
                 pass

@@ -133,6 +133,12 @@ class Parking():
         elif type(block_id) == str and block_id[0] == "f":
             return int(block_id[1:].split(":")[1])
         return self.blocks[block_id].lanes[0].length*self.place_ratio + 1
+    
+    def opposite(self, side):
+        if side == "top":
+            return "bottom"
+        if side == "bottom":
+            return "top"
 
 class Block():
     def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
@@ -190,7 +196,7 @@ class Block():
 class BlockInterface(Block):
 
     def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
-        super().__init__(lanes)
+        super().__init__(lanes, nb_lanes, lane_length, direction)
         self.nb_places_available = self.height
         self.targeted = [False]*self.height
 
@@ -245,6 +251,25 @@ class Lane() :
         if not self.bottom_position is None:
             M = max(M, self.bottom_position)   
         return self.bottom_access and M < self.length - 1
+    
+    def is_end_available(self, side):
+        if side == "top":
+            return self.is_top_available()
+        if side == "bottom":
+            return self.is_bottom_available()
+    
+
+    def end_position(self, side):
+        if side == "top":
+            return self.top_position
+        if side == "bottom":
+            return self.bottom_position
+
+    def future_end_position(self, side):
+        if side == "top":
+            return self.future_top_position
+        if side == "bottom":
+            return self.future_bottom_position
 
 
     def push(self, id_vehicle, coté):
@@ -276,7 +301,7 @@ class Lane() :
                 self.list_vehicles[self.bottom_position + 1] = id_vehicle
                 self.bottom_position += 1
 
-    def push_reserve(self, coté):
+    def push_reserve(self, id_vehicle, coté, mark=True):
         if coté == "top":
             if self.future_top_position == None:
                 if not self.bottom_access:
@@ -287,6 +312,8 @@ class Lane() :
                     self.future_bottom_position = self.length//2
             else:
                 self.future_top_position -= 1
+            if mark:
+                self.list_vehicles[self.future_top_position] = id_vehicle 
 
         elif coté == "bottom":
             if self.future_bottom_position == None:
@@ -298,6 +325,8 @@ class Lane() :
                     self.future_bottom_position = self.length//2
             else:
                 self.future_bottom_position += 1
+            if mark:
+                self.list_vehicles[self.future_bottom_position] = id_vehicle
 
     def push_cancel_reserve(self, coté):
         if coté == "top":

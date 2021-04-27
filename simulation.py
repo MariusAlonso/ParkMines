@@ -114,7 +114,7 @@ class Simulation():
             if lane_id == "full":
                 heapq.heappush(self.pending_deposits, event)
             else:
-                self.parking.blocks[0].lanes[lane_id].push_reserve("top")
+                self.parking.blocks[0].lanes[lane_id].push_reserve(vehicle.id, "top", mark=False)
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top")
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
 
@@ -226,7 +226,7 @@ class Simulation():
                         self.parking.blocks[0].nb_places_available += 1
                         if self.pending_deposits:
                             event_deposit = heapq.heappop(self.pending_deposits)
-                            self.parking.blocks[0].lanes[lane_id].push_reserve("top")
+                            self.parking.blocks[0].lanes[lane_id].push_reserve(event_deposit.vehicle.id, "top", mark=False)
                             self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top")
                             self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
 
@@ -244,7 +244,7 @@ class Simulation():
                         i_lane = self.parking.blocks[0].empty_lane()
                         side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
                         self.locked_lanes[event.robot.goal_position[:2] + (side_chosen_initially,)] -= 1
-                        self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
+                        self.parking.blocks[0].lanes[i_lane].push_reserve(moved_vehicle.id, "bottom", mark=False)
                         self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
                         #On place le vehicule a l'interface
                         event.robot.goal_position = (0, i_lane, "bottom")
@@ -499,7 +499,7 @@ class Simulation():
                 if i_lane != "full":
                     block_id, lane_id, side = robot.goal_position
                     self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
-                    self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
+                    self.parking.blocks[0].lanes[i_lane].push_reserve(robot.vehicle.id, "bottom", mark=False)
                     self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
                     #On place le vehicule a l'interface
                     robot.goal_position = (0, i_lane, "bottom")
@@ -608,34 +608,6 @@ class Algorithm():
         self.nb_placements = 0
 
 class AlgorithmRandom(Algorithm):
-    
-    def place_old(self, vehicle, forbidden_access = None, max_iter=1000):
-        """
-        forbidden_access : tuple (Lane, "top"/"bottom")
-        """
-        self.nb_placements += 1
-        nb_iter = 0
-        while nb_iter < max_iter:
-            rand_i_block = random.randrange(1, len(self.parking.blocks))
-            rand_i_lane = random.randrange(len(self.parking.blocks[rand_i_block].lanes))
-            lane_chosen = self.parking.blocks[rand_i_block].lanes[rand_i_lane]
-            if random.randrange(2):
-                if not self.locked_lanes[(rand_i_block, rand_i_lane, "top")]:
-                    #if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "top" == forbidden_access[1]):
-                    if lane_chosen.is_top_available():
-                        lane_chosen.push_top(vehicle.id)
-                        self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.top_position)
-                        break
-            else:
-                if not self.locked_lanes[(rand_i_block, rand_i_lane, "bottom")]:
-                    #if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "bottom" == forbidden_access[1]):
-                    if lane_chosen.is_bottom_available():
-                        lane_chosen.push_bottom(vehicle.id)
-                        self.parking.occupation[vehicle.id] = (rand_i_block, rand_i_lane, lane_chosen.bottom_position)
-                        break
-            nb_iter += 1
-            if nb_iter == max_iter:
-                raise ValueError("le placement n'a pas pu être effectué")
 
     def place(self, vehicle, forbidden_access = None, max_iter=1000):
         """
@@ -651,13 +623,13 @@ class AlgorithmRandom(Algorithm):
                 if not self.locked_lanes[(rand_i_block, rand_i_lane, "top")]:
                     #if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "top" == forbidden_access[1]):
                     if lane_chosen.is_top_available():
-                        lane_chosen.push_reserve("top")
+                        lane_chosen.push_reserve(vehicle.id, "top")
                         return (rand_i_block, rand_i_lane, "top")
             else:
                 if not self.locked_lanes[(rand_i_block, rand_i_lane, "bottom")]:
                     #if (not forbidden_access) or not (lane_chosen == forbidden_access[0] and "bottom" == forbidden_access[1]):
                     if lane_chosen.is_bottom_available():
-                        lane_chosen.push_reserve("bottom")
+                        lane_chosen.push_reserve(vehicle.id, "bottom")
                         return (rand_i_block, rand_i_lane, "bottom")
             nb_iter += 1
             if nb_iter == max_iter:
@@ -666,3 +638,50 @@ class AlgorithmRandom(Algorithm):
                     print(self.parking)
                     print(self.locked_lanes)
                 raise ValueError("le placement n'a pas pu être effectué")
+
+
+class AlgorithmUnivoke(Algorithm):
+
+    def place(self, vehicle, forbidden_access = None):
+        self.nb_placements += 1
+        min_weight = None
+        min_lane_end = None
+        for lane_end, is_locked in self.locked_lanes.items():
+            if not is_locked and (forbidden_access is None or forbidden_access != lane_end):
+                block_id, lane_id, side = lane_end
+                if block_id != 0:
+                    lane = self.parking.blocks[block_id].lanes[lane_id]
+                    if lane.is_end_available(side):
+                        x = lane.future_end_position(side)
+                        y = lane.future_end_position(self.parking.opposite(side))
+
+                        weight = 100000000
+                        if x is None:
+                            weight = 100000
+                        elif x == y:
+                            weight = abs((self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds())
+                        elif x < y:
+                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval <= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
+                                weight = (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
+                            elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x]].retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
+                                weight = - (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
+                        else:
+                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval <= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
+                                weight = (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
+                            elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x]].retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
+                                weight = - (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
+                        if min_weight is None or min_weight > weight:
+                            min_weight = weight
+                            min_lane_end = lane_end
+        
+        if not min_weight is None:
+            block_id, lane_id, side = min_lane_end
+            lane = self.parking.blocks[block_id].lanes[lane_id]
+            lane.push_reserve(vehicle.id, side)
+            return min_lane_end
+        else:
+            if self.print_in_terminal:
+                print("ERREUR DE PLACEMENT")
+                print(self.parking)
+                print(self.locked_lanes)
+            raise ValueError("le placement n'a pas pu être effectué")
