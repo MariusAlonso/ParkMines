@@ -81,9 +81,8 @@ class Simulation():
             print([(k,self.locked_lanes[k]) for k in self.locked_lanes if self.locked_lanes[k]])
             print("-------------")
             for block_id, lane_id, side in self.locked_lanes:
-                if block_id == 1:
-                    lane = self.parking.blocks[block_id].lanes[lane_id]
-                    print((block_id, lane_id, side), lane.top_position, lane.argmax_retrieval, lane.bottom_position)
+                lane = self.parking.blocks[block_id].lanes[lane_id]
+                print((block_id, lane_id, side), lane.top_position, lane.argmax_retrieval, lane.bottom_position)
             print("-------------")
 
 
@@ -245,7 +244,7 @@ class Simulation():
                     event.robot.start_position = event.robot.goal_position
                     event.robot.start_time = self.t
 
-                    if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
+                    if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t < datetime.timedelta(hours=1):
                         i_lane = self.parking.blocks[0].empty_lane()
                         side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
                         self.locked_lanes[event.robot.goal_position[:2] + (side_chosen_initially,)] -= 1
@@ -430,29 +429,9 @@ class Simulation():
 
             return event
         
-    """
-    def find_unassigned_events(self, are_available_places_interface):
-        i = 0
-        while i < len(self.pending_retrievals):
-            event = self.pending_retrievals[i]
-            if event.unassigned_tasks and event.vehicle.id in self.parking.occupation:
-                if event.unassigned_tasks != 1 or are_available_places_interface:                   
-                    event.unassigned_tasks -= 1
-                    return event
-            i += 1
 
-        i = 0
-        while i < len(self.events):
-            event = self.events[i]
-            if event.date - self.t > datetime.timedelta(hours=1):
-                break
-            if event.event_type == "retrieval" and event.unassigned_tasks and event.vehicle.id in self.parking.occupation:
-                if event.unassigned_tasks != 1 or are_available_places_interface:                       
-                    event.unassigned_tasks -= 1
-                    return event
-            i += 1
-    """
     def find_unassigned_events(self, are_available_places_interface):
+        # On verifie d'abord si des retrievals sont en retard
         i = 0
         while i < len(self.pending_retrievals):
             event = self.pending_retrievals[i]
@@ -469,6 +448,7 @@ class Simulation():
                             return event
             i += 1
 
+        # On s'intéresse ensuite aux retrievals qui sont prévus dans moins d'une heure
         i = 0
         while i < len(self.events):
             event = self.events[i]
@@ -494,6 +474,8 @@ class Simulation():
     
     def whistle(self):
         pass
+
+
 
     def check_redirections(self, event):
 
@@ -660,28 +642,31 @@ class AlgorithmUnimodal(Algorithm):
                         # On simule l'évolution de la lane
                         time_of_arrival = time + self.parking.travel_time(start_position, lane_end)
                         events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
-                        lane.push(vehicle.id, side, self.stock, edit_max = False)
+                        lane.push(vehicle.id, side, self.stock)
                         # x : position du véhicule dans la lane       
                         x = lane.end_position(side)          
                         events_to_reverse.append((side,))
-                        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = time_of_arrival, ))
+                        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = time_of_arrival))
 
                         if side == "top":
                             distance_to_lane_end = lane.top_position
                         else:
                             distance_to_lane_end = lane.length - lane.bottom_position - 1
-                        
+    
                         # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
                         weight = 1000000
                         if lane.top_position == x and lane.bottom_position == x:
                             # Poids de l'extrémité si le véhicule est seul dans sa lane
                             weight = 10000
                         elif lane.top_position <= x and lane.bottom_position >= x:
-                            max_retrieval = self.stock.vehicles[lane.list_vehicles[lane.argmax_retrieval]].retrieval
-                            if vehicle.retrieval > max_retrieval:
-                                if abs(x - lane.argmax_retrieval) <= 1:
-                                    # Poids de l'extrémité si le véhicule est le nouveau "maximum" de la lane
-                                    weight = (vehicle.retrieval - max_retrieval).total_seconds()//60
+                            if x == lane.argmax_retrieval:
+                                # Le véhicule est le nouveau "maximum" de la lane
+                                if lane.top_position < x:
+                                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x-1]].retrieval).total_seconds()//60
+                                    if lane.bottom_position > x:
+                                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60)
+                                else:
+                                     weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60
                             elif x > lane.argmax_retrieval:
                                 # Le véhicule est à droite du "maximum" de la lane
                                 if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
