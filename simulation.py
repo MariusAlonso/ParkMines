@@ -646,8 +646,13 @@ class AlgorithmUnivoke(Algorithm):
         self.nb_placements += 1
         min_weight = None
         min_lane_end = None
+        """
+        self.locked_lanes.keys() contient l'ensemble des extrémités de lane (bloquées ou non !)
+        On parcourt l'ensemble de ces extrémités et on cherche celle de poids minimal
+        """
         for lane_end, is_locked in self.locked_lanes.items():
             if not is_locked and (forbidden_access is None or forbidden_access != lane_end):
+                # forbidden_access contient l'extrémité de départ d'un véhicule lors d'un mouvement intermédiaire
                 block_id, lane_id, side = lane_end
                 if block_id != 0:
                     lane = self.parking.blocks[block_id].lanes[lane_id]
@@ -655,21 +660,31 @@ class AlgorithmUnivoke(Algorithm):
                         x = lane.future_end_position(side)
                         y = lane.future_end_position(self.parking.opposite(side))
 
+                        # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
                         weight = 100000000
                         if x is None:
+                            # Il n'y a aucun véhicule dans la lane
                             weight = 100000
                         elif x == y:
+                            # Il y a un seul véhicule dans la lane
                             weight = abs((self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds())
                         elif x < y:
-                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval <= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
+                            # Il y a plusieurs véhicules dans la lane, et on considère l'extrémité "top"
+                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval:
+                                # On assure la croissance du côté top
                                 weight = (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
                             elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x]].retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
+                                # On conserve la décroissance du côté top
                                 weight = - (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
                         else:
-                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval <= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
+                            # Il y a plusieurs véhicules dans la lane, et on considère l'extrémité "bottom"
+                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval:
+                                # On assure la décroissance du côté bottom
                                 weight = (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
                             elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x]].retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
+                                # On conserve la croissance du côté bottom
                                 weight = - (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
+                        
                         if min_weight is None or min_weight > weight:
                             min_weight = weight
                             min_lane_end = lane_end
