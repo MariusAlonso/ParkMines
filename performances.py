@@ -678,7 +678,7 @@ class Performance():
         plt.show()
 
 
-    def variableAlgorithmsAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-4, 3)], algorithms=[AlgorithmRandom, AlgorithmUnivoke]):
+    def variableAlgorithmsAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-4, 3)], algorithms=[AlgorithmRandom, AlgorithmUnivoke, AlgorithmRefinedUnivoke]):
         """
         Compare les performances de différents algorithmes pour un stock variable
         """

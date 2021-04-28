@@ -279,4 +279,4 @@ test = TestTest()
 #test.testVariableInterfaceAndRobots(nb_repetition=10)
 #test.testVariableStockAndRobotsRealParking(stock_args=(30, ), nb_repetition=10)
 
-test.testVariableAlgorithmsAndRobotsRealParking(nb_repetition=100)
+test.testVariableAlgorithmsAndRobotsRealParking(nb_repetition=20)
