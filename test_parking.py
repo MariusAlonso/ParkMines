@@ -46,10 +46,10 @@ class TestTest():
         lane = Lane(0, 10)
         lane.push(vehicle_1.id, "top") 
         lane.push(vehicle_2.id, "top")
-        lane.pop_top()
+        lane.pop("top")
         assert lane.list_vehicles[4] == None
         assert lane.top_position == 5
-        lane.pop_top()
+        lane.pop("top")
         assert lane.list_vehicles[5] == None
         assert lane.top_position == None
 
@@ -60,10 +60,10 @@ class TestTest():
         lane = Lane(0, 10)
         lane.push(vehicle_1.id, "bottom") 
         lane.push(vehicle_2.id, "bottom")
-        lane.pop_bottom()
+        lane.pop("bottom")
         assert lane.list_vehicles[6] == None
         assert lane.bottom_position == 5
-        lane.pop_bottom()
+        lane.pop("bottom")
         assert lane.list_vehicles[5] == None
         assert lane.bottom_position == None
 
@@ -108,6 +108,25 @@ class TestTest():
     def testNumberOfPlaces(self):
         parking = Parking([Block([Lane(1, 10), Lane(2, 10)]), Block([Lane(1, 7), Lane(2, 7)])])
         assert parking.nb_of_places == 34
+
+    def testCopy(self):
+        parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10, "leftright"), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+        parking_copied = parking._copy()
+        assert parking_copied.x_in_pw is parking.x_in_pw
+        assert not parking_copied.blocks is parking.blocks
+
+    def testEmptyCopy(self):
+        parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10, "leftright"), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+        Vehicle.next_id = 1
+        vehicle_1 = Vehicle(1, 2, 3, 4)
+        parking.blocks[0].lanes[0].push(vehicle_1.id, "top")
+        parking_copied = parking._empty_copy()
+        assert 1 in parking.blocks[0].lanes[0].list_vehicles
+        assert 1 not in parking_copied.blocks[0].lanes[0].list_vehicles
+
+test = TestTest()
+test.testCopy()
+test.testEmptyCopy()
 
 
 

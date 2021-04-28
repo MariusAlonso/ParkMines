@@ -2,21 +2,28 @@ from simulation import Vehicle
 import numpy as np
 import datetime
 import distance as dist
+from copy import copy, deepcopy
 
 class Parking():
-    def __init__(self, blocks, disposal=[[]]):
+    def __init__(self, blocks, disposal=[[]], occupation=dict()):
+        """
+        Attributs variant au cours d'une simulation
+        """
         self.blocks = blocks
-        self.occupation = dict()
-        self.disposal = disposal
-        self.nb_of_places = sum([block.height*block.width for block in self.blocks])
+        self.occupation = occupation
+        """
+        Attributs ne variant pas au cours d'une simulation
+        """
+        self.place_ratio = 2
 
+        self.nb_of_places = sum([block.height*block.width for block in self.blocks])
         L = []
         for block in self.blocks:
             L.append(len(block.lanes))
-        self.nb_max_lanes = max(L)          #lane plus longue du parking
+        self.nb_max_lanes = max(L)          #lane la plus longue du parking
 
-        self.place_ratio = 2
-
+        # Calcul des coordonnées du maillage correspondant à la matrice disposal
+        self.disposal = disposal
         max_i_disposal = len(self.disposal)
         max_j_disposal = len(self.disposal[0])
         self.x_in_pw = [0]*max_j_disposal
@@ -50,7 +57,7 @@ class Parking():
                     while k >=0 and self.disposal[i_disposal][k] == self.disposal[i_disposal][j_disposal-1]:
                         k -= 1
 
-                    block_id = self.disposal[k+1][j_disposal]
+                    block_id = self.disposal[i_disposal][k+1]
                     if type(block_id) == str or self.blocks[block_id].direction == "topbottom":
                         self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_width(block_id))
                     else:
@@ -59,8 +66,25 @@ class Parking():
         distance = dist.Distance(self)
         distance.fill_matrix_time()
         self.matrix_time = distance.matrix_time
-                
-                
+
+    
+    def _copy(self):
+        """
+        Crée une copie profonde d'un parking en conservant son état d'occupation
+        """
+        parking_copied = copy(self)
+        parking_copied.blocks = [block._copy() for block in self.blocks]
+        parking_copied.occupation = self.occupation.copy()
+        return parking_copied
+    
+    def _empty_copy(self):
+        """
+        Crée une copie profonde d'un parking en réinitialisant son état d'occupation
+        """
+        parking_copied = copy(self)
+        parking_copied.blocks = [block._empty_copy() for block in self.blocks]
+        parking_copied.occupation = self.occupation.copy()
+        return parking_copied               
     
     def __repr__(self):
         s = ""
@@ -124,9 +148,6 @@ class Block():
             self.nb_lanes = len(self.lanes)
             self.lane_length = self.lanes[0].length
 
-        
-
-        self.lane_length = lane_length
         # dimensions
         self.height = len(self.lanes) # en nombre de voitures
         self.width = self.lanes[0].length # en nombre de voitures
@@ -136,8 +157,21 @@ class Block():
 
         self.direction = direction
 
-        self.nb_places_available = self.height
-        self.targeted = [False]*self.height
+    def _copy(self):
+        block_copied = copy(self)
+        block_copied.lanes = [deepcopy(lane) for lane in self.lanes]
+        if isinstance(self, BlockInterface):
+            block_copied.targeted = self.targeted[:]
+        return block_copied
+
+    def _empty_copy(self):
+        block_copied = copy(self)
+        block_copied.lanes = [lane._empty_copy() for lane in self.lanes]
+        if isinstance(self, BlockInterface):
+            block_copied.nb_places_available = self.height
+            block_copied.targeted = [False]*self.height
+        return block_copied
+
     
     def __repr__(self):
         # on représente les lanes horizontalement pour construire et on transpose avant d'afficher
@@ -155,11 +189,10 @@ class Block():
 
 class BlockInterface(Block):
 
-    def __init__(self, lanes, nb_lanes=None, lane_length=1):
-        super().__init__(lanes, nb_lanes, lane_length)
+    def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
+        super().__init__(lanes)
         self.nb_places_available = self.height
         self.targeted = [False]*self.height
-
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
         for i_lane, lane in enumerate(self.lanes):
@@ -188,6 +221,9 @@ class Lane() :
         self.future_bottom_position = None      
         self.top_access = top_access
         self.bottom_access = bottom_access
+    
+    def _empty_copy(self):
+        return Lane(self.id, self.length, self.top_access, self.bottom_access)
 
     def __repr__(self):
         liste = self.list_vehicles[:]
@@ -285,8 +321,6 @@ class Lane() :
 
     def pop_cancel_reserve(self, coté):
         self.push_reserve(coté)
-
-
 
     def pop(self, coté):
         if coté == "top":

@@ -1,6 +1,9 @@
 import pygame as pg
 from simulation import *
 import numpy as np
+from sim_analysis import Analysis
+import matplotlib.pyplot as plt
+plt.ion()
 
 class TextInputBox(pg.sprite.Sprite):
 
@@ -51,21 +54,27 @@ class Display():
         self.place_length = place_length
         self.place_width = place_width
 
+        self.last_update_day = 0
+
         self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
+        self.analysis = Analysis(self.simulation)
         self.speed = 0
         self.time_interval = 0
+
 
         pg.init()
         self.screen = pg.display.set_mode((1200, 800))
         self.screen.fill((255, 255, 255))
         clock = pg.time.Clock()
 
+        self.figure = plt.figure()
+
         max_i_disposal = len(self.parking.disposal)
         max_j_disposal = len(self.parking.disposal[0])
         x0 = [20]*max_j_disposal
         y0 = [20]*max_i_disposal
 
-        print(self.parking.disposal)
+        #print(self.parking.disposal)
 
         for i_disposal in range(1, max_i_disposal):   
 
@@ -164,13 +173,19 @@ class Display():
 
         self.x0 = x0
         self.y0 = y0
-        print(x0, y0)
+        #print(x0, y0)
         self.font = pg.font.SysFont(None, 2*self.place_length//4)
         self.font_fixed = pg.font.SysFont(None, 30)
         """
         text_input_box = TextInputBox(50, 50, 400, font)
         group = pg.sprite.Group(text_input_box)
         """
+
+        #On affiche Robot 1 :, Robot 2 : ...
+        for i in range(4):
+            text = self.font_fixed.render(f"Robot {i+1} :", True, (0, 0, 0))
+            self.screen.blit(text, (700, i*70 + 40))
+
 
         running = True
         complete = False
@@ -210,7 +225,7 @@ class Display():
                         complete = self.simulation.next_event(self.simulation.t.replace(minute=0, second=0) + datetime.timedelta(hours=1))
                     if self.speed == 3:
                         complete = self.simulation.next_event(self.simulation.t.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1))
-                    last_display_t = time.time()        
+                    last_display_t = time.time()      
            
             #self.screen.fill(0)
             """
@@ -221,7 +236,21 @@ class Display():
             t_surf = self.font_fixed.render(str(self.simulation.t), True, (0, 0, 0))
             self.screen.blit(t_surf, (900, 10))
 
+            for vehicle_id in self.parking.occupation:
+                self.draw_vehicle(self.stock.vehicles[vehicle_id])  
+
             pg.display.update()
+
+            #on trace la figure de plt
+            if self.simulation.t.day != self.last_update_day:
+                self.analysis.entree_vehicle()
+                self.analysis.sortie_vehicle()
+                self.analysis.count_vehicle()
+                self.analysis.count_vehicle_interface()
+                self.analysis.flux()
+                self.update_figure()
+                self.figure.canvas.draw()
+                self.last_update_day = self.simulation.t.day
 
         # Enfin on rajoute un appel à pg.quit()
         # Cet appel va permettre à pg de "bien s'éteindre" et éviter des bugs sous Windows
@@ -260,8 +289,17 @@ class Display():
         else:
             x = x_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
             y = y_block + (self.place_width+1)*lane_id + (self.place_width - 3*self.place_width//4)//2 + 1
-            rect = pg.Rect(x, y, 3*self.place_length//4, 3*self.place_width//4)           
-        pg.draw.rect(self.screen, (200, 0, 0), rect)
+            rect = pg.Rect(x, y, 3*self.place_length//4, 3*self.place_width//4)  
+
+        if self.simulation.t < vehicle.order_retrieval:
+            color = (75,200,0)
+        else:
+            k = (vehicle.retrieval - self.simulation.t).total_seconds()/86400
+            if k >= 0:
+                color = (max(150-k*150/30,0),min(150+k*100/30,255),0)
+            else:
+                color = (min(255,150-24*k*100),max(0,150+24*k*150,0),0)
+        pg.draw.rect(self.screen, color, rect)
         
         # Affichage de l'identifiant du véhicule
         t_surf = self.font.render(str(vehicle.id), True, (0, 0, 0))
@@ -283,25 +321,54 @@ class Display():
         pg.draw.rect(self.screen, (100, 100, 100), rect)
 
     def show_robot(self):
-        rect3 = pg.Rect(900, 40, 200 ,700)
-        pg.draw.rect(self.screen, (255,255,255), rect3) #on actualise en couvrant avec un rectangle blanc
-        
+        for i in range(4):
+            rect3 = pg.Rect(790, i*70 + 40, 100 ,20) #recouvrement numéro de voiture
+            rect4 = pg.Rect(700, i*70 + 60, 200, 30) #recouvrement jauge
+            pg.draw.rect(self.screen, (255,255,255), rect3) #on actualise en couvrant avec un rectangle blanc
+            pg.draw.rect(self.screen, (255,255,255), rect4)
+
         for i, x in enumerate(self.robots): #on parcourt tous les robots utilisés
             # pg.display.update()             
             if x.vehicle: #le robot transporte un véhicule
                 if x.target: #le robot a une cible en tête
-                    text = self.font_fixed.render(f"Robot {x.id_robot} : {x.vehicle.id}", True, (0, 0, 0))
-                    self.screen.blit(text, (900, i*70 + 40)) #placement du texte
+                    text = self.font_fixed.render(f"{x.vehicle.id}", True, (0, 0, 0))
+                    self.screen.blit(text, (795, i*70 + 40)) #placement du texte
 
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
                 L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
-                rect = pg.Rect(900, i*70 + 60, L*9000 + 100, 30)
+                
+                rect = pg.Rect(700, i*70 + 60, L*30000 + 100, 30)
                 pg.draw.rect(self.screen, (0, 0, 0), rect)
             
                 if x.start_time :
                     if x.goal_time > x.start_time:
                         pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
-                        rect2 = pg.Rect(900, i*70 + 60, pourc*(L*9000+100), 30)
+                        rect2 = pg.Rect(700, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
-            # pg.display.update()
-                    
+            pg.display.update()
+
+    def update_figure(self):
+        
+        self.analysis.first_day, self.analysis.last_day = self.stock.duration_simu()
+        n = (self.analysis.last_day - self.analysis.first_day).days
+        t = [k for k in range(n)]
+        plt.clf()
+
+        plt.subplot(3,1,1)
+        plt.plot(t, [0]*n, color='white') #permet de tracer la fenêtre aux bonnes dimensions
+        plt.plot(self.analysis.nb_entree_array, label="Nombre d'entrées")
+        plt.plot(self.analysis.nb_sortie_array, label="Nombre de sorties")
+        plt.ylabel('Nombre de voitures')
+        plt.legend()
+
+        plt.subplot(3,1,2)
+        plt.plot(t, [1] + [0]*(n-1), color='white')
+        plt.plot(self.analysis.taux_occupation_array, label="Taux d'occupation du parking")
+        plt.plot(self.analysis.taux_occupation_interface_array, label="Taux d'occupation de l'interface")
+        plt.legend()
+
+        plt.subplot(3,1,3)
+        plt.plot(t, [0]*n, color='white')
+        plt.plot(self.analysis.flux_moyen_array)
+        plt.xlabel('Jour')
+        plt.ylabel("Flux moyen")
