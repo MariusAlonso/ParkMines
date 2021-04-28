@@ -239,7 +239,7 @@ class TestTest():
         performance.variableStockAndRobots(nb_repetition)
         assert 0 == 0
     
-    def testVariableInterfaceAndRobots(self, stock_args=(15, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
+    def testVariableInterfaceAndRobots(self, stock_args=(5, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
         # création du parking
         Vehicle.next_id = 1
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
@@ -249,6 +249,16 @@ class TestTest():
         performance.variableInterfaceAndRobots(nb_repetition)
         assert 0 == 0
 
+    def testVariableStockAndRobotsRealParking(self, stock_args=(5, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1)], real_parking, AlgorithmRandom, delays=delays)
+
+        # test
+        performance.variableStockAndRobots(nb_repetition)
+        assert 0 == 0
+
 
 # exécution hors pytest
 
@@ -256,4 +266,6 @@ test = TestTest()
 
 #test.testAverageDashboard(stock_args=(5, ), display=True)
 #test.testVariableStockAndRobots(nb_repetition=10)
-test.testVariableInterfaceAndRobots(nb_repetition=100)
+#test.testVariableInterfaceAndRobots(nb_repetition=10)
+
+test.testVariableStockAndRobotsRealParking(stock_args=(30, ), nb_repetition=1000)

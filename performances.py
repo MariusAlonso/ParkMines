@@ -199,7 +199,7 @@ class Performance():
             else:
                 print(key, means[key])
 
-    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.05*i for i in range(-8, 5)], nb_robots_max=3):
+    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-4, 3)], nb_robots_max=3):
         """
         regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetition répétitions
         """
@@ -210,6 +210,7 @@ class Performance():
         for factor in factors:
             stock_args = tuple(factor*np.array(self.stock_args))
             for nb_robots in range(1, nb_robots_max + 1):
+                print(nb_robots, factor)
                 # génération de toutes les sorties
                 performance = Performance(self.t, stock_args, [Robot(i) for i in range(1, nb_robots + 1)], deepcopy(self.parking), deepcopy(self.algorithm))
                 curves[(factor, nb_robots)] = performance.averageDashboard(nb_repetition)
@@ -454,6 +455,7 @@ class Performance():
 
             for nb_robots in range(1, nb_robots_max + 1):
                 # génération de toutes les sorties
+                print(interface_size, nb_robots)
                 performance = Performance(self.t, self.stock_args, [Robot(i) for i in range(1, nb_robots + 1)], parking, deepcopy(self.algorithm))
                 curves[(interface_size, nb_robots)] = performance.averageDashboard(nb_repetition)
 
