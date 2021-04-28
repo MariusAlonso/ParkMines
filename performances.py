@@ -349,6 +349,9 @@ class Performance():
                 label = str(nb_robots) + ' robot'
             else:
                 label = str(nb_robots) + ' robots'
+            # façon peu élégante de cadrer la figure
+            success_rate.plot(x, [0]*len(x), color='w')
+            success_rate.plot(x, [1.1]*len(x), color='w')
             success_rate.plot(x, y, label=label)
         
         # titre et légende
@@ -369,7 +372,7 @@ class Performance():
             # ordonnées : la part des clients concernés
             ratios = []
             # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
-            if isclose(factor*ref_flow, int(factor*ref_flow)):
+            if isclose(factor*ref_flow, int(factor*ref_flow)) and int(factor*ref_flow)%2 == 0: #les flux pairs sont un choix arbitraire pour avoir un peu moins de courbes
                 #on récupère la courbe pour ce flux et ce nombre de robots
                 average_deposit_delay_rates = curves[factor, nb_robots]['average_deposit_delay_rates']
                 # construction des tableaux à tracer
@@ -402,7 +405,7 @@ class Performance():
             # ordonnées : la part des clients concernés
             ratios = []
             # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
-            if isclose(factor*ref_flow, int(factor*ref_flow)):
+            if isclose(factor*ref_flow, int(factor*ref_flow)) and int(factor*ref_flow)%2 == 0: #les flux pairs sont un choix arbitraire pour avoir un peu moins de courbes
                 #on récupère la courbe pour ce flux et ce nombre de robots
                 average_retrieval_delay_rates = curves[factor, nb_robots]['average_retrieval_delay_rates']
                 # construction des tableaux à tracer
@@ -592,6 +595,9 @@ class Performance():
                 label = str(nb_robots) + ' robot'
             else:
                 label = str(nb_robots) + ' robots'
+            # façon peu élégante de cadrer la figure
+            success_rate.plot(x, [0]*len(x), color='w')
+            success_rate.plot(x, [1.1]*len(x), color='w')
             success_rate.plot(x, y, label=label)
         
         # titre et légende
@@ -678,7 +684,7 @@ class Performance():
         plt.show()
 
 
-    def variableAlgorithmsAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-4, 3)], algorithms=[AlgorithmRandom, AlgorithmUnivoke, AlgorithmRefinedUnivoke]):
+    def variableAlgorithmsAndFlow(self, nb_repetition=10, algorithms=[AlgorithmRandom], factors=[1+0.1*i for i in range(-4, 3)]):
         """
         Compare les performances de différents algorithmes pour un stock variable
         """
@@ -761,7 +767,7 @@ class Performance():
         # construction des tableaux à tracer
         x = np.array(flow)
         for algorithm in algorithms:
-            y = np.array([duration.total_seconds()/60.0 for duration in delay[algorithm]])
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[algorithm]][::-1])    # /!\ le [::-1] est provisoire, il y a une inversion quelque part et il faut la trouver
             label = algorithm.__repr__()
             retrieval.plot(x, y, label=label)
         
@@ -813,6 +819,9 @@ class Performance():
         for algorithm in algorithms:
             y = np.array(rate[algorithm])
             label = algorithm.__repr__()
+            # façon peu élégante de cadrer la figure
+            success_rate.plot(x, [0]*len(x), color='w')
+            success_rate.plot(x, [1.1]*len(x), color='w')
             success_rate.plot(x, y, label=label)
         
         # titre et légende
@@ -833,7 +842,7 @@ class Performance():
             # ordonnées : la part des clients concernés
             ratios = []
             # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
-            if isclose(factor*ref_flow, int(factor*ref_flow)):
+            if isclose(factor, 1): # on ne garde qu'un flux pour avoir un peu moins de courbes
                 #on récupère la courbe pour ce flux et ce nombre de robots
                 average_deposit_delay_rates = curves[factor, algorithm]['average_deposit_delay_rates']
                 # construction des tableaux à tracer
@@ -866,7 +875,7 @@ class Performance():
             # ordonnées : la part des clients concernés
             ratios = []
             # on trace les distributions pour tous les nombres de robots et pour les flux entiers (arbitraire)
-            if isclose(factor*ref_flow, int(factor*ref_flow)):
+            if isclose(factor, 1): # on ne garde qu'un flux pour avoir un peu moins de courbes
                 #on récupère la courbe pour ce flux et ce nombre de robots
                 average_retrieval_delay_rates = curves[factor, algorithm]['average_retrieval_delay_rates']
                 # construction des tableaux à tracer

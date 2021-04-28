@@ -21,17 +21,31 @@ class TestTest():
 
         assert 0 == 0
 
-    def test_univoke_algorithm(self):
+    def test_unimodal_algorithm(self):
         
         Vehicle.next_id = 1
-        stock = RandomStock(30, time = datetime.timedelta(days=100))
+        stock = RandomStock(30, time = datetime.timedelta(days=365))
         print(len(stock.vehicles))
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        Display(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmUnivoke, 12, 20, print_in_terminal = False)
+        with open("log.txt", "w") as log_file:
+            sys.stdout = log_file
+            Display(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
+        
+        assert 0 == 0
+
+    def test_unimodal_refined_algorithm(self):
+        
+        Vehicle.next_id = 1
+        stock = RandomStock(30, time = datetime.timedelta(days=365))
+        print(len(stock.vehicles))
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        with open("log.txt", "w") as log_file:
+            sys.stdout = log_file
+            Display(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmUnimodalRefined, 12, 20, print_in_terminal = False)
         
         assert 0 == 0
 
 test = TestTest()
 #test.test_display_parking()
 
-test.test_univoke_algorithm()
+test.test_unimodal_refined_algorithm()
