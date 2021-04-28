@@ -638,6 +638,10 @@ class AlgorithmRandom(Algorithm):
                     print(self.parking)
                     print(self.locked_lanes)
                 raise ValueError("le placement n'a pas pu être effectué")
+    
+    @classmethod
+    def __repr__(self):
+        return "Random"
 
 
 class AlgorithmUnivoke(Algorithm):
@@ -685,3 +689,7 @@ class AlgorithmUnivoke(Algorithm):
                 print(self.parking)
                 print(self.locked_lanes)
             raise ValueError("le placement n'a pas pu être effectué")
+
+    @classmethod
+    def __repr__(self):
+        return "Univoke"
