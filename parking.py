@@ -140,6 +140,36 @@ class Parking():
         if side == "bottom":
             return "top"
 
+    def future_config(self, block_id, lane_id, robots, stock, min_time = None, max_time = None):
+
+        lane = self.blocks[block_id].lanes[lane_id]
+        events_to_reverse = []
+
+        for robot in robots:
+            if (not max_time or robot.goal_time and robot.goal_time < max_time):
+                if (not min_time or robot.goal_time and robot.goal_time > min_time):
+                    if robot.goal_position[0:2] == (block_id, lane_id):
+                        side = robot.goal_position[2]
+                        if robot.vehicle is None:
+                            events_to_reverse.append((side, lane.pop(side)))
+                        else :
+                            lane.push(robot.vehicle.id, side, stock)
+                            events_to_reverse.append((side,))
+        
+        return events_to_reverse
+    
+    def reverse_config(self, block_id, lane_id, events_to_reverse, stock):
+
+        lane = self.blocks[block_id].lanes[lane_id]
+
+        for event in events_to_reverse[::-1]:
+            if len(event) == 1:
+                lane.pop(event[0])
+            else:
+                lane.push(event[1], event[0], stock)
+                 
+
+
 class Block():
     def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
 
@@ -227,6 +257,7 @@ class Lane() :
         self.future_bottom_position = None      
         self.top_access = top_access
         self.bottom_access = bottom_access
+        self.argmax_retrieval = None
     
     def _empty_copy(self):
         return Lane(self.id, self.length, self.top_access, self.bottom_access)
@@ -272,7 +303,7 @@ class Lane() :
             return self.future_bottom_position
 
 
-    def push(self, id_vehicle, coté):
+    def push(self, id_vehicle, coté, stock, edit_max = True):
         if coté == "top":
             if self.top_position == None:
                 if not self.bottom_access:
@@ -283,8 +314,13 @@ class Lane() :
                     self.list_vehicles[self.length//2] = id_vehicle
                     self.top_position = self.length//2
                     self.bottom_position = self.length//2
+                if edit_max:
+                    self.argmax_retrieval = self.top_position
             else:
                 self.list_vehicles[self.top_position-1] = id_vehicle
+                max_retrieval = stock.vehicles[self.list_vehicles[self.argmax_retrieval]].retrieval
+                if edit_max and self.argmax_retrieval == self.top_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
+                    self.argmax_retrieval -= 1
                 self.top_position -= 1
 
         elif coté == "bottom":
@@ -297,8 +333,13 @@ class Lane() :
                     self.list_vehicles[self.length//2] = id_vehicle
                     self.top_position = self.length//2
                     self.bottom_position = self.length//2
+                if edit_max:
+                    self.argmax_retrieval = self.top_position
             else:
                 self.list_vehicles[self.bottom_position + 1] = id_vehicle
+                max_retrieval = stock.vehicles[self.list_vehicles[self.argmax_retrieval]].retrieval
+                if edit_max and self.argmax_retrieval == self.bottom_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
+                    self.argmax_retrieval += 1
                 self.bottom_position += 1
 
     def push_reserve(self, id_vehicle, coté, mark=True):
@@ -312,8 +353,6 @@ class Lane() :
                     self.future_bottom_position = self.length//2
             else:
                 self.future_top_position -= 1
-            if mark:
-                self.list_vehicles[self.future_top_position] = id_vehicle 
 
         elif coté == "bottom":
             if self.future_bottom_position == None:
@@ -325,8 +364,6 @@ class Lane() :
                     self.future_bottom_position = self.length//2
             else:
                 self.future_bottom_position += 1
-            if mark:
-                self.list_vehicles[self.future_bottom_position] = id_vehicle
 
     def push_cancel_reserve(self, coté):
         if coté == "top":
@@ -349,7 +386,7 @@ class Lane() :
 
 
     def pop_cancel_reserve(self, coté):
-        self.push_reserve(coté)
+        self.push_reserve("None", coté)
 
     def pop(self, coté):
         if coté == "top":
@@ -360,6 +397,8 @@ class Lane() :
                 if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
+                elif self.top_position > self.argmax_retrieval:
+                    self.argmax_retrieval = self.top_position
                 return vehicle_id
 
         elif coté == "bottom":
@@ -370,6 +409,8 @@ class Lane() :
                 if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
+                elif self.bottom_position < self.argmax_retrieval:
+                    self.argmax_retrieval = self.bottom_position
                 return vehicle_id
 
 
