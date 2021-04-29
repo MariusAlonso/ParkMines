@@ -146,15 +146,16 @@ class Parking():
         events_to_reverse = []
 
         for robot in robots:
-            if (not max_time or robot.goal_time and robot.goal_time < max_time):
-                if (not min_time or robot.goal_time and robot.goal_time > min_time):
-                    if robot.goal_position[0:2] == (block_id, lane_id):
-                        side = robot.goal_position[2]
-                        if robot.vehicle is None:
-                            events_to_reverse.append((side, lane.pop(side)))
-                        else :
-                            lane.push(robot.vehicle.id, side, stock)
-                            events_to_reverse.append((side,))
+            if not robot.doing is None:
+                if (not max_time or robot.goal_time and robot.goal_time <= max_time):
+                    if (not min_time or robot.goal_time and robot.goal_time > min_time):
+                        if robot.goal_position[0:2] == (block_id, lane_id):
+                            side = robot.goal_position[2]
+                            if robot.vehicle is None:
+                                events_to_reverse.append((side, lane.pop(side)))
+                            else:
+                                lane.push(robot.vehicle.id, side, stock)
+                                events_to_reverse.append((side,))
         
         return events_to_reverse
     
@@ -303,7 +304,7 @@ class Lane() :
             return self.future_bottom_position
 
 
-    def push(self, id_vehicle, coté, stock, edit_max = True):
+    def push(self, id_vehicle, coté, stock):
         if coté == "top":
             if self.top_position == None:
                 if not self.bottom_access:
@@ -314,12 +315,12 @@ class Lane() :
                     self.list_vehicles[self.length//2] = id_vehicle
                     self.top_position = self.length//2
                     self.bottom_position = self.length//2
-                if edit_max:
-                    self.argmax_retrieval = self.top_position
+                
+                self.argmax_retrieval = self.top_position
             else:
                 self.list_vehicles[self.top_position-1] = id_vehicle
                 max_retrieval = stock.vehicles[self.list_vehicles[self.argmax_retrieval]].retrieval
-                if edit_max and self.argmax_retrieval == self.top_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
+                if self.argmax_retrieval == self.top_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
                     self.argmax_retrieval -= 1
                 self.top_position -= 1
 
@@ -333,12 +334,12 @@ class Lane() :
                     self.list_vehicles[self.length//2] = id_vehicle
                     self.top_position = self.length//2
                     self.bottom_position = self.length//2
-                if edit_max:
-                    self.argmax_retrieval = self.top_position
+                
+                self.argmax_retrieval = self.top_position
             else:
                 self.list_vehicles[self.bottom_position + 1] = id_vehicle
                 max_retrieval = stock.vehicles[self.list_vehicles[self.argmax_retrieval]].retrieval
-                if edit_max and self.argmax_retrieval == self.bottom_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
+                if self.argmax_retrieval == self.bottom_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
                     self.argmax_retrieval += 1
                 self.bottom_position += 1
 
@@ -397,6 +398,7 @@ class Lane() :
                 if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
+                    self.argmax_retrieval = None
                 elif self.top_position > self.argmax_retrieval:
                     self.argmax_retrieval = self.top_position
                 return vehicle_id
@@ -409,6 +411,7 @@ class Lane() :
                 if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
+                    self.argmax_retrieval = None
                 elif self.bottom_position < self.argmax_retrieval:
                     self.argmax_retrieval = self.bottom_position
                 return vehicle_id
