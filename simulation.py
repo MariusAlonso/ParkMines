@@ -99,7 +99,6 @@ class Simulation():
             heapq.heappush(self.events, Event(vehicle, time_wake_up, "wake_up_robots_retrieval", event_retrieval=event_retrieval))
         
         elif event.event_type == "wake_up_robots_retrieval":
-
             self.check_redirections(event)
             self.wake_up_robots()
 
@@ -315,6 +314,7 @@ class Simulation():
 
             event.robot.target = None
             event.robot.doing = None
+
             self.assign_task(event.robot)
             
             self.whistle()
