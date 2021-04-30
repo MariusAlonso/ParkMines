@@ -279,14 +279,9 @@ test = TestTest()
 #test.testVariableInterfaceAndRobots(nb_repetition=10)
 #test.testVariableStockAndRobotsRealParking(stock_args=(30, ), nb_repetition=10)
 
-test.testVariableAlgorithmsAndFlowRealParking(nb_repetition=30, algorithms=[AlgorithmRandom, 
+test.testVariableAlgorithmsAndFlowRealParking(nb_repetition=20, algorithms=[AlgorithmRandom,
                                                                             AlgorithmUnimodal,
-                                                                            AlgorithmUnimodalRefined0,
-                                                                            AlgorithmUnimodalRefined1,
                                                                             AlgorithmUnimodalRefined2,
                                                                             AlgorithmUnimodalRefined6,
-                                                                            AlgorithmUnimodalRefined7,
-                                                                            AlgorithmUnimodalRefined8,
-                                                                            AlgorithmUnimodalRefined9,
-                                                                            AlgorithmUnimodalRefined10
+                                                                            AlgorithmUnimodalRefined7
                                                                             ])

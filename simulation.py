@@ -763,7 +763,7 @@ class AlgorithmUnimodalRefined(Algorithm):
                         # On simule l'évolution de la lane
                         time_of_arrival = time + self.parking.travel_time(start_position, lane_end)
                         events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
-                        lane.push(vehicle.id, side, self.stock, edit_max = False)
+                        lane.push(vehicle.id, side, self.stock)
                         # x : position du véhicule dans la lane       
                         x = lane.end_position(side)          
                         events_to_reverse.append((side,))
@@ -774,17 +774,23 @@ class AlgorithmUnimodalRefined(Algorithm):
                         else:
                             distance_to_lane_end = lane.length - lane.bottom_position - 1
                         
+                        if not type(distance_to_lane_end) == int:
+                            print(distance_to_lane_end)
+                        
                         # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
                         weight = break_unimodality_weight
                         if lane.top_position == x and lane.bottom_position == x:
                             # Poids de l'extrémité si le véhicule est seul dans sa lane
                             weight = start_new_lane_weight
                         elif lane.top_position <= x and lane.bottom_position >= x:
-                            max_retrieval = self.stock.vehicles[lane.list_vehicles[lane.argmax_retrieval]].retrieval
-                            if vehicle.retrieval > max_retrieval:
-                                if abs(x - lane.argmax_retrieval) <= 1:
-                                    # Poids de l'extrémité si le véhicule est le nouveau "maximum" de la lane
-                                    weight = (vehicle.retrieval - max_retrieval).total_seconds()/60
+                            if x == lane.argmax_retrieval:
+                                # Le véhicule est le nouveau "maximum" de la lane
+                                if lane.top_position < x:
+                                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x-1]].retrieval).total_seconds()//60
+                                    if lane.bottom_position > x:
+                                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60)
+                                else:
+                                     weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60
                             elif x > lane.argmax_retrieval:
                                 # Le véhicule est à droite du "maximum" de la lane
                                 if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
@@ -940,6 +946,28 @@ class AlgorithmUnimodalRefined10(AlgorithmUnimodalRefined):
     def __repr__(self):
         return "UR10"
 
+class AlgorithmUnimodalRefined11(AlgorithmUnimodalRefined):
+
+    # break_unimodality_weight x100, start_new_lane_weight /100
+
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=100000000, start_new_lane_weight=100, distance_to_lane_end_coef=1):
+        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
+    
+    @classmethod
+    def __repr__(self):
+        return "UR11"
+
+class AlgorithmUnimodalRefined12(AlgorithmUnimodalRefined):
+
+    # break_unimodality_weight x10, start_new_lane_weight /1000
+
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=10000000, start_new_lane_weight=1000, distance_to_lane_end_coef=1):
+        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
+    
+    @classmethod
+    def __repr__(self):
+        return "UR12"
+
 ###########################################################################
 #################### Changement de classe d'algorithme ####################
 ###########################################################################
@@ -947,11 +975,12 @@ class AlgorithmUnimodalRefined10(AlgorithmUnimodalRefined):
 
 class AlgorithmZeroMinus(Algorithm):
 
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=1000000, start_new_lane_weight=10000, distance_to_lane_end_coef=1):
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, alpha=1, beta=2, start_new_lane_weight=10000, distance_to_lane_end_coef=1):
         super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal)
         
         #paramètres de contrôle des poids
-        self.break_unimodality_weight = break_unimodality_weight
+        self.alpha = alpha
+        self.beta = beta
         self.start_new_lane_weight = start_new_lane_weight
         self.distance_to_lane_end_coef = distance_to_lane_end_coef
 
@@ -959,7 +988,8 @@ class AlgorithmZeroMinus(Algorithm):
     def place(self, vehicle, start_position, time):
 
         #paramètres de contrôle des poids
-        break_unimodality_weight = self.break_unimodality_weight
+        alpha = self.alpha
+        beta = self.beta
         start_new_lane_weight = self.start_new_lane_weight
         distance_to_lane_end_coef = self.distance_to_lane_end_coef
 
@@ -992,8 +1022,9 @@ class AlgorithmZeroMinus(Algorithm):
                         else:
                             distance_to_lane_end = lane.length - lane.bottom_position - 1
                         
-                        # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
-                        weight = break_unimodality_weight
+                        if not type(distance_to_lane_end) == int:
+                            print(distance_to_lane_end)
+                        
                         if lane.top_position == x and lane.bottom_position == x:
                             # Poids de l'extrémité si le véhicule est seul dans sa lane
                             weight = start_new_lane_weight
