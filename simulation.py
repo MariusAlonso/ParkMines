@@ -162,7 +162,7 @@ class Simulation():
                     # Le client récupère son véhicule (seul endroit dans simulation où cela se produit)
                     self.parking.blocks[0].lanes[i_lane].pop("top")
                     
-                    self.nb_interface -= 1 #Un véhicule sort de l'interface pour être rendu
+                    self.nb_interface -= 1 # un véhicule sort de l'interface pour être rendu
                     
                     if self.display:
                         self.display.erase_vehicle(vehicle)
@@ -647,6 +647,57 @@ class Algorithm():
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
+    
+    def place(self, vehicle, start_position, date):
+        """
+        Algorithme de placement avec fonction de coût/pondération externalisée, cette fonction n'a pas à changer quel que soit l'algorithme de placement
+        """
+
+        # paramètre utilisé dans performances (mesure)
+        self.nb_placements += 1
+        
+        # initialisation des extrémité de lane et poids associé pour la recherche du minimum
+        min_weight = None
+        min_lane_end = None
+
+        # self.locked_lanes = {extrémité de lane: bloquée ou non}
+        # On parcourt l'ensemble de ces extrémités et on cherche celle de poids minimal
+
+        for lane_end, is_locked in self.locked_lanes.items():
+            # on s'assure que la lane n'est pas bloquée (qu'il n'y a pas de véhicule à sortir par cette extrémité) 
+            # et qu'on ne replace pas le véhicule là où il est déjà
+            if not is_locked and (start_position is None or start_position != lane_end):
+                block_id, lane_id, side = lane_end
+                # on vérifie que l'extrémité choisie n'est pas dans l'interface : on ne peut pas effectuer de placement dans l'interface (bloc 0)
+                if block_id != 0:
+                    lane = self.parking.blocks[block_id].lanes[lane_id]
+                    # on vérifie que l'extrémité de lane n'est pas pleine
+                    if lane.is_end_available(side):
+                        # l'extrémité n'est pas pleine, pas bloquée, pas dans l'interface et pas notre position de départ : 
+                        # on peut envisager de placer le véhicule ici
+                        # calcul du poids dans une autre fonction
+                        weight = self.weight(vehicle, start_position, lane_end, date)
+
+                        # mise à jour du minimum si on a trouvé un meilleur candidat
+                        if min_weight is None or min_weight > weight:
+                            min_weight = weight
+                            min_lane_end = lane_end
+        
+        # si on a trouvé une lane pour placer le véhicule
+        if not (min_weight is None):
+            block_id, lane_id, side = min_lane_end
+            lane = self.parking.blocks[block_id].lanes[lane_id]
+            # on ajoute le véhicule à l'extrémité de la lane choisi (le calcul du temps pris par le robot pour le faire est effectué ailleurs)
+            lane.push_reserve(vehicle.id, side)
+            return min_lane_end
+        # sinon c'est qu'aucune extrémité de lane n'est disponible (le poids minimum reste à None) : erreur
+        else:
+            if self.print_in_terminal:
+                print("ERREUR DE PLACEMENT")
+                print(self.parking)
+                print(self.locked_lanes)
+            raise ValueError("le placement n'a pas pu être effectué")
+
 
 class AlgorithmRandom(Algorithm):
 
@@ -701,60 +752,55 @@ class AlgorithmUnimodal(Algorithm):
                         time_of_arrival = time + self.parking.travel_time(start_position, lane_end)
                         events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
                         lane.push(vehicle.id, side, self.stock)
-                        # x : position du véhicule dans la lane       
-                        x = lane.end_position(side)          
+                        # vehicle_position : position du véhicule dans la lane       
+                        vehicle_position = lane.end_position(side)          
                         events_to_reverse.append((side,))
                         events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = time_of_arrival))
-
-                        if side == "top":
-                            distance_to_lane_end = lane.top_position
-                        else:
-                            distance_to_lane_end = lane.length - lane.bottom_position - 1
     
                         # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
                         weight = 1000000
-                        if lane.top_position == x and lane.bottom_position == x:
+                        if lane.top_position == vehicle_position and lane.bottom_position == vehicle_position:
                             # Poids de l'extrémité si le véhicule est seul dans sa lane
                             weight = 10000
-                        elif lane.top_position <= x and lane.bottom_position >= x:
-                            if x == lane.argmax_retrieval:
+                        elif lane.top_position <= vehicle_position and lane.bottom_position >= vehicle_position:
+                            if vehicle_position == lane.argmax_retrieval:
                                 # Le véhicule est le nouveau "maximum" de la lane
-                                if lane.top_position < x:
-                                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x-1]].retrieval).total_seconds()//60
-                                    if lane.bottom_position > x:
-                                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60)
+                                if lane.top_position < vehicle_position:
+                                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[vehicle_position-1]].retrieval).total_seconds()//60
+                                    if lane.bottom_position > vehicle_position:
+                                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[vehicle_position+1]].retrieval).total_seconds()//60)
                                 else:
-                                     weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60
-                            elif x > lane.argmax_retrieval:
+                                     weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[vehicle_position+1]].retrieval).total_seconds()//60
+                            elif vehicle_position > lane.argmax_retrieval:
                                 # Le véhicule est à droite du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
-                                    if lane.bottom_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x-1]].retrieval - vehicle.retrieval).total_seconds()/60
-                            elif x < lane.argmax_retrieval:
+                                if self.stock.vehicles[lane.list_vehicles[vehicle_position-1]].retrieval >= vehicle.retrieval:
+                                    if lane.bottom_position == vehicle_position or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[vehicle_position+1]].retrieval:
+                                        weight = (self.stock.vehicles[lane.list_vehicles[vehicle_position-1]].retrieval - vehicle.retrieval).total_seconds()/60
+                            elif vehicle_position < lane.argmax_retrieval:
                                 # Le véhicule est à gauche du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x+1]].retrieval >= vehicle.retrieval:
-                                    if lane.top_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x+1]].retrieval - vehicle.retrieval).total_seconds()/60
+                                if self.stock.vehicles[lane.list_vehicles[vehicle_position+1]].retrieval >= vehicle.retrieval:
+                                    if lane.top_position == vehicle_position or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[vehicle_position-1]].retrieval:
+                                        weight = (self.stock.vehicles[lane.list_vehicles[vehicle_position+1]].retrieval - vehicle.retrieval).total_seconds()/60
                         """
-                        elif x == y:
+                        elif vehicle_position == y:
                             # Il y a un seul véhicule dans la lane
-                            weight = abs((self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds())
-                        elif x < y:
+                            weight = abs((self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval - vehicle.retrieval).total_seconds())
+                        elif vehicle_position < y:
                             # Il y a plusieurs véhicules dans la lane, et on considère l'extrémité "top"
-                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval:
+                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval:
                                 # On assure la croissance du côté top
-                                weight = (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
-                            elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x]].retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
+                                weight = (self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval - vehicle.retrieval).total_seconds()
+                            elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval >= self.stock.vehicles[lane.list_vehicles[vehicle_position+1]].retrieval:
                                 # On conserve la décroissance du côté top
-                                weight = - (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
+                                weight = - (self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval - vehicle.retrieval).total_seconds()
                         else:
                             # Il y a plusieurs véhicules dans la lane, et on considère l'extrémité "bottom"
-                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[x]].retrieval:
+                            if vehicle.retrieval <= self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval:
                                 # On assure la décroissance du côté bottom
-                                weight = (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
-                            elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x]].retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
+                                weight = (self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval - vehicle.retrieval).total_seconds()
+                            elif vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval >= self.stock.vehicles[lane.list_vehicles[vehicle_position-1]].retrieval:
                                 # On conserve la croissance du côté bottom
-                                weight = - (self.stock.vehicles[lane.list_vehicles[x]].retrieval - vehicle.retrieval).total_seconds()
+                                weight = - (self.stock.vehicles[lane.list_vehicles[vehicle_position]].retrieval - vehicle.retrieval).total_seconds()
                         """
 
                         # On nettoie
@@ -780,376 +826,181 @@ class AlgorithmUnimodal(Algorithm):
     def __repr__(self):
         return "Unimodal"
 
-
-class AlgorithmUnimodalRefined(Algorithm):
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=1000000, start_new_lane_weight=10000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal)
-        
-        #paramètres de contrôle des poids
-        self.break_unimodality_weight = break_unimodality_weight
-        self.start_new_lane_weight = start_new_lane_weight
-        self.distance_to_lane_end_coef = distance_to_lane_end_coef
-
-
-    def place(self, vehicle, start_position, time):
-
-        #paramètres de contrôle des poids
-        break_unimodality_weight = self.break_unimodality_weight
-        start_new_lane_weight = self.start_new_lane_weight
-        distance_to_lane_end_coef = self.distance_to_lane_end_coef
-
-
-        self.nb_placements += 1
-        min_weight = None
-        min_lane_end = None
-        """
-        self.locked_lanes.keys() contient l'ensemble des extrémités de lane (bloquées ou non !)
-        On parcourt l'ensemble de ces extrémités et on cherche celle de poids minimal
-        """
-        for lane_end, is_locked in self.locked_lanes.items():
-            if not is_locked and (start_position is None or start_position != lane_end):
-                block_id, lane_id, side = lane_end
-                if block_id != 0:
-                    lane = self.parking.blocks[block_id].lanes[lane_id]
-                    if lane.is_end_available(side):
-
-                        # On simule l'évolution de la lane
-                        time_of_arrival = time + self.parking.travel_time(start_position, lane_end)
-                        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
-                        lane.push(vehicle.id, side, self.stock)
-                        # x : position du véhicule dans la lane       
-                        x = lane.end_position(side)          
-                        events_to_reverse.append((side,))
-                        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = time_of_arrival, ))
-
-                        if side == "top":
-                            distance_to_lane_end = lane.top_position
-                        else:
-                            distance_to_lane_end = lane.length - lane.bottom_position - 1
-                        
-                        if not type(distance_to_lane_end) == int:
-                            print(distance_to_lane_end)
-                        
-                        # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
-                        weight = break_unimodality_weight
-                        if lane.top_position == x and lane.bottom_position == x:
-                            # Poids de l'extrémité si le véhicule est seul dans sa lane
-                            weight = start_new_lane_weight
-                        elif lane.top_position <= x and lane.bottom_position >= x:
-                            if x == lane.argmax_retrieval:
-                                # Le véhicule est le nouveau "maximum" de la lane
-                                if lane.top_position < x:
-                                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x-1]].retrieval).total_seconds()//60
-                                    if lane.bottom_position > x:
-                                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60)
-                                else:
-                                     weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60
-                            elif x > lane.argmax_retrieval:
-                                # Le véhicule est à droite du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
-                                    if lane.bottom_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x-1]].retrieval - vehicle.retrieval).total_seconds()/60
-                            elif x < lane.argmax_retrieval:
-                                # Le véhicule est à gauche du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x+1]].retrieval >= vehicle.retrieval:
-                                    if lane.top_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x+1]].retrieval - vehicle.retrieval).total_seconds()/60
-
-                        # On nettoie
-                        self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
-                        
-                        if min_weight is None or min_weight > weight:
-                            min_weight = weight
-                            min_lane_end = lane_end
-        
-        if not min_weight is None:
-            block_id, lane_id, side = min_lane_end
-            lane = self.parking.blocks[block_id].lanes[lane_id]
-            lane.push_reserve(vehicle.id, side)
-            return min_lane_end
-        else:
-            if self.print_in_terminal:
-                print("ERREUR DE PLACEMENT")
-                print(self.parking)
-                print(self.locked_lanes)
-            raise ValueError("le placement n'a pas pu être effectué")
-
-    @classmethod
-    def __repr__(self):
-        return "Unimodal Refined"
-
-class AlgorithmUnimodalRefined0(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x10, start_new_lane_weight x10
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=10000000, start_new_lane_weight=100000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR0"
-
-class AlgorithmUnimodalRefined1(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight /10, start_new_lane_weight /10
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=100000, start_new_lane_weight=1000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR1"
-
-class AlgorithmUnimodalRefined2(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x10, start_new_lane_weight /10
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=10000000, start_new_lane_weight=1000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR2"
-
-class AlgorithmUnimodalRefined3(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight /10, start_new_lane_weight x10
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=100000, start_new_lane_weight=100000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR3"
-
-class AlgorithmUnimodalRefined4(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x10, start_new_lane_weight x1
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=10000000, start_new_lane_weight=10000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR4"
-
-class AlgorithmUnimodalRefined5(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x1, start_new_lane_weight /10
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=1000000, start_new_lane_weight=1000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR5"
-
-class AlgorithmUnimodalRefined6(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x100, start_new_lane_weight x10
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=100000000, start_new_lane_weight=100000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR6"
-
-class AlgorithmUnimodalRefined7(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x10, start_new_lane_weight x100
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=10000000, start_new_lane_weight=1000000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR7"
-
-class AlgorithmUnimodalRefined8(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x100, start_new_lane_weight x100
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=100000000, start_new_lane_weight=1000000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR8"
-
-class AlgorithmUnimodalRefined9(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x100, start_new_lane_weight /10
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=100000000, start_new_lane_weight=1000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR9"
-
-class AlgorithmUnimodalRefined10(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x10, start_new_lane_weight /100
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=10000000, start_new_lane_weight=100, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR10"
-
-class AlgorithmUnimodalRefined11(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x100, start_new_lane_weight /100
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=100000000, start_new_lane_weight=100, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR11"
-
-class AlgorithmUnimodalRefined12(AlgorithmUnimodalRefined):
-
-    # break_unimodality_weight x10, start_new_lane_weight /1000
-
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, break_unimodality_weight=10000000, start_new_lane_weight=1000, distance_to_lane_end_coef=1):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, break_unimodality_weight, start_new_lane_weight, distance_to_lane_end_coef)
-    
-    @classmethod
-    def __repr__(self):
-        return "UR12"
-
 ###########################################################################
-#################### Changement de classe d'algorithme ####################
+#################### Changement de classe d'algorithmes ####################
 ###########################################################################
 
 
 class AlgorithmZeroMinus(Algorithm):
 
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, alpha=1, beta=2, start_new_lane_weight=10000, distance_to_lane_end_coef=1):
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False):
         super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal)
         
         #paramètres de contrôle des poids
-        self.alpha = alpha
-        self.beta = beta
-        self.start_new_lane_weight = start_new_lane_weight
-        self.distance_to_lane_end_coef = distance_to_lane_end_coef
-
-
-    def place(self, vehicle, start_position, date):
-        """
-        Algorithme de placement avec fonction de coût/pondération externalisée, cette fonction n'a pas à changer quel que soit l'algorithme de placement
-        """
-
-        # paramètre utilisé dans performances (mesure)
-        self.nb_placements += 1
-        
-        # initialisation des extrémité de lane et poids associé pour la recherche du minimum
-        min_weight = None
-        min_lane_end = None
-
-        # self.locked_lanes = {extrémité de lane: bloquée ou non}
-        # On parcourt l'ensemble de ces extrémités et on cherche celle de poids minimal
-
-        for lane_end, is_locked in self.locked_lanes.items():
-            # on s'assure que la lane n'est pas bloquée (qu'il n'y a pas de véhicule à sortir par cette extrémité) 
-            # et qu'on ne replace pas le véhicule là où il est déjà
-            if not is_locked and (start_position is None or start_position != lane_end):
-                block_id, lane_id, side = lane_end
-                # on vérifie que l'extrémité choisie n'est pas dans l'interface : on ne peut pas effectuer de placement dans l'interface (bloc 0)
-                if block_id != 0:
-                    lane = self.parking.blocks[block_id].lanes[lane_id]
-                    # on vérifie que l'extrémité de lane n'est pas pleine
-                    if lane.is_end_available(side):
-                        # l'extrémité n'est pas pleine, pas bloquée, pas dans l'interface et pas notre position de départ : 
-                        # on peut envisager de placer le véhicule ici
-                        # calcul du poids dans une autre fonction
-                        weight = self.weight(vehicle, start_position, lane_end, date)
-
-                        # mise à jour du minimum si on a trouvé un meilleur candidat
-                        if min_weight is None or min_weight > weight:
-                            min_weight = weight
-                            min_lane_end = lane_end
-        
-        # si on a trouvé une lane pour placer le véhicule
-        if not (min_weight is None):
-            block_id, lane_id, side = min_lane_end
-            lane = self.parking.blocks[block_id].lanes[lane_id]
-            # on ajoute le véhicule à l'extrémité de la lane choisi (le calcul du temps pris par le robot pour le faire est effectué ailleurs)
-            lane.push_reserve(vehicle.id, side)
-            return min_lane_end
-        # sinon c'est qu'aucune extrémité de lane n'est disponible (le poids minimum reste à None) : erreur
-        else:
-            if self.print_in_terminal:
-                print("ERREUR DE PLACEMENT")
-                print(self.parking)
-                print(self.locked_lanes)
-            raise ValueError("le placement n'a pas pu être effectué")
-
+        self.alpha = 1.
+        self.beta = 1.1
+        self.start_new_lane_weight = 20
+        self.distance_to_lane_end_coef = 5.
 
     def weight(self, vehicle, start_position, lane_end, date):
 
-        #paramètres de contrôle des poids
-        alpha = self.alpha
-        beta = self.beta
-        start_new_lane_weight = self.start_new_lane_weight
-        distance_to_lane_end_coef = self.distance_to_lane_end_coef
-        break_unimodality_weight = 10000000
+        # détermination de la place cible et simulation éventuelle des arrivées entre temps
 
         block_id, lane_id, side = lane_end
         lane = self.parking.blocks[block_id].lanes[lane_id]
 
         # On simule l'évolution de la lane : il ne faut pas prendre en compte les véhicules qui seront partis quand le notre arrivera (/!\ est-ce bien utile / pas risqué ?)
         time_of_arrival = date + self.parking.travel_time(start_position, lane_end)
-        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time=time_of_arrival)
+        before_time_of_arrival = time_of_arrival - datetime.timedelta(minutes=1)
+        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = before_time_of_arrival)
         lane.push(vehicle.id, side, self.stock)
-        # vehicle_position : position du véhicule dans la lane       
-        vehicle_position = lane.end_position(side)          
+        # on ajoute les évènements simulés à la liste des évènements à annuler (events_to_reverse)
         events_to_reverse.append((side,))
-        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time=time_of_arrival, ))
+        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = before_time_of_arrival, ))
 
+
+        ### détermination des variables régissant le poids ###
+
+        # overweight : somme des pénalités pour les cas dégénérés
+        overweight = 0
+
+        # détermination du nombre de places restantes dans la lane
         if side == "top":
             distance_to_lane_end = lane.top_position
         else:
             distance_to_lane_end = lane.length - lane.bottom_position - 1
         
-        if not type(distance_to_lane_end) == int:
-            print(distance_to_lane_end)
-        
-        # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
-        weight = break_unimodality_weight
-        if lane.top_position == vehicle_position and lane.bottom_position == x:
-            # Poids de l'extrémité si le véhicule est seul dans sa lane
-            weight = start_new_lane_weight
-        elif lane.top_position <= vehicle_position and lane.bottom_position >= x:
-            if vehicle_position == lane.argmax_retrieval:
-                # Le véhicule est le nouveau "maximum" de la lane
-                if lane.top_position < x:
-                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x-1]].retrieval).total_seconds()//60
-                    if lane.bottom_position > x:
-                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60)
-                else:
-                        weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60
-            elif vehicle_position > lane.argmax_retrieval:
-                # Le véhicule est à droite du "maximum" de la lane
-                if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
-                    if lane.bottom_position == vehicle_position or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
-                        weight = (self.stock.vehicles[lane.list_vehicles[x-1]].retrieval - vehicle.retrieval).total_seconds()/60
-            elif vehicle_position < lane.argmax_retrieval:
-                # Le véhicule est à gauche du "maximum" de la lane
-                if self.stock.vehicles[lane.list_vehicles[x+1]].retrieval >= vehicle.retrieval:
-                    if lane.top_position == vehicle_position or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
-                        weight = (self.stock.vehicles[lane.list_vehicles[x+1]].retrieval - vehicle.retrieval).total_seconds()/60
+        # détermination de delta_t (en minutes)
+        try:
+            delta_t = (vehicle.retrieval - lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60     # l'espoir fait vivre
+        except TypeError:   # cas où la lane ne contient pas d'autre véhicule
+            delta_t = 0
+            overweight += self.start_new_lane_weight
 
-        # On nettoie
+        # calcul du poids
+        weight = self.alpha*delta_t + self.beta*abs(delta_t) + self.distance_to_lane_end_coef*distance_to_lane_end + overweight
+
+        # On annule les évènements simulés pour permettre le calcul
         self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
 
         return weight
 
-
     @classmethod
     def __repr__(self):
         return "0-"
+
+
+class AlgorithmNewUnimodal(Algorithm):
+
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False):
+        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal)
+        
+        #paramètres de contrôle des poids
+        self.break_unimodality_weight = 1000000
+        self.start_new_lane_weight = 10000
+
+    def weight(self, vehicle, start_position, lane_end, date):
+
+        # détermination de la place cible et simulation éventuelle des arrivées entre temps
+
+        block_id, lane_id, side = lane_end
+        lane = self.parking.blocks[block_id].lanes[lane_id]
+
+        # On simule l'évolution de la lane : il ne faut pas prendre en compte les véhicules qui seront partis quand le notre arrivera (/!\ est-ce bien utile / pas risqué ?)
+        time_of_arrival = date + self.parking.travel_time(start_position, lane_end)
+        before_time_of_arrival = time_of_arrival - datetime.timedelta(minutes=1)
+        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = before_time_of_arrival)
+        lane.push(vehicle.id, side, self.stock)
+        # on ajoute les évènements simulés à la liste des évènements à annuler (events_to_reverse)
+        events_to_reverse.append((side,))
+        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = before_time_of_arrival, ))
+
+
+        ### détermination des variables régissant le poids ###
+
+        # overweight : somme des pénalités pour les cas dégénérés
+        overweight = 0
+        
+        # détermination de delta_t (en minutes)
+        try:
+            delta_t = (vehicle.retrieval - lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60     # l'espoir fait vivre
+            # on regarde si l'on viole l'unimodalité
+            if delta_t > 0:
+                overweight += self.break_unimodality_weight
+
+        except TypeError:   # cas où la lane ne contient pas d'autre véhicule
+            delta_t = 0
+            overweight += self.start_new_lane_weight
+
+        # calcul du poids
+        weight = delta_t + overweight
+
+        # On annule les évènements simulés pour permettre le calcul
+        self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
+
+        return weight
+
+    @classmethod
+    def __repr__(self):
+        return "New Unimodal"
+
+class AlgorithmUnimodalRefined0(Algorithm):
+
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False):
+        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal)
+        
+        #paramètres de contrôle des poids
+        self.break_unimodality_weight = 100000
+        self.start_new_lane_weight = 1000
+        self.distance_to_lane_end_coef = 100.
+
+    def weight(self, vehicle, start_position, lane_end, date):
+
+        # détermination de la place cible et simulation éventuelle des arrivées entre temps
+
+        block_id, lane_id, side = lane_end
+        lane = self.parking.blocks[block_id].lanes[lane_id]
+
+        # On simule l'évolution de la lane : il ne faut pas prendre en compte les véhicules qui seront partis quand le notre arrivera (/!\ est-ce bien utile / pas risqué ?)
+        time_of_arrival = date + self.parking.travel_time(start_position, lane_end)
+        before_time_of_arrival = time_of_arrival - datetime.timedelta(minutes=1)
+        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = before_time_of_arrival)
+        lane.push(vehicle.id, side, self.stock)
+        # on ajoute les évènements simulés à la liste des évènements à annuler (events_to_reverse)
+        events_to_reverse.append((side,))
+        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = before_time_of_arrival, ))
+
+
+        ### détermination des variables régissant le poids ###
+
+        # overweight : somme des pénalités pour les cas dégénérés
+        overweight = 0
+
+        # détermination du nombre de places restantes dans la lane
+        if side == "top":
+            distance_to_lane_end = lane.top_position
+        else:
+            distance_to_lane_end = lane.length - lane.bottom_position - 1
+        
+        # détermination de delta_t (en minutes)
+        try:
+            delta_t = (vehicle.retrieval - lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60     # l'espoir fait vivre
+            # on regarde si l'on viole l'unimodalité
+            if delta_t > 0:
+                overweight += self.break_unimodality_weight
+
+        except TypeError:   # cas où la lane ne contient pas d'autre véhicule
+            delta_t = 0
+            overweight += self.start_new_lane_weight
+
+        # calcul du poids
+        weight = delta_t + self.distance_to_lane_end_coef*distance_to_lane_end + overweight
+
+        # On annule les évènements simulés pour permettre le calcul
+        self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
+
+        return weight
+
+    @classmethod
+    def __repr__(self):
+        return "UR0"

@@ -259,7 +259,7 @@ class TestTest():
         performance.variableStockAndRobots(nb_repetition)
         assert 0 == 0
 
-    def testVariableAlgorithmsAndFlowRealParking(self, stock_args=(20, ), nb_repetition=10, delays=[i for i in range(300)], display=False, algorithms=[AlgorithmRandom]):
+    def testVariableAlgorithmsAndFlowRealParking(self, stock_args=(30, ), nb_repetition=10, delays=[i for i in range(300)], display=False, algorithms=[AlgorithmRandom]):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
@@ -279,9 +279,8 @@ test = TestTest()
 #test.testVariableInterfaceAndRobots(nb_repetition=10)
 #test.testVariableStockAndRobotsRealParking(stock_args=(30, ), nb_repetition=10)
 
-test.testVariableAlgorithmsAndFlowRealParking(nb_repetition=20, algorithms=[AlgorithmRandom,
-                                                                            AlgorithmUnimodal,
-                                                                            AlgorithmUnimodalRefined2,
-                                                                            AlgorithmUnimodalRefined6,
-                                                                            AlgorithmUnimodalRefined7
+test.testVariableAlgorithmsAndFlowRealParking(nb_repetition=30, algorithms=[AlgorithmRandom,
+                                                                            AlgorithmNewUnimodal,
+                                                                            AlgorithmUnimodalRefined0,
+                                                                            AlgorithmZeroMinus
                                                                             ])

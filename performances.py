@@ -767,7 +767,7 @@ class Performance():
         # construction des tableaux à tracer
         x = np.array(flow)
         for algorithm in algorithms:
-            y = np.array([duration.total_seconds()/60.0 for duration in delay[algorithm]][::-1])    # /!\ le [::-1] est provisoire, il y a une inversion quelque part et il faut la trouver
+            y = np.array([duration.total_seconds()/60.0 for duration in delay[algorithm]]) 
             label = algorithm.__repr__()
             retrieval.plot(x, y, label=label)
         

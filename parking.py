@@ -198,7 +198,7 @@ class Block():
         block_copied = copy(self)
         block_copied.lanes = [deepcopy(lane) for lane in self.lanes]
         if isinstance(self, BlockInterface):
-            block_copied.targeted = self.targeted[:]
+            block_copied.targeted = self.targeted[:]    # message d'erreur car l'attribut n'existe que pour l'interface
         return block_copied
 
     def _empty_copy(self):
@@ -251,7 +251,7 @@ class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
         self.id = id_lane
-        self.list_vehicles = np.array([None]*self.length)  
+        self.list_vehicles = np.array([None]*self.length)   # liste des INDICES des véhicules de la lane
         self.top_position = None                # indice de la premiere voiture occupée dans la lane (None si pas de voiture)
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
         self.future_top_position = None  
@@ -417,7 +417,54 @@ class Lane() :
                 return vehicle_id
 
 
+    def retrieval_side(self, position, stock):
+        """
+        renvoie le côté de sortie (a priori) du véhicule situé en position position, None si il n'y en a pas
+        """
+        vehicle = stock.vehicles[self.list_vehicles[position]]
+        # on vérifie qu'il y a bien un véhicule à cette place
+        if vehicle:
+            bottom_displacement = 0
+            top_displacement = 0
+            # on parcours toutes les positions pour voir si le véhicule gène
+            for i in range(self.length):
+                # on vérifie qu'il y a bien un véhicule en place i
+                if self.list_vehicles[i]:
+                    vehicle_i = stock.vehicles[self.list_vehicles[i]]
+                    # on regarde si il va falloir le déplacer
+                    if vehicle_i.retrieval > vehicle.retrieval:
+                        # il faudra déplacer ce véhicule, on regarde si il est côté top ou côté bottom
+                        if i < position:
+                            top_displacement += 1 
+                        else:
+                            bottom_displacement += 1
+            # on renvoie le côté pour lequel le nombre de véhicules à déplacer est le plus petit
+            if top_displacement <= bottom_displacement:
+                return "top"
+            else:
+                return "bottom"
+        else:
+            return None
 
+    
+    def next_retrieval(self, side, stock, exception=None):
+        """
+        renvoie la date de prochaine sortie d'un véhicule par ce coté de la lane
+        on suppose qu'un véhicule sort par le côté où il y a le moins de véhicule à déplacer
+        Attention : peut renvoyer None si la lane est vide
+        """
+        retrieval = None
+
+        for position, vehicle_id in enumerate(self.list_vehicles):
+            # on vérifie que le véhicule n'est pas None et qu'il va bien sortir par notre côté
+            if vehicle_id and self.retrieval_side(position, stock) == side:
+                vehicle = stock.vehicles[vehicle_id]
+                # on diminue la date de prochaine sortie de ce côté si besoin
+                if retrieval is None or retrieval > vehicle.retrieval:
+                    if not vehicle.retrieval == exception:
+                        retrieval = vehicle.retrieval
+        
+        return retrieval
 
 
 
