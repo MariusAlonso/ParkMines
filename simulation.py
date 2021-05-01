@@ -1,4 +1,3 @@
-
 import random
 from vehicle import Vehicle, Stock, RandomStock
 import heapq
@@ -370,64 +369,92 @@ class Simulation():
     
     def assign_task(self, robot):
 
-        are_available_places_interface = False
-        for lane_id, lane in enumerate(self.parking.blocks[0].lanes):
-            if not lane.list_vehicles[0] in [None, "Lock"] and not self.parking.blocks[0].targeted[lane_id]:
-                vehicle = self.stock.vehicles[lane.list_vehicles[0]]
-                if vehicle.order_retrieval > self.t or vehicle.retrieval - self.t > datetime.timedelta(hours=1):
-                    robot.start_position = robot.goal_position
-                    robot.goal_position = (0, lane_id, "bottom")
-                    lane.pop_reserve("bottom")
+        # initialisation
+        are_available_places_interface = True
 
-                    robot.start_time = self.t
-                    robot.goal_time = self.t + self.parking.travel_time((0, lane_id, "bottom"), robot.goal_position)
-
-                    event_arrival = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "robot_arrival", robot)
-                    heapq.heappush(self.events, event_arrival)
-                    robot.doing = event_arrival
-
-                    event = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "empty_interface", robot)
-
-                    robot.target = event
-
-                    self.parking.blocks[0].targeted[lane_id] = True
-                    
-                    if self.print_in_terminal:
-                        print(f" -> event {event} assigned to {robot}")
-                    return event
-            else:
-                are_available_places_interface = True
-        
         event = self.find_unassigned_events(are_available_places_interface)
 
+        # si on en trouve un :
         if event:
 
             if self.print_in_terminal:
                 print(f" -> event {event} assigned to {robot}")
 
+            # on récupère la position du véhicule que l'on va chercher à placer
             block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
             lane_vehicle = self.parking.blocks[block_id].lanes[lane_id]
 
+            # on détermine par quel côté le véhicule doit sortir
             if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
                 side = "bottom"
             else:
                 side = "top"
 
+            # mise à jour des positions actuelle et d'arrivée du robot
             robot.start_position = robot.goal_position
             robot.goal_position = (block_id, lane_id, side)
+            # on informe qu'on est en train de retirer ce véhicule
             lane_vehicle.pop_reserve(side)
 
+            # mise à jour des dates actuelle et d'arrivée du robot
             robot.start_time = self.t
             robot.goal_time = self.t + self.parking.travel_time(robot.start_position, robot.goal_position)
 
+            # affectation du robot à l'évènement
             event.robot = robot
+            # création de l'event d'arrivée
             event_arrival = Event(event.vehicle, robot.goal_time, "robot_arrival", robot)
+            # ajout de l'event à la pile des events
             heapq.heappush(self.events, event_arrival)
 
-            robot.doing = event_arrival
+            robot.doing = event_arrival     # event en cours
+            # Utilisé pour contrôler ce que fait le robot
             robot.target = event
 
             return event
+        
+        # si on n'a trouvé de véhicule dans l'interface à placer on cherche un véhicule à placer
+
+        # recherche d'un véhicule à placer
+
+        # on parcours toutes les places de l'interface pour voir si il y a un véhicule à placer
+        for lane_id, lane in enumerate(self.parking.blocks[0].lanes):
+            # on vérifie qu'il y a bien un véhicule dans la place d'interface considérée et qu'il n'est pas déjà ciblé par un autre robot 
+            if not lane.list_vehicles[0] in [None, "Lock"] and not self.parking.blocks[0].targeted[lane_id]:
+                # on récupère le véhicule que l'on va chercher à placer
+                vehicle = self.stock.vehicles[lane.list_vehicles[0]]
+                # on vérifie que le véhicule ne va pas être récupérer par le client bientôt (et qu'il est en cours de sortie)
+                if vehicle.order_retrieval > self.t or vehicle.retrieval - self.t > datetime.timedelta(hours=1):    # /!\ provisoire
+                    # mise à jour des positions actuelle et cible du robot
+                    robot.start_position = robot.goal_position
+                    robot.goal_position = (0, lane_id, "bottom")
+                    # on informe qu'on est en train de retirer ce véhicule
+                    lane.pop_reserve("bottom")
+
+                    # mise à jour des dates actuelle et d'arrivée du robot
+                    robot.start_time = self.t
+                    robot.goal_time = self.t + self.parking.travel_time((0, lane_id, "bottom"), robot.goal_position)
+                    # création de l'event d'arrivée (sur l'interface pour récupération)
+                    event_arrival = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "robot_arrival", robot)
+                    # ajout de l'event à la pile des events
+                    heapq.heappush(self.events, event_arrival)
+                    robot.doing = event_arrival     # event en cours
+
+                    # Utilisé uniquement dans le print
+                    event = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "empty_interface", robot)
+                    # Utilisé pour contrôler ce que fait le robot
+                    robot.target = event
+
+                    # on déclare que la lane est ciblée pour éviter qu'un autre robot ne vienne chercher le même véhicule
+                    self.parking.blocks[0].targeted[lane_id] = True
+                    
+                    if self.print_in_terminal:
+                        print(f" -> event {event} assigned to {robot}")
+                    return event
+            #else:
+            #    are_available_places_interface = True
+        
+        
         
 
     def find_unassigned_events(self, are_available_places_interface):
@@ -985,84 +1012,116 @@ class AlgorithmZeroMinus(Algorithm):
         self.distance_to_lane_end_coef = distance_to_lane_end_coef
 
 
-    def place(self, vehicle, start_position, time):
+    def place(self, vehicle, start_position, date):
+        """
+        Algorithme de placement avec fonction de coût/pondération externalisée, cette fonction n'a pas à changer quel que soit l'algorithme de placement
+        """
 
-        #paramètres de contrôle des poids
-        alpha = self.alpha
-        beta = self.beta
-        start_new_lane_weight = self.start_new_lane_weight
-        distance_to_lane_end_coef = self.distance_to_lane_end_coef
-
-
+        # paramètre utilisé dans performances (mesure)
         self.nb_placements += 1
+        
+        # initialisation des extrémité de lane et poids associé pour la recherche du minimum
         min_weight = None
         min_lane_end = None
-        """
-        self.locked_lanes.keys() contient l'ensemble des extrémités de lane (bloquées ou non !)
-        On parcourt l'ensemble de ces extrémités et on cherche celle de poids minimal
-        """
+
+        # self.locked_lanes = {extrémité de lane: bloquée ou non}
+        # On parcourt l'ensemble de ces extrémités et on cherche celle de poids minimal
+
         for lane_end, is_locked in self.locked_lanes.items():
+            # on s'assure que la lane n'est pas bloquée (qu'il n'y a pas de véhicule à sortir par cette extrémité) 
+            # et qu'on ne replace pas le véhicule là où il est déjà
             if not is_locked and (start_position is None or start_position != lane_end):
                 block_id, lane_id, side = lane_end
+                # on vérifie que l'extrémité choisie n'est pas dans l'interface : on ne peut pas effectuer de placement dans l'interface (bloc 0)
                 if block_id != 0:
                     lane = self.parking.blocks[block_id].lanes[lane_id]
+                    # on vérifie que l'extrémité de lane n'est pas pleine
                     if lane.is_end_available(side):
+                        # l'extrémité n'est pas pleine, pas bloquée, pas dans l'interface et pas notre position de départ : 
+                        # on peut envisager de placer le véhicule ici
+                        # calcul du poids dans une autre fonction
+                        weight = self.weight(vehicle, start_position, lane_end, date)
 
-                        # On simule l'évolution de la lane
-                        time_of_arrival = time + self.parking.travel_time(start_position, lane_end)
-                        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
-                        lane.push(vehicle.id, side, self.stock, edit_max = False)
-                        # x : position du véhicule dans la lane       
-                        x = lane.end_position(side)          
-                        events_to_reverse.append((side,))
-                        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = time_of_arrival, ))
-
-                        if side == "top":
-                            distance_to_lane_end = lane.top_position
-                        else:
-                            distance_to_lane_end = lane.length - lane.bottom_position - 1
-                        
-                        if not type(distance_to_lane_end) == int:
-                            print(distance_to_lane_end)
-                        
-                        if lane.top_position == x and lane.bottom_position == x:
-                            # Poids de l'extrémité si le véhicule est seul dans sa lane
-                            weight = start_new_lane_weight
-                        elif lane.top_position <= x and lane.bottom_position >= x:
-                            max_retrieval = self.stock.vehicles[lane.list_vehicles[lane.argmax_retrieval]].retrieval
-                            if vehicle.retrieval > max_retrieval:
-                                if abs(x - lane.argmax_retrieval) <= 1:
-                                    # Poids de l'extrémité si le véhicule est le nouveau "maximum" de la lane
-                                    weight = (vehicle.retrieval - max_retrieval).total_seconds()/60
-                            elif x > lane.argmax_retrieval:
-                                # Le véhicule est à droite du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
-                                    if lane.bottom_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x-1]].retrieval - vehicle.retrieval).total_seconds()/60
-                            elif x < lane.argmax_retrieval:
-                                # Le véhicule est à gauche du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x+1]].retrieval >= vehicle.retrieval:
-                                    if lane.top_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x+1]].retrieval - vehicle.retrieval).total_seconds()/60
-
-                        # On nettoie
-                        self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
-                        
+                        # mise à jour du minimum si on a trouvé un meilleur candidat
                         if min_weight is None or min_weight > weight:
                             min_weight = weight
                             min_lane_end = lane_end
         
-        if not min_weight is None:
+        # si on a trouvé une lane pour placer le véhicule
+        if not (min_weight is None):
             block_id, lane_id, side = min_lane_end
             lane = self.parking.blocks[block_id].lanes[lane_id]
+            # on ajoute le véhicule à l'extrémité de la lane choisi (le calcul du temps pris par le robot pour le faire est effectué ailleurs)
             lane.push_reserve(vehicle.id, side)
             return min_lane_end
+        # sinon c'est qu'aucune extrémité de lane n'est disponible (le poids minimum reste à None) : erreur
         else:
             if self.print_in_terminal:
                 print("ERREUR DE PLACEMENT")
                 print(self.parking)
                 print(self.locked_lanes)
             raise ValueError("le placement n'a pas pu être effectué")
+
+
+    def weight(self, vehicle, start_position, lane_end, date):
+
+        #paramètres de contrôle des poids
+        alpha = self.alpha
+        beta = self.beta
+        start_new_lane_weight = self.start_new_lane_weight
+        distance_to_lane_end_coef = self.distance_to_lane_end_coef
+        break_unimodality_weight = 10000000
+
+        block_id, lane_id, side = lane_end
+        lane = self.parking.blocks[block_id].lanes[lane_id]
+
+        # On simule l'évolution de la lane : il ne faut pas prendre en compte les véhicules qui seront partis quand le notre arrivera (/!\ est-ce bien utile / pas risqué ?)
+        time_of_arrival = date + self.parking.travel_time(start_position, lane_end)
+        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time=time_of_arrival)
+        lane.push(vehicle.id, side, self.stock)
+        # vehicle_position : position du véhicule dans la lane       
+        vehicle_position = lane.end_position(side)          
+        events_to_reverse.append((side,))
+        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time=time_of_arrival, ))
+
+        if side == "top":
+            distance_to_lane_end = lane.top_position
+        else:
+            distance_to_lane_end = lane.length - lane.bottom_position - 1
+        
+        if not type(distance_to_lane_end) == int:
+            print(distance_to_lane_end)
+        
+        # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
+        weight = break_unimodality_weight
+        if lane.top_position == vehicle_position and lane.bottom_position == x:
+            # Poids de l'extrémité si le véhicule est seul dans sa lane
+            weight = start_new_lane_weight
+        elif lane.top_position <= vehicle_position and lane.bottom_position >= x:
+            if vehicle_position == lane.argmax_retrieval:
+                # Le véhicule est le nouveau "maximum" de la lane
+                if lane.top_position < x:
+                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x-1]].retrieval).total_seconds()//60
+                    if lane.bottom_position > x:
+                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60)
+                else:
+                        weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60
+            elif vehicle_position > lane.argmax_retrieval:
+                # Le véhicule est à droite du "maximum" de la lane
+                if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
+                    if lane.bottom_position == vehicle_position or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
+                        weight = (self.stock.vehicles[lane.list_vehicles[x-1]].retrieval - vehicle.retrieval).total_seconds()/60
+            elif vehicle_position < lane.argmax_retrieval:
+                # Le véhicule est à gauche du "maximum" de la lane
+                if self.stock.vehicles[lane.list_vehicles[x+1]].retrieval >= vehicle.retrieval:
+                    if lane.top_position == vehicle_position or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
+                        weight = (self.stock.vehicles[lane.list_vehicles[x+1]].retrieval - vehicle.retrieval).total_seconds()/60
+
+        # On nettoie
+        self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
+
+        return weight
+
 
     @classmethod
     def __repr__(self):

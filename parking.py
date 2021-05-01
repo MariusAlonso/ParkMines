@@ -304,8 +304,8 @@ class Lane() :
             return self.future_bottom_position
 
 
-    def push(self, id_vehicle, coté, stock):
-        if coté == "top":
+    def push(self, id_vehicle, side, stock):
+        if side == "top":
             if self.top_position == None:
                 if not self.bottom_access:
                     self.list_vehicles[-1] = id_vehicle
@@ -324,7 +324,7 @@ class Lane() :
                     self.argmax_retrieval -= 1
                 self.top_position -= 1
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.bottom_position == None:
                 if not self.top_access:
                     self.list_vehicles[0] = id_vehicle
@@ -343,8 +343,8 @@ class Lane() :
                     self.argmax_retrieval += 1
                 self.bottom_position += 1
 
-    def push_reserve(self, id_vehicle, coté, mark=True):
-        if coté == "top":
+    def push_reserve(self, id_vehicle, side, mark=True):
+        if side == "top":
             if self.future_top_position == None:
                 if not self.bottom_access:
                     self.future_top_position = self.length - 1
@@ -355,7 +355,7 @@ class Lane() :
             else:
                 self.future_top_position -= 1
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.future_bottom_position == None:
                 if not self.top_access:
                     self.future_top_position = 0
@@ -366,36 +366,36 @@ class Lane() :
             else:
                 self.future_bottom_position += 1
 
-    def push_cancel_reserve(self, coté):
-        if coté == "top":
+    def push_cancel_reserve(self, side):
+        if side == "top":
             if self.future_top_position != None:
                 self.future_top_position += 1
-                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.future_top_position = None
                     self.future_bottom_position = None
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.future_bottom_position != None:
                 self.future_bottom_position -= 1
-                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.future_top_position = None
                     self.future_bottom_position = None
 
 
-    def pop_reserve(self, coté):
-        self.push_cancel_reserve(coté)
+    def pop_reserve(self, side):
+        self.push_cancel_reserve(side)
 
 
-    def pop_cancel_reserve(self, coté):
-        self.push_reserve("None", coté)
+    def pop_cancel_reserve(self, side):
+        self.push_reserve("None", side)
 
-    def pop(self, coté):
-        if coté == "top":
+    def pop(self, side):
+        if side == "top":
             if self.top_position != None:
                 vehicle_id = self.list_vehicles[self.top_position]
                 self.list_vehicles[self.top_position] = None
                 self.top_position += 1
-                if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
                     self.argmax_retrieval = None
@@ -403,12 +403,12 @@ class Lane() :
                     self.argmax_retrieval = self.top_position
                 return vehicle_id
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.bottom_position != None:
                 vehicle_id = self.list_vehicles[self.bottom_position]
                 self.list_vehicles[self.bottom_position] = None
                 self.bottom_position -= 1
-                if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
                     self.argmax_retrieval = None
