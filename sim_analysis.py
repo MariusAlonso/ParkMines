@@ -10,7 +10,6 @@ class Analysis():
         self.taux_occupation_parking = {}
         self.taux_occupation_interface = {}
         self.flux_moyen = {}
-        self.max_interface = {}
 
         self.first_day, self.last_day = self.simulation.stock.duration_simu()
         n = (self.last_day - self.first_day).days #taille de l'axe des abscisses de la figure
@@ -67,7 +66,7 @@ class Analysis():
             self.taux_occupation_interface_array[jour] = nb_vehicle/self.simulation.parking.nb_of_places
     """
 
-    def max_interface(self):
+    def max_interface(self):    
         for jour in self.simulation.nb_sortie.keys():
             self.nb_vehicles_interface_array[jour] = self.simulation.nb_vehicles_interface[jour]
 

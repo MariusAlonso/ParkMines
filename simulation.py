@@ -56,8 +56,8 @@ class Simulation():
         self.nb_sortie = {}
         self.nb_sortie_interface = {}
         self.nb_vehicles_interface = {}
-        max_interface = 0
-        nb_interface = 0
+        self.max_interface = 0
+        self.nb_interface = 0
 
         # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
@@ -110,7 +110,7 @@ class Simulation():
             # self.wake_up_robots()
 
         elif event.event_type == "deposit":
-            nb_interface += 1 #une voiture entre dans l'interface
+            self.nb_interface += 1 #une voiture entre dans l'interface
             nb_jour = (self.t - self.stock.first_day).days
 
             if nb_jour in self.nb_entree.keys():
@@ -119,11 +119,11 @@ class Simulation():
                 self.nb_entree[nb_jour] = 1
             
             if nb_jour in self.nb_vehicles_interface.keys():
-                if nb_interface > max_interface: 
-                    self.nb_vehicles_interface[nb_jour] = nb_interface
-                    max_interface = nb_interface
+                if self.nb_interface > self.max_interface: 
+                    self.nb_vehicles_interface[nb_jour] = self.nb_interface
+                    self.max_interface = self.nb_interface
             else: #Si c'est un nouveau jour, on ajoute le nb d'interface au 1er instant
-                self.nb_vehicles_interface[nb_jour] = nb_interface
+                self.nb_vehicles_interface[nb_jour] = self.nb_interface
 
             lane_id = self.parking.blocks[0].empty_lane()
             if lane_id == "full":
@@ -163,7 +163,7 @@ class Simulation():
                     # Le client récupère son véhicule (seul endroit dans simulation où cela se produit)
                     self.parking.blocks[0].lanes[i_lane].pop("top")
                     
-                    nb_interface -= 1 #Un véhicule sort de l'interface pour être rendu
+                    self.nb_interface -= 1 #Un véhicule sort de l'interface pour être rendu
                     
                     if self.display:
                         self.display.erase_vehicle(vehicle)
@@ -188,7 +188,6 @@ class Simulation():
                 block_id, lane_id, side = event.robot.goal_position
 
                 if vehicle.id not in self.parking.occupation and block_id == 0:
-                    nb_interface -= 1 #Un véhicule sort de l'interface pour être placé dans le parking
 
                     event.robot.start_position = event.robot.goal_position
                     event.robot.start_time = self.t
@@ -233,6 +232,7 @@ class Simulation():
                     event.robot.vehicle = moved_vehicle
 
                     if block_id == 0:
+                        self.nb_interface -= 1 #Un véhicule sort de l'interface pour être placé dans le parking
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.after_deposit_delays.append(self.t - vehicle.effective_deposit)
                         # la place n'est plus le siège d'un évènement empty_interface
@@ -271,13 +271,13 @@ class Simulation():
                         event.robot.goal_position = (0, i_lane, "bottom")
                         self.parking.blocks[0].nb_places_available -= 1
                         
-                        nb_interface += 1 #Un véhicle arrive dans l'interface avant de sortir
+                        self.nb_interface += 1 #Un véhicle arrive dans l'interface avant de sortir
                         if nb_jour in self.nb_vehicles_interface.keys():
-                            if nb_interface > max_interface: 
-                                self.nb_vehicles_interface[nb_jour] = nb_interface
-                                max_interface = nb_interface
+                            if self.nb_interface > self.max_interface: 
+                                self.nb_vehicles_interface[nb_jour] = self.nb_interface
+                                self.max_interface = self.nb_interface
                         else: #Si c'est un nouveau jour, on ajoute le nb d'interface au 1er instant
-                            self.nb_vehicles_interface[nb_jour] = nb_interface
+                            self.nb_vehicles_interface[nb_jour] = self.nb_interface
                         
                         event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
                         event_end_task = Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot)
@@ -297,6 +297,7 @@ class Simulation():
 
         elif event.event_type == "robot_end_task":
             self.execute_robot_end_task(event, vehicle)
+        
 
 
     def execute_robot_end_task(self, event, vehicle):
