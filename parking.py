@@ -10,6 +10,7 @@ class Parking():
         Attributs variant au cours d'une simulation
         """
         self.blocks = blocks
+        self.number_blocks = len(blocks)
         self.occupation = occupation
         """
         Attributs ne variant pas au cours d'une simulation
@@ -66,6 +67,15 @@ class Parking():
         distance = dist.Distance(self)
         distance.fill_matrix_time()
         self.matrix_time = distance.matrix_time
+        self.dict_lanes = dict()
+        self.number_lanes = 0
+        counter_lanes = 1                              #LA NUMEROTAION DES LANES COMMENCE A 1
+        for id_block, block in enumerate(self.blocks):
+            self.number_lanes += block.nb_lanes
+            for lane in block.lanes:
+                self.dict_lanes[(counter_lanes, id_block)] = lane
+                counter_lanes += 1
+         
 
     
     def _copy(self):
