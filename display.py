@@ -246,7 +246,7 @@ class Display():
                 self.analysis.entree_vehicle()
                 self.analysis.sortie_vehicle()
                 self.analysis.count_vehicle()
-                self.analysis.count_vehicle_interface()
+                self.analysis.max_interface()
                 self.analysis.flux()
                 self.update_figure()
                 self.figure.canvas.draw()
@@ -354,20 +354,24 @@ class Display():
         t = [k for k in range(n)]
         plt.clf()
 
-        plt.subplot(3,1,1)
+        plt.subplot(4,1,1)
         plt.plot(t, [0]*n, color='white') #permet de tracer la fenêtre aux bonnes dimensions
         plt.plot(self.analysis.nb_entree_array, label="Nombre d'entrées")
         plt.plot(self.analysis.nb_sortie_array, label="Nombre de sorties")
         plt.ylabel('Nombre de voitures')
         plt.legend()
 
-        plt.subplot(3,1,2)
+        plt.subplot(4,1,2)
         plt.plot(t, [1] + [0]*(n-1), color='white')
         plt.plot(self.analysis.taux_occupation_array, label="Taux d'occupation du parking")
-        plt.plot(self.analysis.taux_occupation_interface_array, label="Taux d'occupation de l'interface")
         plt.legend()
 
-        plt.subplot(3,1,3)
+        plt.subplot(4,1,3)
+        plt.plot(t, [1] + [0]*(n-1), color='white')
+        plt.plot(self.analysis.nb_vehicles_interface_array, label="Occupation maximale de l'interface")
+        plt.legend()
+
+        plt.subplot(4,1,4)
         plt.plot(t, [0]*n, color='white')
         plt.plot(self.analysis.flux_moyen_array)
         plt.xlabel('Jour')
