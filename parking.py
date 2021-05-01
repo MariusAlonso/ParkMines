@@ -5,12 +5,13 @@ import distance as dist
 from copy import copy, deepcopy
 
 class Parking():
-    def __init__(self, blocks, disposal=[[]], occupation=dict()):
+    def __init__(self, blocks, disposal=[[]], occupation={}):
         """
         Attributs variant au cours d'une simulation
         """
         self.blocks = blocks
         self.occupation = occupation
+        print("Dictionnaire vide :", occupation)
         """
         Attributs ne variant pas au cours d'une simulation
         """
@@ -289,20 +290,24 @@ class Lane() :
             return self.is_top_available()
         if side == "bottom":
             return self.is_bottom_available()
-    
 
     def end_position(self, side):
         if side == "top":
             return self.top_position
         if side == "bottom":
             return self.bottom_position
+    
+    def end_limit(self, side):
+        if side == "top":
+            return 0
+        if side == "bottom":
+            return self.length - 1
 
     def future_end_position(self, side):
         if side == "top":
             return self.future_top_position
         if side == "bottom":
             return self.future_bottom_position
-
 
     def push(self, id_vehicle, coté, stock):
         if coté == "top":
@@ -416,9 +421,3 @@ class Lane() :
                     self.argmax_retrieval = self.bottom_position
                 return vehicle_id
 
-
-
-
-
-
-    
