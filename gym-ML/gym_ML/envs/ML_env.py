@@ -3,7 +3,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 from parking import *
-from vehicule import *
+from vehicle import *
 
 
 
@@ -32,7 +32,13 @@ class MLEnv(gym.Env):
         self.done = False
 
     def step(self, action):
+        #si fin de partie
+        if (self.taux_occupation_parking > 0.9):
+            self.reset()
+
+        #
         
+
         return self.reward, self.done, self.observation
     def reset(self):
         pass
