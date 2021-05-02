@@ -324,6 +324,7 @@ class Simulation():
             if self.events:
                 time_start = time.time()
                 event = heapq.heappop(self.events)
+                print(event)
                 self.t = event.date
                 self.nb_events_tracker[self.t] = len(self.events)
                 self.execute(event)
@@ -376,6 +377,8 @@ class Event():
         return True
     
     def __eq__(self, other):
+        if self.vehicle == None or other.vehicle == None:                    #si jamais le event n'a pas de véhicule associé
+            return (not (other is None)) and self.date == other.date
         return (not (other is None)) and self.date == other.date and self.vehicle.id == other.vehicle.id
     
     def __lt__(self, other):
@@ -748,11 +751,11 @@ class AlgorithmUnimodal(BaseAlgorithm):
 
 class RLAlgorithm(Algorithm):
 
-    def take_decision(self, robot_actions, current_time):
+    def take_decision(self, robot_actions_lanes, robot_actions_sides, current_time):
 
         for i_robot, robot in enumerate(self.robots):
 
-            lane_global_id, side_bool = robot_actions[i_robot]
+            lane_global_id, side_bool = robot_actions_lanes[i_robot], robot_actions_sides[i_robot]
 
             if lane_global_id:
                 if side_bool:

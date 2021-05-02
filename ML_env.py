@@ -35,10 +35,7 @@ class MLEnv(gym.Env):
         self.action_space = Dict(dictionary)
 
         print("action_space_created")
-
-        for k in [1, 10, 100]:
-            print(MultiDiscrete([1000 for _ in range(k)]))
-        input()
+        
         
         #observation_space : Parking, liste de véhicules avec dates,  véhicule porté par chaque robot
 
@@ -47,19 +44,19 @@ class MLEnv(gym.Env):
             block_id, lane_id = self.parking.dict_lanes[lane_global_id]
             lane_length = self.parking.blocks[block_id].lanes[lane_id].length
             d[f"lane_{lane_global_id}"] = MultiDiscrete([self.max_number_vehicles + 1 for _ in range(lane_length)])
-            input("lane")
+           
         
         d["current_time"] = Box(low=0., high=np.inf, shape=(1,), dtype="float64")
         d["robot_actions_lanes"] = MultiDiscrete([self.parking.number_lanes + 1 for _ in range(self.number_robots)])
         d["robot_actions_sides"] = MultiDiscrete([2 for _ in range(self.number_robots)])
         d["robot_is_carrying"] = MultiDiscrete([self.max_number_vehicles + 1 for _ in range(self.number_robots)])
-        print("djbgtjbojtrbroij")
+    
         d["stock_is_active"] = MultiDiscrete([2 for _ in range(self.max_stock_visible)])
-        print("svefvrveve")
+  
         #d["stock_vehicle_id"] = MultiDiscrete([list(range(1, (self.max_number_vehicles + 1))) for _ in range(self.max_stock_visible)])
-        print("svefvrveve")
+     
         d["stock_dates"] = Box(low=0., high=np.inf, shape=(self.max_stock_visible,2), dtype="float64")
-        print("svefvrveve")
+   
         print(d)
         self.observation_space = Dict(d)
 
@@ -90,7 +87,7 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
         wake_up_date = self.t0 + datetime.timedelta(seconds = int(action["idleness_date"][0]))
-        self.simulation.algorithm.take_decision(action["robot_actions_lanes"], self.simulation.t)
+        self.simulation.algorithm.take_decision(action["robot_actions_lanes"], action["robot_actions_sides"], self.simulation.t)
 
         while True:
             print("k")
@@ -105,13 +102,13 @@ class MLEnv(gym.Env):
                 break
         
         # On met à jour l'observation
-        self.observation["current_time"] = (self.simulation.t - self.t0).total_seconself.observations()
+        self.observation["current_time"] = (self.simulation.t - self.t0).total_seconds 
         for i_robot, robot in enumerate(self.simulation.robots):
             if robot.doing is None:
                 self.observation["robot_actions_lanes"][i_robot] = 0
             else:
-                self.observation["robot_actions_lanes"][i_robot] = self.parking.to_global_id[robot.goal_direction[:2]]
-                if robot.goal_direction[2] == "bottom":
+                self.observation["robot_actions_lanes"][i_robot] = self.parking.to_global_id[robot.goal_position[:2]]
+                if robot.goal_position[2] == "bottom":
                     self.observation["robot_actions_sides"][i_robot] = 1
                 else:
                     self.observation["robot_actions_sides"][i_robot] = 0
