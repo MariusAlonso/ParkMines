@@ -165,6 +165,9 @@ class Simulation():
                         print(f"Retrieval of {vehicle.id}")
                         print(self.parking)
                         print("")
+                    
+                    self.algorithm.update_retrieval(vehicle, self.t)
+
                 else:
                     heapq.heappush(self.pending_retrievals, event)
             else:
@@ -313,34 +316,24 @@ class Simulation():
     def next_event(self, until = None, repeat = 1):
         """
         Exécute un nombre d'évènements égal à repeat
+        Renvoie un couple (bouléen, évènement)
         """
-        if until is None:
-            for _ in range(repeat):
-                if self.events:
-                    time_start = time.time()
-                    event = heapq.heappop(self.events)
-                    self.t = event.date
-                    self.nb_events_tracker[self.t] = len(self.events)
-                    self.execute(event)
-                    self.time_execution += time.time() - time_start
-                else:
-                    if self.print_in_terminal:
-                        print("THE SIMULATION IS COMPETED")
-                    break
-        else:
-            while self.t < until:
-                if self.events:
-                    time_start = time.time()
-                    event = heapq.heappop(self.events)
-                    self.t = event.date
-                    self.nb_events_tracker[self.t] = len(self.events)
-                    self.execute(event)
-                    self.time_execution += time.time() - time_start
-                else:
-                    if self.print_in_terminal:
-                        print("THE SIMULATION IS COMPLETED")
-                    break       
-        return bool(self.events)
+        event = None
+        r = 0
+        while (r is None or r < repeat) and (until is None or until > self.t):
+            if self.events:
+                time_start = time.time()
+                event = heapq.heappop(self.events)
+                self.t = event.date
+                self.nb_events_tracker[self.t] = len(self.events)
+                self.execute(event)
+                self.time_execution += time.time() - time_start
+                r += 1
+            else:
+                if self.print_in_terminal:
+                    print("THE SIMULATION IS COMPLETED")  
+                break    
+        return bool(self.events), event
             
     def complete(self):
         """
@@ -409,6 +402,9 @@ class Algorithm():
         pass
     
     def update_deposit(self, current_time):
+        pass
+
+    def update_retrieval(self, current_time):
         pass
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
@@ -749,3 +745,45 @@ class AlgorithmUnimodal(BaseAlgorithm):
                 print(self.parking)
                 print(self.locked_lanes)
             raise ValueError("le placement n'a pas pu être effectué")
+
+class RLAlgorithm(Algorithm):
+
+    def take_action(self, robot_actions, current_time):
+
+        for i_robot, robot in enumerate(self.robots):
+
+            lane_global_id, side_bool = robot_actions[i_robot]
+
+            if lane_global_id:
+                if side_bool:
+                    side = "bottom"
+                else:
+                    side = "top"
+                block_id = self.parking.block_id(lane_global_id)
+                lane_id = self.parking.lane_id(lane_global_id)
+                robot.goal_position = (block_id, lane_id, side)
+
+                robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
+
+                if robot.vehicle is None:
+                    event = Event(None, robot.goal_time, "robot_arrival", robot)
+                else:
+                    event = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
+                robot.doing = event
+                heapq.heappush(self.events, event)
+    
+    def update(self, current_time):
+        self.pending_action = True
+
+    def update_retrieval(self, vehicle, current_time):
+        """
+        penality 
+        self.reward += 6000 - min(0, vehicle.retrieval)
+        """
+        pass
+
+    def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
+        self.update(current_time)
+
+    def update_robot_end_task(self, robot, lane_end, success, current_time):
+        self.update(current_time)
