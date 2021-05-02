@@ -759,8 +759,7 @@ class RLAlgorithm(Algorithm):
                     side = "bottom"
                 else:
                     side = "top"
-                block_id = self.parking.block_id(lane_global_id)
-                lane_id = self.parking.lane_id(lane_global_id)
+                block_id, lane_id = self.parking.dict_lanes[lane_global_id]
                 robot.goal_position = (block_id, lane_id, side)
 
                 robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
@@ -776,11 +775,8 @@ class RLAlgorithm(Algorithm):
         self.pending_action = True
 
     def update_retrieval(self, vehicle, current_time):
-        """
         penality 
         self.reward += 6000 - min(0, vehicle.retrieval)
-        """
-        pass
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
         self.update(current_time)

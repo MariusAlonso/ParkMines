@@ -71,10 +71,10 @@ class Parking():
         self.dict_lanes = dict()
         self.number_lanes = 0
         counter_lanes = 1                              #LA NUMEROTAION DES LANES COMMENCE A 1
-        for id_block, block in enumerate(self.blocks):
+        for block_id, block in enumerate(self.blocks):
             self.number_lanes += block.nb_lanes
-            for lane in block.lanes:
-                self.dict_lanes[(counter_lanes, id_block)] = lane
+            for lane_id, lane in enumerate(block.lanes):
+                self.dict_lanes[counter_lanes] = (block_id, lane_id)
                 counter_lanes += 1
          
 
@@ -227,7 +227,7 @@ class Block():
         matrix = np.empty((self.height, self.width), dtype='<U6')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
-            liste = [str(item).replace('None', '-') for item in liste]
+            liste = [str(item).replace(0, '-') for item in liste]
             matrix[row_index] = liste
 
         # les lanes sont les colonnes (la première à gauche)
@@ -262,7 +262,7 @@ class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
         self.id = id_lane
-        self.list_vehicles = np.array([None]*self.length)  
+        self.list_vehicles = np.array([0]*self.length)  
         self.top_position = None                # indice de la premiere voiture occupée dans la lane (None si pas de voiture)
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
         self.future_top_position = None  
@@ -402,13 +402,13 @@ class Lane() :
 
 
     def pop_cancel_reserve(self, coté):
-        self.push_reserve("None", coté)
+        self.push_reserve(0, coté)
 
     def pop(self, coté):
         if coté == "top":
             if self.top_position != None:
                 vehicle_id = self.list_vehicles[self.top_position]
-                self.list_vehicles[self.top_position] = None
+                self.list_vehicles[self.top_position] = 0
                 self.top_position += 1
                 if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.top_position = None
@@ -421,7 +421,7 @@ class Lane() :
         elif coté == "bottom":
             if self.bottom_position != None:
                 vehicle_id = self.list_vehicles[self.bottom_position]
-                self.list_vehicles[self.bottom_position] = None
+                self.list_vehicles[self.bottom_position] = 0
                 self.bottom_position -= 1
                 if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
