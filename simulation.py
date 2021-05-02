@@ -748,7 +748,7 @@ class AlgorithmUnimodal(BaseAlgorithm):
 
 class RLAlgorithm(Algorithm):
 
-    def take_action(self, robot_actions, current_time):
+    def take_decision(self, robot_actions, current_time):
 
         for i_robot, robot in enumerate(self.robots):
 

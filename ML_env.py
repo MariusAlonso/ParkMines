@@ -28,11 +28,17 @@ class MLEnv(gym.Env):
         #               ensuite un Box qui donne le temps d'oisiveté (nombre réel entre 0 et 100)
     
         dictionary = {
-            "robot_actions_lanes": MultiDiscrete([list(range(0, (self.parking.number_lanes + 1))) for _ in range(self.number_robots)]),
-            "robot_actions_sides": MultiDiscrete([list(range(0, 1)) for _ in range(self.number_robots)]),
-            "idleness_date": Box(low=0., high=np.inf, shape= (1,), dtype="np.float64")
+            "robot_actions_lanes": MultiDiscrete([self.parking.number_lanes + 1 for _ in range(self.number_robots)]),
+            "robot_actions_sides": MultiDiscrete([2 for _ in range(self.number_robots)]),
+            "idleness_date": Box(low=0., high=np.inf, shape= (1,), dtype="float64")
         }
         self.action_space = Dict(dictionary)
+
+        print("action_space_created")
+
+        for k in [1, 10, 100]:
+            print(MultiDiscrete([1000 for _ in range(k)]))
+        input()
         
         #observation_space : Parking, liste de véhicules avec dates,  véhicule porté par chaque robot
 
@@ -40,20 +46,27 @@ class MLEnv(gym.Env):
         for lane_global_id in range(1, self.parking.number_lanes+1):
             block_id, lane_id = self.parking.dict_lanes[lane_global_id]
             lane_length = self.parking.blocks[block_id].lanes[lane_id].length
-            d[f"lane_{lane_global_id}"] = MultiDiscrete([list(range(0, self.max_number_vehicles + 1)) for _ in range(lane_length)])
+            d[f"lane_{lane_global_id}"] = MultiDiscrete([self.max_number_vehicles + 1 for _ in range(lane_length)])
+            input("lane")
         
-        d["current_time"] = Box(low=0., high=np.inf, shape=(1,), dtype="np.float64")
-        d["robot_actions_lanes"] = MultiDiscrete([list(range(0, (self.parking.number_lanes + 1))) for _ in range(self.number_robots)]),
-        d["robot_actions_sides"] = MultiDiscrete([list(range(2)) for _ in range(self.number_robots)]),
-        d["robot_is_carrying"] = MultiDiscrete([list(range(0, (self.max_number_vehicles + 1))) for _ in range(self.number_robots)])
-        d["stock_is_active"] = MultiDiscrete([list(range(2)) for _ in range(self.max_stock_visible)])
-        d["stock_vehicle_id"] = MultiDiscrete([list(range(1, (self.max_number_vehicles + 1))) for _ in range(self.max_stock_visible)])
-        d["stock_dates"] = Box(low=0., high=np.inf, shape=(self.max_stock_visible,2), dtype="np.float64")
-    
+        d["current_time"] = Box(low=0., high=np.inf, shape=(1,), dtype="float64")
+        d["robot_actions_lanes"] = MultiDiscrete([self.parking.number_lanes + 1 for _ in range(self.number_robots)])
+        d["robot_actions_sides"] = MultiDiscrete([2 for _ in range(self.number_robots)])
+        d["robot_is_carrying"] = MultiDiscrete([self.max_number_vehicles + 1 for _ in range(self.number_robots)])
+        print("djbgtjbojtrbroij")
+        d["stock_is_active"] = MultiDiscrete([2 for _ in range(self.max_stock_visible)])
+        print("svefvrveve")
+        #d["stock_vehicle_id"] = MultiDiscrete([list(range(1, (self.max_number_vehicles + 1))) for _ in range(self.max_stock_visible)])
+        print("svefvrveve")
+        d["stock_dates"] = Box(low=0., high=np.inf, shape=(self.max_stock_visible,2), dtype="float64")
+        print("svefvrveve")
+        print(d)
         self.observation_space = Dict(d)
 
+        print("observation_space_created")
+
         self.observation = {}
-        for lane_global_id in range(self.parking.number_lanes):
+        for lane_global_id in range(1, self.parking.number_lanes+1):
             block_id, lane_id = self.parking.dict_lanes[lane_global_id]
             self.observation[f"lane_{lane_global_id}"] = self.parking.blocks[block_id].lanes[lane_id].list_vehicles
         
@@ -61,11 +74,11 @@ class MLEnv(gym.Env):
         self.observation["robot_actions_sides"] = [0]*self.number_robots
         
         self.observation["stock_is_active"] = [0]*self.max_stock_visible
-        self.observation["stock_vehicle_id"] = [0]*self.max_stock_visible
+        #self.observation["stock_vehicle_id"] = [0]*self.max_stock_visible
         self.observation["stock_dates"] = np.zeros((self.max_stock_visible,2))
-        for i_vehicle, vehicle in enumerate(self.stock.vehicles):
+        for i_vehicle, vehicle in enumerate(self.stock.vehicles.values()):
             self.observation["stock_is_active"][i_vehicle] = 1
-            self.observation["stock_vehicle_id"][i_vehicle] = vehicle.id
+            #self.observation["stock_vehicle_id"][i_vehicle] = vehicle.id
             deposit_in_sec = (vehicle.deposit - self.t0).total_seconds()
             retrieval_in_sec = (vehicle.retrieval - self.t0).total_seconds()
             self.observation["stock_dates"][i_vehicle] = np.array([deposit_in_sec, retrieval_in_sec])
@@ -77,9 +90,10 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
         wake_up_date = self.t0 + datetime.timedelta(seconds = int(action["idleness_date"][0]))
-        self.simulation.algorithm.take_decision(action["robot_actions"], self.simulation.t)
+        self.simulation.algorithm.take_decision(action["robot_actions_lanes"], self.simulation.t)
 
         while True:
+            print("k")
             if not (self.simulation.events) and not(self.simulation.pending_retrievals):
                 self.done = True
                 break
@@ -112,7 +126,7 @@ class MLEnv(gym.Env):
         self.simulation = Simulation(datetime.datetime(1,1,1,0,0,0,0), self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, print_in_terminal=False)
 
         self.observation = {}
-        for lane_global_id in range(self.parking.number_lanes):
+        for lane_global_id in range(1, self.parking.number_lanes+1):
             block_id, lane_id = self.parking.dict_lanes[lane_global_id]
             self.observation[f"lane_{lane_global_id}"] = self.parking.blocks[block_id].lanes[lane_id].list_vehicles
         
@@ -120,11 +134,11 @@ class MLEnv(gym.Env):
         self.observation["robot_actions_sides"] = [0]*self.number_robots
         
         self.observation["stock_is_active"] = [0]*self.max_stock_visible
-        self.observation["stock_vehicle_id"] = [0]*self.max_stock_visible
+        #self.observation["stock_vehicle_id"] = [0]*self.max_stock_visible
         self.observation["stock_dates"] = np.zeros((self.max_stock_visible,2))
-        for i_vehicle, vehicle in enumerate(self.stock.vehicles):
+        for i_vehicle, vehicle in enumerate(self.stock.vehicles.values()):
             self.observation["stock_is_active"][i_vehicle] = 1
-            self.observation["stock_vehicle_id"][i_vehicle] = vehicle.id
+            #self.observation["stock_vehicle_id"][i_vehicle] = vehicle.id
             deposit_in_sec = (vehicle.deposit - self.t0).total_seconds()
             retrieval_in_sec = (vehicle.retrieval - self.t0).total_seconds()
             self.observation["stock_dates"][i_vehicle] = np.array([deposit_in_sec, retrieval_in_sec])
