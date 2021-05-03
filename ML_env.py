@@ -114,7 +114,7 @@ class MLEnv(gym.Env):
                     self.observation["robot_actions_sides"][i_robot] = 0
 
         self.done = not (self.simulation.events) and not(self.simulation.pending_retrievals)
-        return self.simulation.algorithm.reward, self.done, self.observation
+        return self.observation, self.simulation.algorithm.reward, self.done, {}
 
     def reset(self):
 

@@ -69,12 +69,14 @@ class Parking():
         distance.fill_matrix_time()
         self.matrix_time = distance.matrix_time
         self.dict_lanes = dict()
+        self.to_global_id = dict()
         self.number_lanes = 0
         counter_lanes = 1                              #LA NUMEROTAION DES LANES COMMENCE A 1
         for block_id, block in enumerate(self.blocks):
             self.number_lanes += block.nb_lanes
             for lane_id, lane in enumerate(block.lanes):
                 self.dict_lanes[counter_lanes] = (block_id, lane_id)
+                self.to_global_id[(block_id, lane_id)] = counter_lanes
                 counter_lanes += 1
          
 
