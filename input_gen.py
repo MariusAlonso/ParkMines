@@ -5,7 +5,7 @@ import pandas as pd
 import time as comptime
 import numpy as np
 from sklearn.mixture import GaussianMixture
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # En jours
 mu_deposit_order = 2
@@ -160,8 +160,10 @@ if __name__ == "__main__":
             if days_to_retrieval >= 0:
                 break
         res.append(days_to_retrieval)
+    """
     plt.hist(res, bins = range(40), density = True)
     plt.show()
+    """
 
 
 
