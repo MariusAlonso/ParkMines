@@ -13,16 +13,18 @@ class MLEnv(gym.Env):
     def __init__(self):
         self.parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.number_robots = 4
-        self.simulation_length = 1000
+        self.simulation_length = 30
         self.daily_flow = 30
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
+        self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
+        print(self.tmax)
 
         # self.max_stock_visible = 100 + self.parking.size
         self.max_stock_visible = self.max_number_vehicles
 
-        self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, print_in_terminal=False)
+        self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
 
         #action_space : pour chaque robot un Discrete avec le numéro de lane où il va effectuer la tâche (0 correpond à oisiveté)
         #               ensuite un Box qui donne le temps d'oisiveté (nombre réel entre 0 et 100)
@@ -30,7 +32,7 @@ class MLEnv(gym.Env):
         dictionary = {
             "robot_actions_lanes": MultiDiscrete([self.parking.number_lanes + 1 for _ in range(self.number_robots)]),
             "robot_actions_sides": MultiDiscrete([2 for _ in range(self.number_robots)]),
-            "idleness_date": Box(low=0., high=np.inf, shape= (1,), dtype="float64")
+            "idleness_date": Discrete(10000000)
         }
         self.action_space = Dict(dictionary)
 
@@ -86,11 +88,13 @@ class MLEnv(gym.Env):
     def step(self, action):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
-        wake_up_date = self.t0 + datetime.timedelta(seconds = int(action["idleness_date"][0]))
+        wake_up_date = self.simulation.t + datetime.timedelta(seconds = action["idleness_date"])
         self.simulation.algorithm.take_decision(action["robot_actions_lanes"], action["robot_actions_sides"], self.simulation.t)
 
         while True:
-            print("k")
+            if self.simulation.t > self.tmax:
+                self.done = True
+                break          
             if not (self.simulation.events) and not(self.simulation.pending_retrievals):
                 self.done = True
                 break
@@ -113,14 +117,18 @@ class MLEnv(gym.Env):
                 else:
                     self.observation["robot_actions_sides"][i_robot] = 0
 
-        self.done = not (self.simulation.events) and not(self.simulation.pending_retrievals)
+        self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
+
+        if self.done:
+            #input()
+            pass
         return self.observation, self.simulation.algorithm.reward, self.done, {}
 
     def reset(self):
 
         self.parking = self.parking._empty_copy()
-        self.stock = RandomStock(30, time = datetime.timedelta(days=1000))
-        self.simulation = Simulation(datetime.datetime(1,1,1,0,0,0,0), self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, print_in_terminal=False)
+        self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
+        self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
 
         self.observation = {}
         for lane_global_id in range(1, self.parking.number_lanes+1):
@@ -144,4 +152,5 @@ class MLEnv(gym.Env):
         self.done = False
 
     def render(self, mode='human', close=False):
+        #print(self.simulation.t)
         pass

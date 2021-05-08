@@ -9,7 +9,7 @@ import time
 
 class Simulation():
 
-    def __init__(self, t0, stock, robots, parking, AlgorithmType, print_in_terminal=False, display=None):
+    def __init__(self, t0, stock, robots, parking, AlgorithmType, order=True, print_in_terminal=False, display=None):
         """
         t0 : date d'initialisation
         """
@@ -32,8 +32,13 @@ class Simulation():
         # Création de la file d'événements : ajout des commandes
         self.events = []
         for v in self.stock.vehicles.values():
-            heapq.heappush(self.events, Event(v, v.order_deposit, "order_deposit"))
-            heapq.heappush(self.events, Event(v, v.order_retrieval, "order_retrieval"))
+            if order:
+                heapq.heappush(self.events, Event(v, v.order_deposit, "order_deposit"))
+                heapq.heappush(self.events, Event(v, v.order_retrieval, "order_retrieval"))
+            else:
+                heapq.heappush(self.events, Event(v, v.deposit, "deposit"))
+                heapq.heappush(self.events, Event(v, v.retrieval, "retrieval"))                
+
 
         self.pending_deposits = []
         self.pending_retrievals = []
@@ -161,6 +166,24 @@ class Simulation():
 
                     del self.parking.occupation[event.vehicle.id]
 
+                    if self.pending_deposits:
+                        event_deposit = heapq.heappop(self.pending_deposits)
+                        self.parking.blocks[0].lanes[i_lane].push_reserve(event_deposit.vehicle.id, "top")
+                        self.parking.blocks[0].lanes[i_lane].push(event_deposit.vehicle.id, "top", self.stock)
+                        self.parking.occupation[event_deposit.vehicle.id] = (0, i_lane, 0)
+
+                        # ajout du retard éventuel à la liste des retards au dépôt
+                        self.before_deposit_delays.append(self.t - event_deposit.date)
+                        # mise à jour de la date de dépôt effectif du véhicule
+                        event_deposit.vehicle.effective_deposit = self.t
+
+                        for pdg_retrieval in self.pending_retrievals:
+                            # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
+                            if pdg_retrieval.vehicle.id == event_deposit.vehicle.id:
+                                self.execute(pdg_retrieval)
+                                self.pending_retrievals.remove(pdg_retrieval)
+                                break
+
                     if self.print_in_terminal:
                         print(f"Retrieval of {vehicle.id}")
                         print(self.parking)
@@ -283,6 +306,13 @@ class Simulation():
                         # mise à jour de la date de dépôt effectif du véhicule
                         event_deposit.vehicle.effective_deposit = self.t
 
+                        for pdg_retrieval in self.pending_retrievals:
+                            # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
+                            if pdg_retrieval.vehicle.id == event_deposit.vehicle.id:
+                                self.execute(pdg_retrieval)
+                                self.pending_retrievals.remove(pdg_retrieval)
+                                break
+
                 if block_id == 0:
                     # ajout du retard éventuel à la liste des retards au dépôt
                     self.after_deposit_delays.append(self.t - vehicle.effective_deposit)
@@ -324,7 +354,6 @@ class Simulation():
             if self.events:
                 time_start = time.time()
                 event = heapq.heappop(self.events)
-                print(event)
                 self.t = event.date
                 self.nb_events_tracker[self.t] = len(self.events)
                 self.execute(event)
@@ -774,15 +803,20 @@ class RLAlgorithm(Algorithm):
                 robot.doing = event
                 heapq.heappush(self.events, event)
     
+    def check_pick(self, lane_end, moved_vehicle, current_time):
+        return True
+    
     def update(self, current_time):
         self.pending_action = True
 
     def update_retrieval(self, vehicle, current_time):
-        penality 
-        self.reward += 6000 - min(0, vehicle.retrieval)
+        malus = min(100*max(0, (current_time - vehicle.retrieval).total_seconds()/3600)**2, 2400)
+        self.reward += 1 - malus
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
         self.update(current_time)
+        self.reward -= 0.25
 
     def update_robot_end_task(self, robot, lane_end, success, current_time):
         self.update(current_time)
+        self.reward -= 0.25
