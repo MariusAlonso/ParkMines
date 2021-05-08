@@ -13,9 +13,10 @@ class MLEnv(gym.Env):
     def __init__(self):
         self.parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.number_robots = 4
-        self.simulation_length = 1000
+        self.simulation_length = 1
         self.daily_flow = 30
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
+        
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
 
@@ -89,13 +90,16 @@ class MLEnv(gym.Env):
         wake_up_date = self.t0 + datetime.timedelta(seconds = int(action["idleness_date"][0]))
         self.simulation.algorithm.take_decision(action["robot_actions_lanes"], action["robot_actions_sides"], self.simulation.t)
 
+        
         while True:
-            print("k")
             if not (self.simulation.events) and not(self.simulation.pending_retrievals):
                 self.done = True
                 break
+            
             if not (self.simulation.events) or self.simulation.events[0].date > wake_up_date:
                 heapq.heappush(self.simulation.events, Event(None, wake_up_date, "wake_up_robots", None))
+              
+                
             self.simulation.next_event()
             # On vérifie si un évènement appelle à une décision
             if self.simulation.algorithm.pending_action:
@@ -113,13 +117,16 @@ class MLEnv(gym.Env):
                 else:
                     self.observation["robot_actions_sides"][i_robot] = 0
 
+
+        #Fin de la simulation
+       
         self.done = not (self.simulation.events) and not(self.simulation.pending_retrievals)
         return self.observation, self.simulation.algorithm.reward, self.done, {}
 
     def reset(self):
 
         self.parking = self.parking._empty_copy()
-        self.stock = RandomStock(30, time = datetime.timedelta(days=1000))
+        self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.simulation = Simulation(datetime.datetime(1,1,1,0,0,0,0), self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, print_in_terminal=False)
 
         self.observation = {}

@@ -23,7 +23,9 @@ for episode in range(1, episodes+1):
         env.render()
         print("j")
         action = env.action_space.sample()
+        
         n_state, reward, done, info = env.step(action)
+        print("k")
         score+=reward
     print('Episode:{} Score:{}'.format(episode, score))
 env.close()
