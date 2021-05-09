@@ -1,4 +1,7 @@
 import gym 
+
+from ray import tune
+from ray.rllib.agents.ppo import PPOTrainer
 # from stable_baselines import ACER
 from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
@@ -15,7 +18,7 @@ env = MLEnv()
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
-episodes = 100
+episodes = 1
 for episode in range(1, episodes+1):
     env.reset()
     done = False
@@ -38,10 +41,13 @@ env.close()
 #apprentissage
 
 env = MLEnv()
-
+"""
 # env = DummyVecEnv([lambda: env])
-#model = PPO2(MlpPolicy, env, verbose=1)
+model = PPO2(MlpPolicy, env, verbose=1)
 
 
-#model.learn(total_timesteps=100000)
+model.learn(total_timesteps=100000)
+"""
+
+tune.run(PPOTrainer, config={"env": env}) 
 
