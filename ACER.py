@@ -15,7 +15,7 @@ env = MLEnv()
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
-episodes = 100
+episodes = 1
 for episode in range(1, episodes+1):
     env.reset()
     done = False
@@ -38,8 +38,7 @@ env.close()
 #apprentissage
 
 env = MLEnv()
-
-# env = DummyVecEnv([lambda: env])
+#env = DummyVecEnv([lambda: env])
 #model = PPO2(MlpPolicy, env, verbose=1)
 
 

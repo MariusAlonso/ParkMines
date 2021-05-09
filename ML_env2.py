@@ -8,16 +8,17 @@ from parking import *
 
 
 class MLEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
+    
 
     def __init__(self):
         self.parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.number_robots = 4
-        self.simulation_length = 30
-        self.daily_flow = 30
+        self.simulation_length = 20
+        self.daily_flow = 1
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
-        
+        print(self.stock)
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
+        
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
         self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
         #print(self.tmax)
@@ -36,7 +37,7 @@ class MLEnv(gym.Env):
             "idleness_date": Discrete(10000000)
         }
         """
-        self.action_space = MultiDiscrete([10e4] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
+        self.action_space = MultiDiscrete([10e2] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
 
         print("action_space_created")
         
@@ -55,7 +56,7 @@ class MLEnv(gym.Env):
 
 
         #[current_time, robot1_lane, robot2_lane..., robot1_side, robot2_side,..., stock_date_deposit_vehicule1, ..., stock_date_retrieval_vehicule1, ....]
-        self.observation_space = MultiDiscrete([10e8] + L + [(self.parking.number_lanes + 1) for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)] + [10e8 for _ in range(2*self.max_stock_visible)])
+        self.observation_space = MultiDiscrete([10e2] + L + [(self.parking.number_lanes + 1) for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)] + [10e8 for _ in range(2*self.max_stock_visible)])
 
         print("observation_space_created")
 
