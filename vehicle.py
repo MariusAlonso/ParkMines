@@ -58,7 +58,7 @@ class RandomStock(Stock):
     def __init__(self, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0)):
         Vehicle.next_id = 1
         self.vehicles = generateStock(Vehicle, vehicles_per_day, time, start_date)
-        print(self.vehicles)
+        #print(self.vehicles)
         self.first_day, self.last_day = self.duration_simu()
 
 if __name__ == "__main__":
