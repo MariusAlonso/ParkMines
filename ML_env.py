@@ -20,7 +20,7 @@ class MLEnv(gym.Env):
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
         self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
-        print(self.tmax)
+        #print(self.tmax)
 
         # self.max_stock_visible = 100 + self.parking.size
         self.max_stock_visible = self.max_number_vehicles
@@ -60,7 +60,6 @@ class MLEnv(gym.Env):
      
         d["stock_dates"] = Box(low=0., high=np.inf, shape=(self.max_stock_visible,2), dtype="float64")
    
-        print(d)
         self.observation_space = Dict(d)
 
         print("observation_space_created")

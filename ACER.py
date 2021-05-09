@@ -4,7 +4,7 @@ from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
-from ML_env import MLEnv
+from ML_env2 import MLEnv
 
 """
 environment_name =
@@ -26,7 +26,7 @@ for episode in range(1, episodes+1):
         action = env.action_space.sample()
         
         n_state, reward, done, info = env.step(action)
-        print("k")
+        
         score+=reward
     print('Episode:{} Score:{}'.format(episode, score))
 env.close()
@@ -42,5 +42,5 @@ env = MLEnv()
 model = PPO2(MlpPolicy, env, verbose=1)
 
 
-model.learn(total_timesteps=100000)
+#model.learn(total_timesteps=100000)
 
