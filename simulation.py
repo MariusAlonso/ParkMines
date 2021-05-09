@@ -811,7 +811,7 @@ class RLAlgorithm(Algorithm):
 
     def update_retrieval(self, vehicle, current_time):
         malus = min(100*max(0, (current_time - vehicle.retrieval).total_seconds()/3600)**2, 2400)
-        self.reward += 1 - malus
+        self.reward += 1. - malus
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
         self.update(current_time)
