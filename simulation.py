@@ -840,7 +840,7 @@ class AlgorithmZeroMinus(Algorithm):
         self.alpha = 1.
         self.beta = 1.1
         self.start_new_lane_weight = 20
-        self.distance_to_lane_end_coef = 5.
+        self.distance_to_lane_end_coef = -5.
 
     def weight(self, vehicle, start_position, lane_end, date):
 
@@ -872,7 +872,7 @@ class AlgorithmZeroMinus(Algorithm):
         
         # détermination de delta_t (en minutes)
         try:
-            delta_t = (vehicle.retrieval - lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60     # l'espoir fait vivre
+            delta_t = (vehicle.retrieval - lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60
         except TypeError:   # cas où la lane ne contient pas d'autre véhicule
             delta_t = 0
             overweight += self.start_new_lane_weight
@@ -923,7 +923,7 @@ class AlgorithmNewUnimodal(Algorithm):
         
         # détermination de delta_t (en minutes)
         try:
-            delta_t = (vehicle.retrieval - lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60     # l'espoir fait vivre
+            delta_t = (vehicle.retrieval - lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60
             # on regarde si l'on viole l'unimodalité
             if delta_t > 0:
                 overweight += self.break_unimodality_weight

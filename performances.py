@@ -78,7 +78,23 @@ class Dashboard():
             delays_rates[delay] = np.mean(retrieval_delays > datetime.timedelta(minutes=delay))
         
         return delays_rates
+    
+    def Mark(self):
+        """
+        renvoie la note de la simulation
+        """
+        retrieval_delays = np.array(self.simulation.retrieval_delays)
+        mark = 0
+        nb_vehicles = len(self.simulation.stock)
 
+        for delay in range(600):
+            mark += pow(np.sum(datetime.timedelta(minutes=delay) < retrieval_delays) - np.sum(datetime.timedelta(minutes=delay+1) < retrieval_delays), 3/2)
+        
+        mark /= nb_vehicles
+
+        return mark
+
+    
 
 
 class Performance():
@@ -100,13 +116,13 @@ class Performance():
         self.algorithm = AlgorithmType
         self.delays = delays
     
-    def averageDashboard(self, nb_repetition=10):
+    def averageDashboard(self, nb_repetitions=10):
         """
         renvoie les données du Dashboard de la simulation de référence,
-        moyennées sur nb_repetition répétitions
+        moyennées sur nb_repetitions répétitions
         """
         average_dashboard = {}
-        effective_nb_repetition = 0
+        effective_nb_repetitions = 0
         average_intermediate_mpv = 0.
         average_before_deposit_delay = datetime.timedelta()
         average_after_deposit_delay = datetime.timedelta()
@@ -114,7 +130,7 @@ class Performance():
         average_deposit_delay_rates = {key: 0. for key in self.delays}
         average_retrieval_delay_rates = {key: 0. for key in self.delays}
 
-        for _ in range(nb_repetition):
+        for _ in range(nb_repetitions):
             simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
             dashboard = Dashboard(simulation)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
@@ -131,29 +147,29 @@ class Performance():
                 for delay in retrieval_delay_rates:
                     average_retrieval_delay_rates[delay] += retrieval_delay_rates[delay]
 
-                effective_nb_repetition += 1
+                effective_nb_repetitions += 1
         
         for key, value in average_deposit_delay_rates.items():
-            average_deposit_delay_rates[key] = value / effective_nb_repetition
+            average_deposit_delay_rates[key] = value / effective_nb_repetitions
         
         for key, value in average_retrieval_delay_rates.items():
-            average_retrieval_delay_rates[key] = value / effective_nb_repetition
+            average_retrieval_delay_rates[key] = value / effective_nb_repetitions
 
-        average_dashboard["average_intermediate_mpv"] = average_intermediate_mpv / effective_nb_repetition
-        average_dashboard["average_before_deposit_delay"] = average_before_deposit_delay / effective_nb_repetition
-        average_dashboard["average_after_deposit_delay"] = average_after_deposit_delay / effective_nb_repetition
-        average_dashboard["average_retrieval_delay"] = average_retrieval_delay / effective_nb_repetition
-        average_dashboard["success_rate"] = effective_nb_repetition / nb_repetition
+        average_dashboard["average_intermediate_mpv"] = average_intermediate_mpv / effective_nb_repetitions
+        average_dashboard["average_before_deposit_delay"] = average_before_deposit_delay / effective_nb_repetitions
+        average_dashboard["average_after_deposit_delay"] = average_after_deposit_delay / effective_nb_repetitions
+        average_dashboard["average_retrieval_delay"] = average_retrieval_delay / effective_nb_repetitions
+        average_dashboard["success_rate"] = effective_nb_repetitions / nb_repetitions
         average_dashboard["average_deposit_delay_rates"] = average_deposit_delay_rates # attention, c'est un dictionnaire
         average_dashboard["average_retrieval_delay_rates"] = average_retrieval_delay_rates # attention, c'est un dictionnaire
 
         return average_dashboard
     
-    def printAverageDashboard(self, nb_repetition=10):
+    def printAverageDashboard(self, nb_repetitions=10):
         """
         affiche les résulats de averageDashboard
         """
-        means = self.averageDashboard(nb_repetition=nb_repetition)
+        means = self.averageDashboard(nb_repetitions=nb_repetitions)
         for key in means:
 
             if key == "average_deposit_delay_rates":
@@ -199,9 +215,9 @@ class Performance():
             else:
                 print(key, means[key])
 
-    def variableStockAndRobots(self, nb_repetition=10, factors=[1+0.1*i for i in range(-4, 3)], nb_robots_max=3):
+    def variableStockAndRobots(self, nb_repetitions=10, factors=[1+0.1*i for i in range(-4, 3)], nb_robots_max=3):
         """
-        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetition répétitions
+        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
         """
         # curves = {(factor, nb_robots): dictionnaire des performances pour ce facteur et ce nombre de robots}
         curves = {}
@@ -213,7 +229,7 @@ class Performance():
                 print(nb_robots, factor)
                 # génération de toutes les sorties
                 performance = Performance(self.t, stock_args, [Robot(i) for i in range(1, nb_robots + 1)], deepcopy(self.parking), deepcopy(self.algorithm))
-                curves[(factor, nb_robots)] = performance.averageDashboard(nb_repetition)
+                curves[(factor, nb_robots)] = performance.averageDashboard(nb_repetitions)
 
         # tracé
         ref_flow = self.stock_args[0]
@@ -439,9 +455,9 @@ class Performance():
 
 
 
-    def variableInterfaceAndRobots(self, nb_repetition=10, interface_delta_sizes=[i for i in range(-2, 4)], nb_robots_max=3):
+    def variableInterfaceAndRobots(self, nb_repetitions=10, interface_delta_sizes=[i for i in range(-2, 4)], nb_robots_max=3):
         """
-        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetition répétitions
+        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
         """
         # curves = {(interface_size, nb_robots): dictionnaire des performances pour cette taille d'interface et ce nombre de robots}
         curves = {}
@@ -460,7 +476,7 @@ class Performance():
                 # génération de toutes les sorties
                 print(interface_size, nb_robots)
                 performance = Performance(self.t, self.stock_args, [Robot(i) for i in range(1, nb_robots + 1)], parking, deepcopy(self.algorithm))
-                curves[(interface_size, nb_robots)] = performance.averageDashboard(nb_repetition)
+                curves[(interface_size, nb_robots)] = performance.averageDashboard(nb_repetitions)
 
         # tracé
 
@@ -684,7 +700,7 @@ class Performance():
         plt.show()
 
 
-    def variableAlgorithmsAndFlow(self, nb_repetition=10, algorithms=[AlgorithmRandom], factors=[1+0.1*i for i in range(-4, 3)]):
+    def variableAlgorithmsAndFlow(self, nb_repetitions=10, algorithms=[AlgorithmRandom], factors=[1+0.1*i for i in range(-4, 3)]):
         """
         Compare les performances de différents algorithmes pour un stock variable
         """
@@ -698,7 +714,7 @@ class Performance():
                 print(algorithm.__repr__(), factor)
                 # génération de toutes les sorties
                 performance = Performance(self.t, stock_args, self.robots, deepcopy(self.parking), deepcopy(algorithm))
-                curves[(factor, algorithm)] = performance.averageDashboard(nb_repetition)
+                curves[(factor, algorithm)] = performance.averageDashboard(nb_repetitions)
 
         # tracé
         ref_flow = self.stock_args[0]
@@ -906,3 +922,25 @@ class Performance():
                     wspace=0.185,
                     hspace=0.35)
         plt.show()
+    
+
+    
+    def algorithmMark(self, nb_repetitions=100):
+        """
+        calcule la "note" de l'algorithme : somme(retards^3/2)/nb_véhicules, moyennée sur nb_repetitions simulations
+        """
+
+        effective_nb_repetitions = 0
+        average_mark = 0
+
+        for _ in range(nb_repetitions):
+            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
+            dashboard = Dashboard(simulation)
+            if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
+                
+                average_mark += dashboard.Mark()
+                effective_nb_repetitions += 1
+
+        average_mark /= effective_nb_repetitions
+
+        return average_mark

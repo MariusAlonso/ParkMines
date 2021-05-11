@@ -181,7 +181,7 @@ class TestTest():
         print(f"les véhicules restent en moyenne {dashboard.averageAfterDepositDelay()} heures dans l'interface")
         assert datetime.timedelta() <= dashboard.averageAfterDepositDelay()
     
-    def testDepositDelaysRates(self, delays=[1, 5, 60], nb_vehicles=70, nb_repetition=10):
+    def testDepositDelaysRates(self, delays=[1, 5, 60], nb_vehicles=70, nb_repetitions=10):
         # création du parking
         Vehicle.next_id = 1
         stock = Stock(importFromFile()[:nb_vehicles])
@@ -216,7 +216,7 @@ class TestTest():
 
 
 
-    def testAverageDashboard(self, stock_args=(5, ), nb_repetition=100, delays=[i for i in range(300)], display=False):
+    def testAverageDashboard(self, stock_args=(5, ), nb_repetitions=100, delays=[i for i in range(300)], display=False):
         # création du parking
         Vehicle.next_id = 1
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
@@ -224,49 +224,60 @@ class TestTest():
 
         # test
         if display:
-            performance.printAverageDashboard(nb_repetition)
+            performance.printAverageDashboard(nb_repetitions)
         else:
-            performance.averageDashboard(nb_repetition)
+            performance.averageDashboard(nb_repetitions)
         assert 0 == 0
     
-    def testVariableStockAndRobots(self, stock_args=(5, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
+    def testVariableStockAndRobots(self, stock_args=(5, ), nb_repetitions=10, delays=[i for i in range(300)], display=False):
         # création du parking
         Vehicle.next_id = 1
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
         performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1)], parking, AlgorithmUnimodal, delays=delays)
 
         # test
-        performance.variableStockAndRobots(nb_repetition)
+        performance.variableStockAndRobots(nb_repetitions)
         assert 0 == 0
     
-    def testVariableInterfaceAndRobots(self, stock_args=(5, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
+    def testVariableInterfaceAndRobots(self, stock_args=(5, ), nb_repetitions=10, delays=[i for i in range(300)], display=False):
         # création du parking
         Vehicle.next_id = 1
         parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([Lane(1, 10), Lane(2, 10), Lane(3, 10), Lane(4, 10), Lane(5, 10), Lane(6, 10), Lane(7, 10), Lane(8, 10)]), Block([Lane(1, 4), Lane(2, 4)]), Block([Lane(1, 2)])], [[0, 0, 0, 0],["s", 1, 1, 1],[2,2,3,"e"]])
         performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1)], parking, AlgorithmRandom, delays=delays)
 
         # test
-        performance.variableInterfaceAndRobots(nb_repetition)
+        performance.variableInterfaceAndRobots(nb_repetitions)
         assert 0 == 0
 
-    def testVariableStockAndRobotsRealParking(self, stock_args=(5, ), nb_repetition=10, delays=[i for i in range(300)], display=False):
+    def testVariableStockAndRobotsRealParking(self, stock_args=(5, ), nb_repetitions=10, delays=[i for i in range(300)], display=False):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1)], real_parking, AlgorithmRandom, delays=delays)
 
         # test
-        performance.variableStockAndRobots(nb_repetition)
+        performance.variableStockAndRobots(nb_repetitions)
         assert 0 == 0
 
-    def testVariableAlgorithmsAndFlowRealParking(self, stock_args=(30, ), nb_repetition=10, delays=[i for i in range(300)], display=False, algorithms=[AlgorithmRandom]):
+    def testVariableAlgorithmsAndFlowRealParking(self, stock_args=(30, ), nb_repetitions=10, delays=[i for i in range(300)], display=False, algorithms=[AlgorithmRandom]):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmRandom, delays=delays)
 
         # test
-        performance.variableAlgorithmsAndFlow(nb_repetition, algorithms)
+        performance.variableAlgorithmsAndFlow(nb_repetitions, algorithms)
+        assert 0 == 0
+    
+    def testMark(self, algorithm, stock_args=(30, datetime.timedelta(days=150)), nb_repetitions=100, delays=[i for i in range(300)]):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, algorithm, delays=delays)
+
+        # test
+        mark = performance.algorithmMark(nb_repetitions)
+        print(f"{algorithm.__repr__()} algorithm mark :  {mark}")
         assert 0 == 0
 
 
@@ -275,12 +286,12 @@ class TestTest():
 test = TestTest()
 
 #test.testAverageDashboard(stock_args=(5, ), display=True)
-#test.testVariableStockAndRobots(nb_repetition=20)
-#test.testVariableInterfaceAndRobots(nb_repetition=10)
-#test.testVariableStockAndRobotsRealParking(stock_args=(30, ), nb_repetition=10)
+#test.testVariableStockAndRobots(nb_repetitions=20)
+#test.testVariableInterfaceAndRobots(nb_repetitions=10)
+#test.testVariableStockAndRobotsRealParking(stock_args=(30, ), nb_repetitions=10)
 
-test.testVariableAlgorithmsAndFlowRealParking(nb_repetition=30, algorithms=[AlgorithmRandom,
-                                                                            AlgorithmNewUnimodal,
-                                                                            AlgorithmUnimodalRefined0,
-                                                                            AlgorithmZeroMinus
-                                                                            ])
+#test.testVariableAlgorithmsAndFlowRealParking(nb_repetitions=30, algorithms=[AlgorithmRandom, AlgorithmNewUnimodal, AlgorithmUnimodalRefined0, AlgorithmZeroMinus])
+
+test.testMark(AlgorithmRandom)
+test.testMark(AlgorithmNewUnimodal)
+test.testMark(AlgorithmZeroMinus)
