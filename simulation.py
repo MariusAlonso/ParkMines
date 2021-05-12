@@ -783,7 +783,6 @@ class RLAlgorithm(Algorithm):
     def take_decision(self, robot_actions_lanes, robot_actions_sides, current_time):
 
         for i_robot, robot in enumerate(self.robots):
-
             lane_global_id, side_bool = robot_actions_lanes[i_robot], robot_actions_sides[i_robot]
 
             if lane_global_id:
