@@ -14,7 +14,7 @@ class MLEnv(gym.Env):
         self.parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.number_robots = 4
         self.simulation_length = 20
-        self.daily_flow = 1
+        self.daily_flow = 20
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
         
@@ -32,11 +32,11 @@ class MLEnv(gym.Env):
         
         #self.action_space = MultiDiscrete([10e2] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
         Linf = np.array([0]*(2*self.number_robots + 1))
-        Lsup = np.array([10e4]+[self.parking.number_lanes + 0.9]*self.number_robots + [1.4]*self.number_robots)
-        self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
+        #Lsup = np.array([10e4]+[self.parking.number_lanes + 0.9]*self.number_robots + [1]*self.number_robots)
+        #self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
 
-        #Lsup2 = [10e4]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
-        #self.action_space = MultiDiscrete(Lsup2)
+        Lsup2 = [100]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
+        self.action_space = MultiDiscrete(Lsup2)
         
 
 
@@ -65,7 +65,7 @@ class MLEnv(gym.Env):
         
         self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.parking.nb_max_lanes))
 
-        print(Lsup)
+        #print(Lsup)
         print(self.observation_space)
         print("observation_space_created")
 
@@ -143,8 +143,6 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
         if action[0]=='nan':
-            print('i')
-            print(type(action[0]))
             return self.observation, -10e20, True, {}
         wake_up_date = self.simulation.t + datetime.timedelta(seconds = int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
@@ -179,11 +177,21 @@ class MLEnv(gym.Env):
                 self.observation[self._dict("robot_actions_lanes", number=i_robot)] = 0
             else:
                 self.observation[self._dict("robot_actions_lanes", number=i_robot)] = self.parking.to_global_id[robot.goal_position[:2]]
+                #self.simulation.algorithm.reward += 1000*self.parking.to_global_id[robot.goal_position[:2]]
                 if robot.goal_position[2] == "bottom":
                     self.observation[self._dict("robot_actions_sides", number=i_robot)] = 1
                 else:
                     self.observation[self._dict("robot_actions_sides", number=i_robot)] = 0
 
+        for lane_global_id in range(1, self.parking.number_lanes+1):
+            block_id, lane_id = self.parking.dict_lanes[lane_global_id]
+            for position, vehicle_id in enumerate(self.parking.blocks[block_id].lanes[lane_id].list_vehicles):
+                print(self.parking.blocks[block_id].lanes[lane_id].list_vehicles)
+                print(vehicle_id)
+                if vehicle_id:
+                    self.observation[self._dict("lanes", number=lane_global_id, place=position)] = (self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds()
+                    print((self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds())
+        print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
         self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
         if self.done:
@@ -217,5 +225,8 @@ class MLEnv(gym.Env):
     def render(self, mode='human', close=False):
         #print(self.simulation.t)
         #display = Display(self.simulation.t, self.stock, [Robot(1), Robot(2)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
-        print(self.observation)
+        print("stock_dates=", self.observation[self._dict("stock_dates")[0]:self._dict("stock_dates")[0]+7, 0:2])
+        print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
+        print("robot_actions_lanes=", self.observation[self._dict("robot_actions_lanes")[0]:self._dict("robot_actions_lanes")[1], 0])
+
         pass
