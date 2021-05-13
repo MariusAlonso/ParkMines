@@ -27,6 +27,8 @@ class MLEnv(gym.Env):
 
         self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
 
+        self.simulation.start_display(time_interval=1.)
+
         #action_space : pour chaque robot un Discrete avec le numéro de lane où il va effectuer la tâche (0 correpond à oisiveté)
         #               ensuite un Box qui donne le temps d'oisiveté (nombre réel entre 0 et 100)
         
@@ -186,7 +188,9 @@ class MLEnv(gym.Env):
 
         self.parking = self.parking._empty_copy()
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
+        self.simulation.display.shutdown()
         self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
+        self.simulation.start_display(time_interval=1.)
 
         
         self.observation = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
@@ -204,7 +208,4 @@ class MLEnv(gym.Env):
         self.done = False
 
     def render(self, mode='human', close=False):
-        #print(self.simulation.t)
-        #display = Display(self.simulation.t, self.stock, [Robot(1), Robot(2)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
-
-        pass
+        self.simulation.display.update()
