@@ -16,7 +16,6 @@ class MLEnv(gym.Env):
         self.simulation_length = 20
         self.daily_flow = 1
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
-        print(self.stock)
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
         
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
@@ -33,36 +32,35 @@ class MLEnv(gym.Env):
         
         #self.action_space = MultiDiscrete([10e2] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
         Linf = np.array([0]*(2*self.number_robots + 1))
-        Lsup = np.array([10e6]+[self.parking.number_lanes + 1]*self.number_robots + [1.4]*self.number_robots)
+        Lsup = np.array([np.inf]+[self.parking.number_lanes + 0.9]*self.number_robots + [1.4]*self.number_robots)
         self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
 
         print(self.action_space)
         print("action_space_created")
         
         
+        
 
 
         #[current_time, robot1_lane, robot2_lane..., robot1_side, robot2_side,..., stock_date_deposit_vehicule1, ..., stock_date_retrieval_vehicule1, ....]
         
-        self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible
+        self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
         Linf = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
         Lsup = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
-        Lsup[0,0] == np.inf
-        for id_robot in range(self.number_robots):    #id des robots commencent a 1
-            Lsup[id_robot+1,0], Lsup[id_robot,1] == self.parking.number_lanes, 1
+        Lsup[0,0] = np.inf
+        for id_robot in range(self.number_robots):    #id des robots commencent a 0
+            Lsup[id_robot+1,0], Lsup[id_robot+1,1] = self.parking.number_lanes+0.9, 1
         
         for id_global_lane in range (1, self.parking.number_lanes+1):
             id_block, id_lane = self.parking.dict_lanes[id_global_lane]
             lane = self.parking.blocks[id_block].lanes[id_lane]
             Lsup[self.number_robots+id_global_lane, :lane.length] = np.array([np.inf]*lane.length)
 
-        Lsup[self.number_robots+self.parking.number_lanes+1:, 0:2] == np.inf*np.ones((self.max_stock_visible, 2))
-
-
+        Lsup[self.number_robots+self.parking.number_lanes+1:, 0:2] = np.inf*np.ones((self.max_stock_visible, 2))
         
         self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.parking.nb_max_lanes))
 
-
+        print(Lsup)
         print(self.observation_space)
         print("observation_space_created")
 
@@ -78,10 +76,9 @@ class MLEnv(gym.Env):
         for i_vehicle, vehicle in enumerate(self.stock.vehicles.values()):
             deposit_in_sec = (vehicle.deposit - self.t0).total_seconds()
             retrieval_in_sec = (vehicle.retrieval - self.t0).total_seconds()
-            self.observation[self._dict("stock_dates", number=i_vehicle)[0],0] = deposit_in_sec
-            self.observation[self._dict("stock_dates", number=i_vehicle)[0],1] = retrieval_in_sec
-        
-
+            self.observation[self._dict("stock_dates", number=i_vehicle)] = deposit_in_sec
+            self.observation[self._dict("stock_dates", number=i_vehicle, retrieval=True)] = retrieval_in_sec
+       
         self.done = False
 
 
@@ -140,11 +137,7 @@ class MLEnv(gym.Env):
     def step(self, action):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
-        print('i')
-        if type(action[self._dict("idleness_date")]) != int:
-            wake_up_date = self.simulation.t + datetime.timedelta(seconds = 3)
-        else:
-            wake_up_date = self.simulation.t + datetime.timedelta(seconds = int(action[self._dict("idleness_date")]))
+        wake_up_date = self.simulation.t + datetime.timedelta(seconds = int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
         init2, end2 = self._dict("robot_actions_sides", action_space=True)
         self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)
@@ -168,17 +161,19 @@ class MLEnv(gym.Env):
                 break
         
         # On met à jour l'observation
-        self.observation[self._dict("current_time")] = (self.simulation.t - self.t0).seconds
+        
+        self.observation[self._dict("current_time")] = (self.simulation.t - self.t0).total_seconds()
+        
         for i_robot, robot in enumerate(self.simulation.robots):
             if robot.doing is None:
                 
-                self.observation[self._dict("robot_actions_lanes", number=i_robot),0] = 0
+                self.observation[self._dict("robot_actions_lanes", number=i_robot)] = 0
             else:
-                self.observation[self._dict("robot_actions_lanes", number=i_robot),0] = self.parking.to_global_id[robot.goal_position[:2]]
+                self.observation[self._dict("robot_actions_lanes", number=i_robot)] = self.parking.to_global_id[robot.goal_position[:2]]
                 if robot.goal_position[2] == "bottom":
-                    self.observation[self._dict("robot_actions_sides", number=i_robot),1] = 1
+                    self.observation[self._dict("robot_actions_sides", number=i_robot)] = 1
                 else:
-                    self.observation[self._dict("robot_actions_sides", number=i_robot),1] = 0
+                    self.observation[self._dict("robot_actions_sides", number=i_robot)] = 0
 
         self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
@@ -203,11 +198,13 @@ class MLEnv(gym.Env):
         for i_vehicle, vehicle in enumerate(self.stock.vehicles.values()):
             deposit_in_sec = (vehicle.deposit - self.t0).total_seconds()
             retrieval_in_sec = (vehicle.retrieval - self.t0).total_seconds()
-            self.observation[self._dict("stock_dates", number=i_vehicle)[0],0] = deposit_in_sec
-            self.observation[self._dict("stock_dates", number=i_vehicle)[0],1] = retrieval_in_sec
+            self.observation[self._dict("stock_dates", number=i_vehicle)] = deposit_in_sec
+            self.observation[self._dict("stock_dates", number=i_vehicle, retrieval=True)] = retrieval_in_sec
         
         self.done = False
 
     def render(self, mode='human', close=False):
         #print(self.simulation.t)
+        #display = Display(self.simulation.t, self.stock, [Robot(1), Robot(2)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
+
         pass

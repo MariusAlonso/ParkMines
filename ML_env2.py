@@ -161,7 +161,7 @@ class MLEnv(gym.Env):
                 break
         
         # On met à jour l'observation
-        self.observation[self._dict("current_time")] = (self.simulation.t - self.t0).total_seconds 
+        self.observation[self._dict("current_time")] = (self.simulation.t - self.t0).total_seconds() 
         for i_robot, robot in enumerate(self.simulation.robots):
             if robot.doing is None:
                 
