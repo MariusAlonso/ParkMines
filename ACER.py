@@ -7,7 +7,7 @@ from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
-from ML_env import MLEnv
+from ML_env3 import MLEnv
 
 """
 environment_name =
@@ -18,7 +18,7 @@ env = MLEnv()
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
-episodes = 1
+episodes = 10
 for episode in range(1, episodes+1):
     env.reset()
     done = False
@@ -39,7 +39,6 @@ env.close()
 
 
 #apprentissage
-"""
 env = MLEnv()
 
 # env = DummyVecEnv([lambda: env])
@@ -50,4 +49,4 @@ model.learn(total_timesteps=100000)
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 
-
+"""
