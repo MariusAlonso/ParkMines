@@ -1,0 +1,69 @@
+# docker build --tag openai:latest .
+# docker run --env DISPLAY=:0 --name "open_ai_test" --network host --privileged -v `pwd`:`pwd` -v "/tmp/.X11-unix:/tmp/.X11-unix:rw"  --workdir `pwd` -it openai:latest bash
+
+FROM ubuntu:18.04
+
+# setup timezone
+RUN echo 'Etc/UTC' > /etc/timezone && \
+    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+    apt update && \
+    apt install -q -y --no-install-recommends tzdata && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update \
+    && apt-get install -y \
+	apt-utils \
+	git \
+	vim \
+	htop \
+	wget \
+	python3-dev \
+	libopenmpi-dev \
+	python3-pip \
+    python3-tk \
+	zlib1g-dev \
+	cmake \
+	ffmpeg \ 
+	freeglut3-dev \
+        python3-opengl \
+        libjpeg-dev \
+        curl \
+        cmake \
+        swig \
+        wget \
+        unzip \
+        git \
+        xvfb \
+        xterm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /root/.cache/pip/
+
+# Clean up pycache and pyc files
+RUN pip3 install --upgrade pip && \
+    pip install 'tensorflow < 2' && \
+    pip install 'gym' && \
+    pip install 'pyglet' && \
+    pip install 'stable-baselines' && \
+    pip install 'shapely'
+
+# Setup user
+RUN apt-get update \
+    && apt-get install -y \
+    sudo \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /root/.cache/pip/
+
+# Set root password inside docker in order to install new package for dev
+RUN echo "root:root"| chpasswd
+RUN useradd -m stan \
+    && usermod -a -G video stan
+RUN echo "stan:root" | chpasswd
+# Allow user to use sudo
+RUN adduser stan sudo
+
+
+WORKDIR /home/stan
+
+USER stan
+
+CMD /bin/bash
