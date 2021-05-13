@@ -781,7 +781,7 @@ class AlgorithmUnimodal(BaseAlgorithm):
 class RLAlgorithm(Algorithm):
 
     def take_decision(self, robot_actions_lanes, robot_actions_sides, current_time):
-
+        print(robot_actions_lanes)
         for i_robot, robot in enumerate(self.robots):
             
             lane_global_id, side_bool = robot_actions_lanes[i_robot], robot_actions_sides[i_robot]
@@ -815,8 +815,8 @@ class RLAlgorithm(Algorithm):
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
         self.update(current_time)
-        self.reward -= 0.25
+        self.reward += 0.25
 
     def update_robot_end_task(self, robot, lane_end, success, current_time):
         self.update(current_time)
-        self.reward -= 0.25
+        self.reward += 0.25

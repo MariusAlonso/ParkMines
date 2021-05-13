@@ -32,8 +32,13 @@ class MLEnv(gym.Env):
         
         #self.action_space = MultiDiscrete([10e2] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
         Linf = np.array([0]*(2*self.number_robots + 1))
-        Lsup = np.array([np.inf]+[self.parking.number_lanes + 0.9]*self.number_robots + [1.4]*self.number_robots)
+        Lsup = np.array([10e4]+[self.parking.number_lanes + 0.9]*self.number_robots + [1.4]*self.number_robots)
         self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
+
+        #Lsup2 = [10e4]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
+        #self.action_space = MultiDiscrete(Lsup2)
+        
+
 
         print(self.action_space)
         print("action_space_created")
@@ -110,7 +115,7 @@ class MLEnv(gym.Env):
                 if number == None:
                     return  1+self.number_robots, 2*self.number_robots+1
                 else:
-                    return 1+number+self.parking.number_lanes
+                    return 1+number+self.number_robots
 
 
         elif string == "lanes":
@@ -137,6 +142,10 @@ class MLEnv(gym.Env):
     def step(self, action):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
+        if action[0]=='nan':
+            print('i')
+            print(type(action[0]))
+            return self.observation, -10e20, True, {}
         wake_up_date = self.simulation.t + datetime.timedelta(seconds = int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
         init2, end2 = self._dict("robot_actions_sides", action_space=True)
@@ -183,7 +192,7 @@ class MLEnv(gym.Env):
         return self.observation, self.simulation.algorithm.reward, self.done, {}
 
     def reset(self):
-
+        #print(self.observation)
         self.parking = self.parking._empty_copy()
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
@@ -202,9 +211,11 @@ class MLEnv(gym.Env):
             self.observation[self._dict("stock_dates", number=i_vehicle, retrieval=True)] = retrieval_in_sec
         
         self.done = False
+        return self.observation
+        
 
     def render(self, mode='human', close=False):
         #print(self.simulation.t)
         #display = Display(self.simulation.t, self.stock, [Robot(1), Robot(2)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
-
+        print(self.observation)
         pass

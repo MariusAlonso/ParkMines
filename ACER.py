@@ -18,7 +18,7 @@ env = MLEnv()
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
-episodes = 10
+episodes = 0
 for episode in range(1, episodes+1):
     env.reset()
     done = False
@@ -44,13 +44,18 @@ env.close()
 
 #apprentissage
 env = MLEnv()
-"""
+
 # env = DummyVecEnv([lambda: env])
 model = PPO2(MlpPolicy, env, verbose=1)
 
 
-model.learn(total_timesteps=100000)
-"""
+model.learn(total_timesteps=10000)
+
+obs = env.reset()
+while True:
+    action, _states = model.predict(obs)
+    obs, rewards, dones, info = env.step(action)
+    env.render()
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 
