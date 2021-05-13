@@ -269,15 +269,46 @@ class TestTest():
         performance.variableAlgorithmsAndFlow(nb_repetitions, algorithms)
         assert 0 == 0
     
-    def testMark(self, algorithm, stock_args=(30, datetime.timedelta(days=150)), nb_repetitions=100, delays=[i for i in range(300)]):
+    def testMark(self, algorithm, stock_args=(30, datetime.timedelta(days=150)), nb_repetitions=100):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, algorithm, delays=delays)
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, algorithm)
 
         # test
         mark = performance.algorithmMark(nb_repetitions)
         print(f"{algorithm.__repr__()} algorithm mark :  {mark}")
+        assert 0 == 0
+    
+    def testRefineAlgorithm(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 1.1, 20., -5.]):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmZeroMinus)
+
+        # test
+        performance.refineParametersZeroMinus(variation_coef, nb_steps, nb_repetitions, initial_parameters)
+        assert 0 == 0
+    
+    def testMarkOnPool(self, algorithm, stock_args=(30, datetime.timedelta(days=150))):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, algorithm)
+
+        # test
+        mark = performance.algorithmMarkOnPool()
+        print(f"{algorithm.__repr__()} algorithm mark :  {mark}")
+        assert 0 == 0
+    
+    def testRefineAlgorithmOnPool(self, variation_coef=0.9, nb_steps=10, initial_parameters=[1., 1.1, 20., -5.]):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmZeroMinus)
+
+        # test
+        performance.refineParametersZeroMinusOnPool(variation_coef, nb_steps, initial_parameters)
         assert 0 == 0
 
 
@@ -292,6 +323,12 @@ test = TestTest()
 
 #test.testVariableAlgorithmsAndFlowRealParking(nb_repetitions=30, algorithms=[AlgorithmRandom, AlgorithmNewUnimodal, AlgorithmUnimodalRefined0, AlgorithmZeroMinus])
 
-test.testMark(AlgorithmRandom)
-test.testMark(AlgorithmNewUnimodal)
-test.testMark(AlgorithmZeroMinus)
+#test.testMark(AlgorithmRandom)
+#test.testMark(AlgorithmNewUnimodal)
+#test.testMark(AlgorithmZeroMinus)
+
+#test.testRefineAlgorithm(variation_coef=0.9, nb_steps=5, nb_repetitions=2, initial_parameters=[1., 1.1, 20., -5.])
+
+#test.testMarkOnPool(AlgorithmZeroMinus)
+
+test.testRefineAlgorithmOnPool(variation_coef=0.9, nb_steps=10, initial_parameters=[1., 1.1, 20., -5.])

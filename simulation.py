@@ -8,7 +8,7 @@ import time
 
 class Simulation():
 
-    def __init__(self, t0, stock, robots, parking, AlgorithmType, print_in_terminal=False, display=None):
+    def __init__(self, t0, stock, robots, parking, AlgorithmType, print_in_terminal=False, display=None, optimization_parameters=None):
         """
         t0 : date d'initialisation
         """
@@ -17,6 +17,7 @@ class Simulation():
         self.t = t0
         self.parking = parking
         self.print_in_terminal = print_in_terminal
+        self.optimization_parameters = optimization_parameters
 
         self.before_deposit_delays = []
         self.after_deposit_delays = []
@@ -48,7 +49,10 @@ class Simulation():
                 self.locked_lanes[(block_id, lane_id, "top")] = int(not lane.top_access)
                 self.locked_lanes[(block_id, lane_id, "bottom")] = int(not lane.bottom_access)
         
-        self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes) # /!\ provisoire
+        if optimization_parameters is None:
+            self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes) # /!\ provisoire
+        else:
+            self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes, optimization_parameters=optimization_parameters) # /!\ provisoire
 
         # Dictionnaires pour l'analyse de flux
         self.nb_entree = {}
@@ -833,14 +837,18 @@ class AlgorithmUnimodal(Algorithm):
 
 class AlgorithmZeroMinus(Algorithm):
 
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False):
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, optimization_parameters=(1., 1.1, 20., -5.)):
         super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal)
         
         #paramètres de contrôle des poids
-        self.alpha = 1.
-        self.beta = 1.1
-        self.start_new_lane_weight = 20
-        self.distance_to_lane_end_coef = -5.
+        alpha, beta, start_new_lane_weight, distance_to_lane_end_coef = optimization_parameters
+
+        self.alpha = alpha
+        self.beta = beta
+        self.start_new_lane_weight = start_new_lane_weight
+        self.distance_to_lane_end_coef = distance_to_lane_end_coef
+
+        self.optimization_parameters = list(optimization_parameters)    # /!\ changement de type
 
     def weight(self, vehicle, start_position, lane_end, date):
 
@@ -888,6 +896,9 @@ class AlgorithmZeroMinus(Algorithm):
     @classmethod
     def __repr__(self):
         return "0-"
+
+
+
 
 
 class AlgorithmNewUnimodal(Algorithm):

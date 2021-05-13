@@ -1,7 +1,9 @@
 from parking import *
 from simulation import *
-from inputs import *
-from vehicle import RandomStock
+from inputs import importFromFile
+from vehicle import *
+from robot import *
+import numpy as np
 import datetime
 from copy import deepcopy
 from math import isclose
@@ -94,7 +96,6 @@ class Dashboard():
 
         return mark
 
-    
 
 
 class Performance():
@@ -924,17 +925,15 @@ class Performance():
         plt.show()
     
 
-    
-    def algorithmMark(self, nb_repetitions=100):
+    def algorithmMark(self, nb_repetitions=100, optimization_parameters=None):
         """
         calcule la "note" de l'algorithme : somme(retards^3/2)/nb_véhicules, moyennée sur nb_repetitions simulations
         """
-
         effective_nb_repetitions = 0
         average_mark = 0
 
         for _ in range(nb_repetitions):
-            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
+            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
                 
@@ -944,3 +943,115 @@ class Performance():
         average_mark /= effective_nb_repetitions
 
         return average_mark
+
+    def algorithmMarkOnPool(self, optimization_parameters=None):
+        """
+        calcule la "note" de l'algorithme : somme(retards^3/2)/nb_véhicules, moyennée sur le pool de stocks
+        """
+        effective_nb_repetitions = 0
+        average_mark = 0
+        root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+
+        for i in range(10):
+            path = root_path + 'stock_' + str(i) + '.csv'
+            simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
+            dashboard = Dashboard(simulation)
+            if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
+                
+                average_mark += dashboard.Mark()
+                effective_nb_repetitions += 1
+
+        average_mark /= effective_nb_repetitions
+
+        return average_mark
+
+
+    def refineParametersZeroMinus(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 1.1, 20., -5.]):
+        """
+        Affine les paramètres de 0- sur nb_repetitions
+        """
+        best_optimization_parameters = initial_parameters
+
+        # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
+        marks = {}
+
+        for k in range(nb_steps):
+            print(f"step {k} :")
+            # création d'un dictionnaire des notes "locales" et ajout de la référence
+            local_marks = {}
+            best_optimization_parameters = list(best_optimization_parameters)
+            mark = self.algorithmMark(nb_repetitions, optimization_parameters=best_optimization_parameters)
+            local_marks[tuple(best_optimization_parameters)] = mark
+            # parcours des jeux de paramètres adjacents
+            for i in range(len(best_optimization_parameters)):
+                # on essaie en diminuant un peu le i-ème paramètre
+                parameters = best_optimization_parameters[:]
+                parameters[i] *= variation_coef
+                # calcul de la note
+                mark = self.algorithmMark(nb_repetitions, optimization_parameters=parameters)
+                marks[tuple(parameters)] = mark
+                local_marks[tuple(parameters)] = mark
+                #print(f"{tuple(parameters)} : {mark}")
+
+                # on essaie en aumentant un peu le i-ème paramètre
+                parameters = best_optimization_parameters[:]
+                parameters[i] /= variation_coef
+                # calcul de la note
+                mark = self.algorithmMark(nb_repetitions, optimization_parameters=parameters)
+                marks[tuple(parameters)] = mark
+                local_marks[tuple(parameters)] = mark
+                #print(f"{tuple(parameters)} : {mark}")
+
+            # mise à jour des paramètres de référence
+            best_mark = local_marks[tuple(best_optimization_parameters)]
+            for parameters, mark in local_marks.items():
+                if mark < best_mark:
+                    best_optimization_parameters = parameters
+                    best_mark = mark
+            print(f"{best_optimization_parameters} : {best_mark}")
+        return marks
+
+    def refineParametersZeroMinusOnPool(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 1.1, 20., -5.]):
+        """
+        Affine les paramètres de 0- sur nb_repetitions
+        """
+        best_optimization_parameters = initial_parameters
+
+        # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
+        marks = {}
+
+        for k in range(nb_steps):
+            print(f"step {k} :")
+            # création d'un dictionnaire des notes "locales" et ajout de la référence
+            local_marks = {}
+            best_optimization_parameters = list(best_optimization_parameters)
+            mark = self.algorithmMarkOnPool(optimization_parameters=best_optimization_parameters)
+            local_marks[tuple(best_optimization_parameters)] = mark
+            # parcours des jeux de paramètres adjacents
+            for i in range(len(best_optimization_parameters)):
+                # on essaie en diminuant un peu le i-ème paramètre
+                parameters = best_optimization_parameters[:]
+                parameters[i] *= variation_coef
+                # calcul de la note
+                mark = self.algorithmMarkOnPool(optimization_parameters=parameters)
+                marks[tuple(parameters)] = mark
+                local_marks[tuple(parameters)] = mark
+                #print(f"{tuple(parameters)} : {mark}")
+
+                # on essaie en aumentant un peu le i-ème paramètre
+                parameters = best_optimization_parameters[:]
+                parameters[i] /= variation_coef
+                # calcul de la note
+                mark = self.algorithmMarkOnPool(optimization_parameters=parameters)
+                marks[tuple(parameters)] = mark
+                local_marks[tuple(parameters)] = mark
+                #print(f"{tuple(parameters)} : {mark}")
+
+            # mise à jour des paramètres de référence
+            best_mark = local_marks[tuple(best_optimization_parameters)]
+            for parameters, mark in local_marks.items():
+                if mark < best_mark:
+                    best_optimization_parameters = parameters
+                    best_mark = mark
+            print(f"{best_optimization_parameters} : {best_mark}")
+        return marks
