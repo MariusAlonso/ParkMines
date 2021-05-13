@@ -17,7 +17,7 @@ class TestTest():
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         with open("log.txt", "w") as log_file:
             sys.stdout = log_file
-            display = Display(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3), Robot(4)], real_parking, AlgorithmRandom, 12, 20, print_in_terminal = False)
+            display = Display(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1)], real_parking, AlgorithmRandom, 12, 20, print_in_terminal = False)
 
         assert 0 == 0
 

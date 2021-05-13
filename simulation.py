@@ -29,6 +29,8 @@ class Simulation():
         # nb_events_tracker : dictionnaire contenant le nombre d'évènements dans la file de priorité à chaque date
         self.nb_events_tracker = {}
 
+        self.side_chosen_to_retrieve = {}
+
         # Création de la file d'événements : ajout des commandes
         self.events = []
         for v in self.stock.vehicles.values():
@@ -48,6 +50,11 @@ class Simulation():
                 self.locked_lanes[(block_id, lane_id, "bottom")] = int(not lane.bottom_access)
         
         self.algorithm = AlgorithmType(self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes) # /!\ provisoire
+
+        # Dictionnaires pour l'analyse de flux
+        self.nb_entree = {}
+        self.nb_sortie = {}
+        self.nb_sortie_interface = {}
 
         # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
@@ -71,15 +78,8 @@ class Simulation():
                 print(f"vehicle carrying:", robot.vehicle)
                 print(f"goal_position:", robot.goal_position)
             print("-------------")
-            print([k for k in self.locked_lanes if self.locked_lanes[k]])
+            print([(k,self.locked_lanes[k]) for k in self.locked_lanes if self.locked_lanes[k]])
             print("-------------")
-            """
-            for id_block, block in enumerate(self.parking.blocks):
-                for id_lane, lane in enumerate(block.lanes):
-                    print(id_block, id_lane, lane.top_position, lane.future_top_position)
-                    print(id_block, id_lane, lane.bottom_position, lane.future_bottom_position)
-            print("-------------")
-            """
 
 
         vehicle = event.vehicle
@@ -104,6 +104,11 @@ class Simulation():
             # self.wake_up_robots()
 
         elif event.event_type == "deposit":
+            nb_jour = (self.t - self.stock.first_day).days
+            if nb_jour in self.nb_entree.keys():
+                self.nb_entree[nb_jour] += 1
+            else:
+                self.nb_entree[nb_jour] = 1
 
             lane_id = self.parking.blocks[0].empty_lane()
             if lane_id == "full":
@@ -129,11 +134,17 @@ class Simulation():
                 print("")
 
         elif event.event_type == "retrieval":
-            
+            nb_jour = (self.t - self.stock.first_day).days
+
             if vehicle.id in self.parking.occupation:
                 i_block, i_lane, _ = self.parking.occupation[vehicle.id]
                 if i_block == 0:
-                    # Le client récupère son véhicle (seul endroit dans simulation où cela se produit)
+                    if nb_jour in self.nb_sortie.keys():
+                        self.nb_sortie[nb_jour] += 1
+                    else:
+                        self.nb_sortie[nb_jour] = 1
+
+                    # Le client récupère son véhicule (seul endroit dans simulation où cela se produit)
                     self.parking.blocks[0].lanes[i_lane].pop("top")
 
                     if self.display:
@@ -164,6 +175,12 @@ class Simulation():
                     event.robot.goal_time = None
                     event.robot.target = None
                     event.robot.doing = None
+
+                    nb_jour = (self.t - self.stock.first_day).days
+                    if nb_jour in self.nb_sortie_interface.keys():
+                        self.nb_sortie_interface[nb_jour] += 1
+                    else:
+                        self.nb_sortie_interface[nb_jour] = 1
                         
                     if self.print_in_terminal:
                         print(f"Robot {event.robot} waits in interface zone")
@@ -225,7 +242,8 @@ class Simulation():
 
                     if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t <= datetime.timedelta(hours=1):
                         i_lane = self.parking.blocks[0].empty_lane()
-                        self.locked_lanes[event.robot.goal_position] -= 1
+                        side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
+                        self.locked_lanes[event.robot.goal_position[:2] + (side_chosen_initially,)] -= 1
                         self.parking.blocks[0].lanes[i_lane].push_reserve("bottom")
                         self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
                         #On place le vehicule a l'interface
@@ -281,13 +299,13 @@ class Simulation():
 
             if block_id == 0:
                 # ajout du retard éventuel à la liste des retards à la sortie
-                self.retrieval_delays.append(self.t - event.robot.target.date)
+                self.retrieval_delays.append(self.t - vehicle.retrieval)
             
                 for pdg_retrieval in self.pending_retrievals:
                     # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
-                    if pdg_retrieval == event.robot.target:
-                        self.execute(event.robot.target)
-                        self.pending_retrievals.remove(event.robot.target)
+                    if pdg_retrieval.vehicle.id == vehicle.id:
+                        self.execute(pdg_retrieval)
+                        self.pending_retrievals.remove(pdg_retrieval)
                         break
 
 
@@ -313,7 +331,7 @@ class Simulation():
                     self.time_execution += time.time() - time_start
                 else:
                     if self.print_in_terminal:
-                        print("THE SIMULATION IS COMPLETED")
+                        print("THE SIMULATION IS COMPETED")
                     break
         else:
             while self.t < until:
@@ -511,6 +529,7 @@ class Simulation():
                     # event.event_retrieval.unassigned_tasks = position - vehicle_lane.top_position + 1
                 
                 self.locked_lanes[(block_id, lane_id, side)] += 1
+                self.side_chosen_to_retrieve[event.vehicle.id] = side
 
                 # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
                 for robot in self.robots:                           
@@ -565,7 +584,7 @@ class Event():
         return True
     
     def __eq__(self, other):
-        return (not (other is None)) and self.date == other.date
+        return (not (other is None)) and self.date == other.date and self.vehicle.id == other.vehicle.id
     
     def __lt__(self, other):
         return self.date < other.date

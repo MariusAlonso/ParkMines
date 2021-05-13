@@ -13,7 +13,7 @@ class Vehicle():
         self.order_retrieval = order_retrieval
         self.id = self.__class__.next_id
         self.__class__.next_id += 1
-        if Vehicle.next_id >= 100000:
+        if Vehicle.next_id >= 1000000:
             raise ValueError("La représentation d'un block ne fonctionne que si les ids des véhicules contiennent au plus cinq chiffres")
     
     def __repr__(self):
@@ -28,6 +28,7 @@ class Stock():
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
+        self.first_day, self.last_day = self.duration_simu()
     
     def __len__(self):
         return len(self.vehicles)
@@ -38,11 +39,23 @@ class Stock():
     def remove(self, vehicle):
         del self.vehicles[vehicle.id]
 
+    def duration_simu(self):
+        first_day = self.vehicles[1].order_deposit
+        last_day = self.vehicles[1].retrieval
+        for _, vehicle in self.vehicles.items():
+            if vehicle.order_deposit < first_day:
+                first_day = vehicle.order_deposit
+            if vehicle.retrieval > last_day:
+                last_day = vehicle.retrieval
+        return first_day, last_day
+
+
 class RandomStock(Stock):
 
     def __init__(self, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0)):
         Vehicle.next_id = 1
         self.vehicles = generateStock(Vehicle, vehicles_per_day, time, start_date)
+        self.first_day, self.last_day = self.duration_simu()
 
 if __name__ == "__main__":
     t000 = comptime.time()

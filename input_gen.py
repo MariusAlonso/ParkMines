@@ -3,6 +3,9 @@ import datetime
 import random
 import pandas as pd
 import time as comptime
+import numpy as np
+from sklearn.mixture import GaussianMixture
+import matplotlib.pyplot as plt
 
 # En jours
 mu_deposit_order = 2
@@ -50,15 +53,22 @@ def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=da
     mvmts = pd.DataFrame(columns = ["DEPOSIT", "RETRIEVAL", "ID", "ORDER_DEPOSIT", "ORDER_RETRIEVAL"])
     date = start_date
 
+    gm = GaussianMixture(n_components=7, covariance_type='spherical')
+    gm.weights_ = np.array([0.12,0.32,0.125,0.05,0.02,0.005,0.36])
+    gm.means_ = np.array([[3.],[7.],[14.],[21.],[28.],[35.],[12.]])
+    gm.covariances_ = np.array([3.,1.,1.,1.,1.,1.,30.])
+
     while date - start_date < time:
 
         weekday = date.weekday()
         nb_entrances = max(0, int(round(vehicles_per_day*random.normalvariate(mu_entrances[weekday], sigma_entrances[weekday]))))
 
         for _ in range(nb_entrances):
-
-            days_to_retrieval = max(0, int(round(random.normalvariate(mu_stay_duration, sigma_stay_duration))))
-
+    
+            while True:
+                days_to_retrieval = int(np.round(gm.sample()[0]))
+                if days_to_retrieval >= 0:
+                    break
             while True:
                 hour_deposit = random_hour("entrance") + datetime.timedelta(seconds=int(3600*random.random()))
                 hour_retrieval = random_hour("exit") + datetime.timedelta(seconds=int(3600*random.random()))
@@ -94,14 +104,22 @@ def generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31),
     date = start_date
     dict_vehicles = {}
 
+    gm = GaussianMixture(n_components=7, covariance_type='spherical')
+    gm.weights_ = np.array([0.12,0.32,0.125,0.05,0.02,0.005,0.36])
+    gm.means_ = np.array([[3.],[7.],[14.],[21.],[28.],[35.],[12.]])
+    gm.covariances_ = np.array([3.,1.,1.,1.,1.,1.,30.])
+
     while date - start_date < time:
 
         weekday = date.weekday()
         nb_entrances = max(0, int(round(vehicles_per_day*random.normalvariate(mu_entrances[weekday], sigma_entrances[weekday]))))
 
         for _ in range(nb_entrances):
-
-            days_to_retrieval = max(0, int(round(random.normalvariate(mu_stay_duration, sigma_stay_duration))))
+    
+            while True:
+                days_to_retrieval = int(np.round(gm.sample()[0]))
+                if days_to_retrieval >= 0:
+                    break
 
             while True:
                 hour_deposit = random_hour("entrance") + datetime.timedelta(seconds=int(3600*random.random()))
@@ -127,9 +145,28 @@ def generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31),
     return dict_vehicles
 
 if __name__ == "__main__":
+
+    """
     t00 = comptime.time()
     for _ in range(100):
         generate(5)
     print("time to generate 100 csv:", comptime.time()-t00)
+    """
+
+    gm = GaussianMixture(n_components=7, covariance_type='spherical')
+    gm.weights_ = np.array([0.12,0.32,0.125,0.05,0.02,0.005,0.36])
+    gm.means_ = np.array([[3.],[7.],[14.],[21.],[28.],[35.],[12.]])
+    gm.covariances_ = np.array([3.,1.,1.,1.,1.,1.,30.])
+
+    res = []
+    for _ in range(100000):
+        while True:
+            days_to_retrieval = int(np.round(gm.sample()[0]))
+            if days_to_retrieval >= 0:
+                break
+        res.append(days_to_retrieval)
+    plt.hist(res, bins = range(40), density = True)
+    plt.show()
+
 
 
