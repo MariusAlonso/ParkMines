@@ -14,7 +14,7 @@ class MLEnv(gym.Env):
         self.parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.number_robots = 4
         self.simulation_length = 1
-        self.daily_flow = 1
+        self.daily_flow = 5
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
@@ -33,7 +33,7 @@ class MLEnv(gym.Env):
         dictionary = {
             "robot_actions_lanes": MultiDiscrete([self.parking.number_lanes + 1 for _ in range(self.number_robots)]),
             "robot_actions_sides": MultiDiscrete([2 for _ in range(self.number_robots)]),
-            "idleness_date": Discrete(10000000)
+            "idleness_date": Box(low=0., high=np.inf, shape=(1,), dtype="float64")
         }
         self.action_space = Dict(dictionary)
 

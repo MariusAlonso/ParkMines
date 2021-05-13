@@ -1,5 +1,5 @@
 import gym 
-
+import ray
 from ray import tune
 from ray.rllib.agents.ppo import PPOTrainer
 # from stable_baselines import ACER
@@ -43,7 +43,6 @@ env.close()
 
 
 #apprentissage
-
 env = MLEnv()
 """
 # env = DummyVecEnv([lambda: env])
@@ -53,5 +52,6 @@ model = PPO2(MlpPolicy, env, verbose=1)
 model.learn(total_timesteps=100000)
 """
 """
+# ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 
 """
