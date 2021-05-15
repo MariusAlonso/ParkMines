@@ -14,7 +14,7 @@ environment_name =
 
 env = gym.make(environment_name)
 """
-env = MLEnv(display=True)
+env = MLEnv()
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
@@ -48,7 +48,13 @@ env.close()
 model = PPO2(MlpPolicy, env, verbose=1)
 
 
-model.learn(total_timesteps=1000)
+model.learn(total_timesteps=10000)
+
+model.save("ppo2_cartpole")
+
+del model # remove to demonstrate saving and loading
+
+model = PPO2.load("ppo2_cartpole")
 
 obs = env.reset()
 #input()
@@ -56,7 +62,7 @@ while True:
     action, _states = model.predict(obs)
     obs, rewards, dones, info = env.step(action)
     env.render()
-    input()
+    #input()
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 
