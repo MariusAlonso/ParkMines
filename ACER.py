@@ -48,7 +48,7 @@ env.close()
 model = PPO2(MlpPolicy, env, verbose=1)
 
 
-model.learn(total_timesteps=1000)
+model.learn(total_timesteps=100000)
 
 obs = env.reset()
 #input()
@@ -56,7 +56,7 @@ while True:
     action, _states = model.predict(obs)
     obs, rewards, dones, info = env.step(action)
     env.render()
-    input()
+    #input()
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 

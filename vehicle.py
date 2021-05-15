@@ -40,12 +40,12 @@ class Stock():
         del self.vehicles[vehicle.id]
 
     def duration_simu(self):
-        first_day = self.vehicles[1].order_deposit
-        last_day = self.vehicles[1].retrieval
+        first_day = None
+        last_day = None
         for _, vehicle in self.vehicles.items():
-            if vehicle.order_deposit < first_day:
+            if first_day is None or vehicle.order_deposit < first_day:
                 first_day = vehicle.order_deposit
-            if vehicle.retrieval > last_day:
+            if last_day is None or vehicle.retrieval > last_day:
                 last_day = vehicle.retrieval
         return first_day, last_day
 
