@@ -43,21 +43,21 @@ env.close()
 
 
 #apprentissage
-env = MLEnv()
+env = MLEnv(display=True)
 
 # env = DummyVecEnv([lambda: env])
 model = PPO2(MlpPolicy, env, verbose=1)
 
 
-model.learn(total_timesteps=1000)
+model.learn(total_timesteps=10000)
 
 obs = env.reset()
-input()
+#input()
 while True:
     action, _states = model.predict(obs)
     obs, rewards, dones, info = env.step(action)
     env.render()
-    input()
+    #input()
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 
