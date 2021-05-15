@@ -7,18 +7,18 @@ from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
-from ML_env2 import MLEnv
+from ML_env3 import MLEnv
 
 """
 environment_name =
 
 env = gym.make(environment_name)
 """
-env = MLEnv()
+env = MLEnv(display=True)
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
-episodes = 10
+episodes = 0
 for episode in range(1, episodes+1):
     env.reset()
     done = False
@@ -33,7 +33,7 @@ for episode in range(1, episodes+1):
         if reward !=0:
             print(n_state[env._dict("stock_dates")[0]:,0], reward, done, info)
         """
-        input()
+        #input()
         score+=reward
         print(score)
     print('Episode:{} Score:{}'.format(episode, score))
@@ -43,13 +43,12 @@ env.close()
 
 
 #apprentissage
-env = MLEnv(display=True)
 
 # env = DummyVecEnv([lambda: env])
 model = PPO2(MlpPolicy, env, verbose=1)
 
 
-model.learn(total_timesteps=10000)
+model.learn(total_timesteps=1000)
 
 obs = env.reset()
 #input()
@@ -57,7 +56,7 @@ while True:
     action, _states = model.predict(obs)
     obs, rewards, dones, info = env.step(action)
     env.render()
-    #input()
+    input()
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 

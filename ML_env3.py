@@ -72,6 +72,7 @@ class MLEnv(gym.Env):
         self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.parking.nb_max_lanes))
 
         #print(Lsup)
+        input()
         print(self.observation_space)
         print("observation_space_created")
 
@@ -128,7 +129,7 @@ class MLEnv(gym.Env):
             if number == None:    #number lane
                 return self.number_robots+1, self.number_robots + self.parking.number_lanes +1
 
-            elif number != None and not place:
+            elif number is not None and place is None:
                 id_block, id_lane = self.parking.dict_lanes[number]
                 lane = self.parking.blocks[id_block].lanes[id_lane]
                 return self.number_robots+number, lane.length 
@@ -207,8 +208,9 @@ class MLEnv(gym.Env):
                 #print(self.parking.blocks[block_id].lanes[lane_id].list_vehicles)
                 #print(vehicle_id)
                 if vehicle_id:
+                    #print(self.parking.blocks[block_id].lanes[lane_id].list_vehicles)
                     self.observation[self._dict("lanes", number=lane_global_id, place=position)] = (self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds()
-                    print((self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds())
+                    #print((self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds())
         #print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
         self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
