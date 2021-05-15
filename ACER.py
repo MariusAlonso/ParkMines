@@ -7,7 +7,7 @@ from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
-from ML_env3 import MLEnv
+from ML_env2 import MLEnv
 
 """
 environment_name =
@@ -18,7 +18,7 @@ env = MLEnv()
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
-episodes = 0
+episodes = 10
 for episode in range(1, episodes+1):
     env.reset()
     done = False
@@ -33,7 +33,7 @@ for episode in range(1, episodes+1):
         if reward !=0:
             print(n_state[env._dict("stock_dates")[0]:,0], reward, done, info)
         """
-        #input()
+        input()
         score+=reward
         print(score)
     print('Episode:{} Score:{}'.format(episode, score))

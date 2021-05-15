@@ -798,6 +798,7 @@ class RLAlgorithm(Algorithm):
 
                 if robot.vehicle is None:
                     event = Event(None, robot.goal_time, "robot_arrival", robot)
+                    #self.parking.blocks[block_id].lanes[lane_id].list_vehicles[0] = 5
                 else:
                     event = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
                 robot.doing = event

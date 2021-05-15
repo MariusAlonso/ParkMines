@@ -13,6 +13,7 @@ class MLEnv(gym.Env):
     def __init__(self):
         self.parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.number_robots = 4
+    
         self.simulation_length = 20
         self.daily_flow = 20
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
@@ -93,7 +94,7 @@ class MLEnv(gym.Env):
         number (id_vehicle ou id_robot) doit commencer en 0, pareil pour place
         """
         if (string == "current_time"):
-            return (0 ,0)
+            return (0,0)
 
         elif (string =="idleness_date"):
             return 0
@@ -142,8 +143,8 @@ class MLEnv(gym.Env):
     def step(self, action):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
-        if action[0]=='nan':
-            return self.observation, -10e20, True, {}
+        #if action[0]=='nan':
+            #return self.observation, -10e20, True, {}
         wake_up_date = self.simulation.t + datetime.timedelta(seconds = int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
         init2, end2 = self._dict("robot_actions_sides", action_space=True)
@@ -186,12 +187,12 @@ class MLEnv(gym.Env):
         for lane_global_id in range(1, self.parking.number_lanes+1):
             block_id, lane_id = self.parking.dict_lanes[lane_global_id]
             for position, vehicle_id in enumerate(self.parking.blocks[block_id].lanes[lane_id].list_vehicles):
-                print(self.parking.blocks[block_id].lanes[lane_id].list_vehicles)
-                print(vehicle_id)
+                #print(self.parking.blocks[block_id].lanes[lane_id].list_vehicles)
+                #print(vehicle_id)
                 if vehicle_id:
                     self.observation[self._dict("lanes", number=lane_global_id, place=position)] = (self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds()
                     print((self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds())
-        print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
+        #print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
         self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
         if self.done:
