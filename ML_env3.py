@@ -42,7 +42,7 @@ class MLEnv(gym.Env):
         #Lsup = np.array([10e4]+[self.parking.number_lanes + 0.9]*self.number_robots + [1]*self.number_robots)
         #self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
 
-        Lsup2 = [100]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
+        Lsup2 = [10000]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
         self.action_space = MultiDiscrete(Lsup2)
         
 
@@ -153,7 +153,7 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.pending_action = False
         #if action[0]=='nan':
             #return self.observation, -10e20, True, {}
-        wake_up_date = self.simulation.t + datetime.timedelta(seconds = int(action[self._dict("idleness_date")]))
+        wake_up_date = self.simulation.t + datetime.timedelta(minutes= int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
         init2, end2 = self._dict("robot_actions_sides", action_space=True)
         self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)

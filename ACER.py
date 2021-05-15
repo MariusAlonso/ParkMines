@@ -48,7 +48,7 @@ env.close()
 model = PPO2(MlpPolicy, env, verbose=1)
 
 
-model.learn(total_timesteps=10000)
+model.learn(total_timesteps=1000)
 
 model.save("ppo2_cartpole")
 
@@ -58,11 +58,15 @@ model = PPO2.load("ppo2_cartpole")
 
 obs = env.reset()
 #input()
-while True:
+done = False
+score = 0
+while not done:
     action, _states = model.predict(obs)
-    obs, rewards, dones, info = env.step(action)
+    obs, reward, done, info = env.step(action)
     env.render()
+    score+=reward
     #input()
+print("reward=", reward)
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 
