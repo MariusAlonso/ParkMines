@@ -229,7 +229,7 @@ class Block():
         matrix = np.empty((self.height, self.width), dtype='<U6')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
-            liste = [str(item).replace(0, '-') for item in liste]
+            liste = [str(item).replace("0", '-') for item in liste]
             matrix[row_index] = liste
 
         # les lanes sont les colonnes (la première à gauche)
@@ -246,14 +246,14 @@ class BlockInterface(Block):
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
         for i_lane, lane in enumerate(self.lanes):
-            if lane.list_vehicles[0] == None:
+            if lane.list_vehicles[0] == 0:
                 return i_lane
         else:
             return "full"
 
     def occupied_lane(self): #renvoie "empty" si interface est pleine, et return premier vehicule
         for i_lane, lane in enumerate(self.lanes):
-            if lane.list_vehicles[0] != None:
+            if lane.list_vehicles[0] != 0:
                 return i_lane
         else:
             return "empty"
@@ -264,7 +264,7 @@ class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
         self.id = id_lane
-        self.list_vehicles = np.array([0]*self.length)  
+        self.list_vehicles = [0]*self.length
         self.top_position = None                # indice de la premiere voiture occupée dans la lane (None si pas de voiture)
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
         self.future_top_position = None  
@@ -278,7 +278,7 @@ class Lane() :
 
     def __repr__(self):
         liste = self.list_vehicles[:]
-        liste = [str(item).replace('None', '-') for item in liste]
+        liste = [str(item).replace('0', '-') for item in liste]
         return liste.__repr__()
 
     def is_top_available(self):

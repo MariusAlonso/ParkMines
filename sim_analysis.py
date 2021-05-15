@@ -1,4 +1,3 @@
-from simulation import Simulation
 from vehicle import *
 import numpy as np
 
