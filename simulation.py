@@ -118,6 +118,7 @@ class Simulation():
             """
         
         elif event.event_type == "wake_up_robots":
+            self.algorithm.reward -= 1.
             self.algorithm.update(self.t)
 
         elif event.event_type == "deposit":
@@ -839,7 +840,7 @@ class RLAlgorithm(Algorithm):
         self.pending_action = True
 
     def update_retrieval(self, vehicle, current_time):
-        self.reward += 4.
+        self.reward += 5.
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
         self.update(current_time)
