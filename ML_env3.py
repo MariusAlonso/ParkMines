@@ -12,8 +12,8 @@ class MLEnv(gym.Env):
 
     def __init__(self, display = False):
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-        self.parking = real_parking
+        parking1 = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+        self.parking = parking1
         self.number_robots = 3
         self.simulation_length = 1
         self.daily_flow = 20
@@ -24,9 +24,7 @@ class MLEnv(gym.Env):
         
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
         self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
-        #print(self.tmax)
-
-        # self.max_stock_visible = 100 + self.parking.size
+        
         self.max_stock_visible = self.max_number_vehicles
 
         self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
@@ -43,7 +41,7 @@ class MLEnv(gym.Env):
         #Lsup = np.array([10e4]+[self.parking.number_lanes + 0.9]*self.number_robots + [1]*self.number_robots)
         #self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
 
-        Lsup2 = [10000]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
+        Lsup2 = [1000]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
         self.action_space = MultiDiscrete(Lsup2)
         
 
@@ -153,7 +151,7 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.pending_action = False
         #if action[0]=='nan':
             #return self.observation, -10e20, True, {}
-        wake_up_date = self.simulation.t + datetime.timedelta(minutes= int(action[self._dict("idleness_date")]))
+        wake_up_date = self.simulation.t + datetime.timedelta(minutes= 5*int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
         init2, end2 = self._dict("robot_actions_sides", action_space=True)
         self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)
@@ -186,7 +184,6 @@ class MLEnv(gym.Env):
                 self.observation[self._dict("robot_actions_lanes", number=i_robot)] = 0
             else:
                 self.observation[self._dict("robot_actions_lanes", number=i_robot)] = self.parking.to_global_id[robot.goal_position[:2]]
-                #self.simulation.algorithm.reward += 1000*self.parking.to_global_id[robot.goal_position[:2]]
                 if robot.goal_position[2] == "bottom":
                     self.observation[self._dict("robot_actions_sides", number=i_robot)] = 1
                 else:
@@ -194,27 +191,32 @@ class MLEnv(gym.Env):
         
         for event_deposit in self.simulation.pending_deposits:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward += 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
-                self.simulation.algorithm.reward += 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
+                print("punition=", 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600)
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward += 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
             else:
-                self.simulation.algorithm.reward += 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
         
         for lane_global_id in range(1, self.parking.number_lanes+1):
             block_id, lane_id = self.parking.dict_lanes[lane_global_id]
             for position, vehicle_id in enumerate(self.parking.blocks[block_id].lanes[lane_id].list_vehicles):
-                #print(self.parking.blocks[block_id].lanes[lane_id].list_vehicles)
-                #print(vehicle_id)
                 if vehicle_id:
-                    #print(self.parking.blocks[block_id].lanes[lane_id].list_vehicles)
                     self.observation[self._dict("lanes", number=lane_global_id, place=position)] = (self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds()
                 else:
                     self.observation[self._dict("lanes", number=lane_global_id, place=position)] = 0
-                    #print((self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds())
-        #print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
+
+        #pénalisation d'utilisation de nouvelles lanes:
+        for lane in self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]:
+            self.lanes_occupated = 0
+            if not (lane==0.).all():
+                self.lanes_occupated += 1
+        self.simulation.algorithm.reward -= 10*self.lanes_occupated
+        
+
         self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
         if self.done:
