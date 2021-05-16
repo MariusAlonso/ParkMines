@@ -11,13 +11,14 @@ class MLEnv(gym.Env):
     
 
     def __init__(self, display = False):
-        self.parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-        self.number_robots = 1
-    
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+        self.parking = real_parking
+        self.number_robots = 3
         self.simulation_length = 1
-        self.daily_flow = 2
+        self.daily_flow = 20
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
-        self.max_number_vehicles = int(self.simulation_length*self.daily_flow*2)
+        self.max_number_vehicles = int(self.simulation_length*self.daily_flow*3)
         self.display = display
         self.last_step_t = None
         
@@ -72,7 +73,6 @@ class MLEnv(gym.Env):
         
         self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.parking.nb_max_lanes))
 
-        #print(Lsup)
         #input()
         print(self.observation_space)
         print("observation_space_created")
@@ -254,9 +254,10 @@ class MLEnv(gym.Env):
     def render(self, mode='human', close=False):
         #print(self.simulation.t)
         #display = Display(self.simulation.t, self.stock, [Robot(1), Robot(2)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
-        print("stock_dates=", self.observation[self._dict("stock_dates")[0]:self._dict("stock_dates")[0]+7, 0:2])
+        #print("stock_dates=", self.observation[self._dict("stock_dates")[0]:self._dict("stock_dates")[0]+7, 0:2])
         print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
         print("robot_actions_lanes=", self.observation[self._dict("robot_actions_lanes")[0]:self._dict("robot_actions_lanes")[1], 0])
+        #print(self.observation)
 
 
         if self.display:

@@ -45,29 +45,54 @@ env.close()
 #apprentissage
 
 # env = DummyVecEnv([lambda: env])
-model = PPO2(MlpPolicy, env, verbose=1)
+
+learning = False
 
 
-model.learn(total_timesteps=1000)
 
-model.save("ppo2_cartpole")
 
-del model # remove to demonstrate saving and loading
+if learning:
+    model = PPO2(MlpPolicy, env, verbose=1)
+
+
+    model.learn(total_timesteps=100000)
+
+    model.save("ppo2_cartpole")
+
+
+    del model # remove to demonstrate saving and loading
 
 model = PPO2.load("ppo2_cartpole")
 
-obs = env.reset()
-#input()
-done = False
-score = 0
-while not done:
-    action, _states = model.predict(obs)
-    obs, reward, done, info = env.step(action)
-    env.render()
-    score+=reward
-    #input()
-print("reward=", reward)
+
+def evaluate_model(model, repetition):
+    statics = []
+    for _ in range(repetition):
+        obs = env.reset()
+        #input()
+        done = False
+        score = 0
+        i=0
+        while not done:
+            action, _states = model.predict(obs)
+            obs, reward, done, info = env.step(action)
+            i+=1
+            if i==500:
+                env.render()
+                print("score=", score)
+                i=0
+            score+=reward
+            #input()
+        print("score final=", score)
+        statics.append(score)
+    return statics
+
+
+statics_100000 = evaluate_model(model, 10)
+print(statics_100000)
+
 """
 # ray.init(include_dashboard=False)
 tune.run(PPOTrainer, config={"env": env}) 
 """
+

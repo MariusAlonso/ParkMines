@@ -6,12 +6,15 @@ from copy import copy, deepcopy
 
 class Parking():
     def __init__(self, blocks, disposal=[[]], occupation={}):
+
+        self.real_parking = [BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]]
         """
         Attributs variant au cours d'une simulation
         """
         self.blocks = blocks
         self.number_blocks = len(blocks)
         self.occupation = occupation
+
         print("Dictionnaire vide :", occupation)
         """
         Attributs ne variant pas au cours d'une simulation
