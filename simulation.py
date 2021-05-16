@@ -239,7 +239,7 @@ class Simulation():
 
         success = False # Pourl'instant ...
 
-        # On vérifie qu'ily ait bien la place de mettre le véhicule
+        # On vérifie qu'il y ait bien la place de mettre le véhicule
         if lane.end_position(side) is None or abs(lane.end_position(side) - lane.end_limit(side)) > 0:
 
             success = True
@@ -408,6 +408,8 @@ class Simulation():
 
 class Event():
 
+    next_id = 0
+
     def __init__(self, vehicle, date, event_type, robot=None, unassigned_tasks=None, goal_position=None, event_retrieval=None):
         """
         Les valeurs possibles du string event_type sont :
@@ -425,17 +427,25 @@ class Event():
         self.goal_position = goal_position
         self.canceled = False
         self.event_retrieval = event_retrieval
+        self.id = self.__class__.next_id
+        self.__class__.next_id += 1
     
     def __bool__(self):
         return True
-    
+
+    """
+        def __eq__(self, other):
+            if self is None or other is None:
+                return False
+            if self.vehicle == None or other.vehicle == None:                    #si jamais le event n'a pas de véhicule associé
+                return (not (other is None)) and self.date == other.date
+            return (not (other is None)) and self.date == other.date and self.vehicle.id == other.vehicle.id
+    """
     def __eq__(self, other):
         if self is None or other is None:
             return False
-        if self.vehicle == None or other.vehicle == None:                    #si jamais le event n'a pas de véhicule associé
-            return (not (other is None)) and self.date == other.date
-        return (not (other is None)) and self.date == other.date and self.vehicle.id == other.vehicle.id
-    
+        return self.id == other.id
+
     def __lt__(self, other):
         return self.date < other.date
     
@@ -816,6 +826,7 @@ class RLAlgorithm(Algorithm):
             lane_global_id, side_bool = robot_actions_lanes[i_robot], robot_actions_sides[i_robot]
 
             if lane_global_id:
+                self.reward -= 1.
                 if side_bool:
                     side = "bottom"
                 else:
@@ -844,8 +855,8 @@ class RLAlgorithm(Algorithm):
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
         self.update(current_time)
-        self.reward -= 1.
+        #self.reward -= 1.
 
     def update_robot_end_task(self, robot, lane_end, success, current_time):
         self.update(current_time)
-        self.reward -= 1.
+        #self.reward -= 1.

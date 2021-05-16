@@ -1,7 +1,9 @@
 import gym 
+"""
 import ray
 from ray import tune
 from ray.rllib.agents.ppo import PPOTrainer
+"""
 # from stable_baselines import ACER
 from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
@@ -47,7 +49,7 @@ env.close()
 # env = DummyVecEnv([lambda: env])
 
 learning = True
-saving = True
+saving = False
 
 
 
@@ -61,11 +63,9 @@ if learning:
     if saving:
 
         model.save("ppo2_cartpole")
-
-
         del model # remove to demonstrate saving and loading
 
-model = PPO2.load("ppo2_cartpole")
+# model = PPO2.load("ppo2_cartpole")
 
 
 def evaluate_model(model, repetition):
@@ -81,11 +81,11 @@ def evaluate_model(model, repetition):
             obs, reward, done, info = env.step(action)
             i+=1
             if i==500:
-                env.render()
                 print("score=", score)
                 i=0
             score+=reward
             #input()
+        env.render()
         print("score final=", score)
         statics.append(score)
     return statics

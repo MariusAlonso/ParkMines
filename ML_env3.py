@@ -12,11 +12,11 @@ class MLEnv(gym.Env):
 
     def __init__(self, display = False):
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        parking1 = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-        self.parking = parking1
+        tiny_parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+        self.parking = tiny_parking
         self.number_robots = 3
-        self.simulation_length = 1
-        self.daily_flow = 20
+        self.simulation_length = 3
+        self.daily_flow = 3
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*3)
         self.display = display
@@ -209,12 +209,13 @@ class MLEnv(gym.Env):
                     self.observation[self._dict("lanes", number=lane_global_id, place=position)] = 0
 
         #pénalisation d'utilisation de nouvelles lanes:
+        """
         for lane in self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]:
             self.lanes_occupated = 0
             if not (lane==0.).all():
                 self.lanes_occupated += 1
         self.simulation.algorithm.reward -= 10*self.lanes_occupated
-        
+        """
 
         self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
@@ -227,6 +228,7 @@ class MLEnv(gym.Env):
         #print(self.observation)
         self.parking = self.parking._empty_copy()
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
+        self.last_step_t = None
         if self.display:
             #self.simulation.display.shutdown()
             pass
