@@ -49,6 +49,7 @@ env.close()
 # env = DummyVecEnv([lambda: env])
 
 learning = True
+saving = False
 
 
 
@@ -57,12 +58,12 @@ if learning:
     model = PPO2(MlpPolicy, env, verbose=1)
 
 
-    model.learn(total_timesteps=100000)
+    model.learn(total_timesteps=1000)
 
-    model.save("ppo2_cartpole")
+    if saving:
 
-
-    # del model # remove to demonstrate saving and loading
+        model.save("ppo2_cartpole")
+        del model # remove to demonstrate saving and loading
 
 # model = PPO2.load("ppo2_cartpole")
 
