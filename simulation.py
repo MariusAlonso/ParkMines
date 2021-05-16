@@ -43,6 +43,8 @@ class Simulation():
 
         self.pending_deposits = []
         self.pending_retrievals = []
+        self.vehicles_left_to_handle = set(self.stock.vehicles.keys())
+        print(self.vehicles_left_to_handle)
 
         self.vehicles_to_retrieve = []
     
@@ -53,7 +55,7 @@ class Simulation():
                 self.locked_lanes[(block_id, lane_id, "top")] = int(not lane.top_access)
                 self.locked_lanes[(block_id, lane_id, "bottom")] = int(not lane.bottom_access)
         
-        args = (self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes, self.pending_retrievals)
+        args = (self, self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes, self.pending_retrievals)
         self.algorithm = AlgorithmType(*args, print_in_terminal=self.print_in_terminal) # /!\ provisoire
 
         # Dictionnaires pour l'analyse de flux
@@ -118,10 +120,13 @@ class Simulation():
             """
         
         elif event.event_type == "wake_up_robots":
-            self.algorithm.reward -= 1.
-            self.algorithm.update(self.t)
+            if event == self.algorithm.current_wake_up:
+                self.algorithm.update(self.t)
 
         elif event.event_type == "deposit":
+
+            success = False
+
             nb_jour = (self.t - self.stock.first_day).days
             if nb_jour in self.nb_entree.keys():
                 self.nb_entree[nb_jour] += 1
@@ -132,6 +137,8 @@ class Simulation():
             if lane_id == "full":
                 heapq.heappush(self.pending_deposits, event)
             else:
+                success = True
+
                 self.parking.blocks[0].lanes[lane_id].push_reserve(vehicle.id, "top")
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top", self.stock)
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
@@ -140,8 +147,6 @@ class Simulation():
 
                 # ajout du retard (nul) à la liste des retards au dépôt
                 self.before_deposit_delays.append(datetime.timedelta(0, 0, 0, 0, 0, 0))
-
-                self.algorithm.update_deposit(self.t)
                 
                 if self.display:
                     self.display.draw_vehicle(vehicle)
@@ -150,13 +155,22 @@ class Simulation():
                 print(f"Deposit of {vehicle.id}")
                 print(self.parking)
                 print("")
+            
+            self.algorithm.update_deposit(vehicle, success, self.t)
 
         elif event.event_type == "retrieval":
             nb_jour = (self.t - self.stock.first_day).days
 
+            success = False
+
             if vehicle.id in self.parking.occupation:
                 i_block, i_lane, _ = self.parking.occupation[vehicle.id]
                 if i_block == 0:
+                    
+                    success = True
+
+                    self.vehicles_left_to_handle.remove(vehicle.id)
+
                     if nb_jour in self.nb_sortie.keys():
                         self.nb_sortie[nb_jour] += 1
                     else:
@@ -189,6 +203,7 @@ class Simulation():
                         for pdg_retrieval in self.pending_retrievals:
                             # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
                             if pdg_retrieval.vehicle.id == event_deposit.vehicle.id:
+                                print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                                 self.execute(pdg_retrieval)
                                 self.pending_retrievals.remove(pdg_retrieval)
                                 break
@@ -197,8 +212,6 @@ class Simulation():
                         print(f"Retrieval of {vehicle.id}")
                         print(self.parking)
                         print("")
-                    
-                    self.algorithm.update_retrieval(vehicle, self.t)
 
                 else:
                     heapq.heappush(self.pending_retrievals, event)
@@ -206,8 +219,11 @@ class Simulation():
                 for pdg_deposit in self.pending_deposits:
                     if vehicle.id == pdg_deposit.vehicle.id:
                         self.pending_deposits.remove(pdg_deposit)
+                        break
                 else:
                     heapq.heappush(self.pending_retrievals, event)
+            
+            self.algorithm.update_retrieval(vehicle, success, self.t)
 
 
         elif event.event_type == "robot_arrival":
@@ -329,6 +345,7 @@ class Simulation():
                         for pdg_retrieval in self.pending_retrievals:
                             # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
                             if pdg_retrieval.vehicle.id == event_deposit.vehicle.id:
+                                print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                                 self.execute(pdg_retrieval)
                                 self.pending_retrievals.remove(pdg_retrieval)
                                 break
@@ -450,12 +467,15 @@ class Event():
         return self.date < other.date
     
     def __repr__(self):
-        return f"{self.event_type} ; due to {self.date} ; vehicle {self.vehicle} ;"
-
+        if self.robot is not None: 
+            return f"{self.event_type} ; due to {self.date} ; vehicle {self.vehicle} ; concerning robot {self.robot.id_robot}"
+        else: 
+            return f"{self.event_type} ; due to {self.date} ; vehicle {self.vehicle}"
 
 class Algorithm():
 
-    def __init__(self, t0, stock, robots, parking, events, *args, print_in_terminal=False):
+    def __init__(self, simulation, t0, stock, robots, parking, events, *args, print_in_terminal=False):
+        self.simulation = simulation
         self.robots = robots
         self.stock = stock
         self.t0 = t0
@@ -469,10 +489,10 @@ class Algorithm():
     def update(self, current_time):
         pass
     
-    def update_deposit(self, current_time):
+    def update_deposit(self, vehicle, success, current_time):
         pass
 
-    def update_retrieval(self, vehicle, current_time):
+    def update_retrieval(self, vehicle, success, current_time):
         pass
 
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
@@ -483,9 +503,9 @@ class Algorithm():
 
 class BaseAlgorithm(Algorithm):
 
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False):
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False):
 
-        super().__init__(t0, stock, robots, parking, events, print_in_terminal=False)
+        super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal=False)
 
         self.locked_lanes = locked_lanes
         self.side_chosen_to_retrieve = {}
@@ -566,11 +586,12 @@ class BaseAlgorithm(Algorithm):
                 robot.goal_position = robot.start_position
                 self.assign_task(robot, current_time)
     
-    def update_deposit(self, current_time):
+    def update_deposit(self, vehicle, success, current_time):
         self.update(current_time)
 
-    def update_retrieval(self, vehicle, current_time):
-        self.update(current_time)
+    def update_retrieval(self, vehicle, success, current_time):
+        if success:
+            self.update(current_time)
     
     def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
 
@@ -816,7 +837,7 @@ class AlgorithmUnimodal(BaseAlgorithm):
                 print(self.parking)
                 print(self.locked_lanes)
             raise ValueError("le placement n'a pas pu être effectué")
-
+"""
 class RLAlgorithm(Algorithm):
 
     def take_decision(self, robot_actions_lanes, robot_actions_sides, current_time):
@@ -860,3 +881,4 @@ class RLAlgorithm(Algorithm):
     def update_robot_end_task(self, robot, lane_end, success, current_time):
         self.update(current_time)
         #self.reward -= 1.
+"""

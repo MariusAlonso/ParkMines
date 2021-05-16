@@ -4,6 +4,7 @@ from gym.utils import seeding
 from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 from simulation import *
 from parking import *
+from rl import rl_algorithm_builder
 
 
 
@@ -21,13 +22,15 @@ class MLEnv(gym.Env):
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*3)
         self.display = display
         self.last_step_t = None
+        self.max_stock_visible = self.max_number_vehicles
+        self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
         
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
         self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
         
-        self.max_stock_visible = self.max_number_vehicles
 
-        self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
+        RLAlgorithm = rl_algorithm_builder(None, self._dict, self.number_arguments)
+        self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=True)
 
         if self.display:
             #self.simulation.start_display(time_interval=1.)
@@ -55,7 +58,7 @@ class MLEnv(gym.Env):
 
         #[current_time, robot1_lane, robot2_lane..., robot1_side, robot2_side,..., stock_date_deposit_vehicule1, ..., stock_date_retrieval_vehicule1, ....]
         
-        self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
+        
         Linf = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
         Lsup = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
         Lsup[0,0] = np.inf
@@ -74,22 +77,9 @@ class MLEnv(gym.Env):
         #input()
         print(self.observation_space)
         print("observation_space_created")
-
-
-
-
-        self.observation = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
-        for lane_global_id in range(1, self.parking.number_lanes+1):
-            block_id, lane_id = self.parking.dict_lanes[lane_global_id]
-            init, end = self._dict("lanes", number=lane_global_id)
-            self.observation[init,:end] = self.parking.blocks[block_id].lanes[lane_id].list_vehicles
-
-        for i_vehicle, vehicle in enumerate(self.stock.vehicles.values()):
-            deposit_in_sec = (vehicle.deposit - self.t0).total_seconds()
-            retrieval_in_sec = (vehicle.retrieval - self.t0).total_seconds()
-            self.observation[self._dict("stock_dates", number=i_vehicle)] = deposit_in_sec
-            self.observation[self._dict("stock_dates", number=i_vehicle, retrieval=True)] = retrieval_in_sec
        
+        self.observation = self.simulation.algorithm.observation
+
         self.done = False
 
 
@@ -149,45 +139,25 @@ class MLEnv(gym.Env):
         self.last_step_t = self.simulation.t
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
-        #if action[0]=='nan':
-            #return self.observation, -10e20, True, {}
-        wake_up_date = self.simulation.t + datetime.timedelta(minutes= 5*int(action[self._dict("idleness_date")]))
-        init, end = self._dict("robot_actions_lanes")
-        init2, end2 = self._dict("robot_actions_sides", action_space=True)
-        self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)
+        
+        self.simulation.algorithm.take_decision(action, self.simulation.t)
 
         
         while True:
+
             if self.simulation.t > self.tmax:
                 self.done = True
                 break          
-            if not (self.simulation.events) and not(self.simulation.pending_retrievals):
+            if not self.simulation.vehicles_left_to_handle:
                 self.done = True
                 break
-            
-            if not (self.simulation.events) or self.simulation.events[0].date > wake_up_date:
-                heapq.heappush(self.simulation.events, Event(None, wake_up_date, "wake_up_robots", None))
-              
-                
+
             self.simulation.next_event()
             # On vérifie si un évènement appelle à une décision
             if self.simulation.algorithm.pending_action:
                 break
-        
-        # On met à jour l'observation
-        
-        self.observation[self._dict("current_time")] = (self.simulation.t - self.t0).total_seconds()
-        
-        for i_robot, robot in enumerate(self.simulation.robots):
-            if robot.doing is None:
-                
-                self.observation[self._dict("robot_actions_lanes", number=i_robot)] = 0
-            else:
-                self.observation[self._dict("robot_actions_lanes", number=i_robot)] = self.parking.to_global_id[robot.goal_position[:2]]
-                if robot.goal_position[2] == "bottom":
-                    self.observation[self._dict("robot_actions_sides", number=i_robot)] = 1
-                else:
-                    self.observation[self._dict("robot_actions_sides", number=i_robot)] = 0
+
+        # Calcul de la récompense
         
         for event_deposit in self.simulation.pending_deposits:
             if self.last_step_t is None:
@@ -200,67 +170,48 @@ class MLEnv(gym.Env):
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
-        
-        for lane_global_id in range(1, self.parking.number_lanes+1):
-            block_id, lane_id = self.parking.dict_lanes[lane_global_id]
-            for position, vehicle_id in enumerate(self.parking.blocks[block_id].lanes[lane_id].list_vehicles):
-                if vehicle_id:
-                    self.observation[self._dict("lanes", number=lane_global_id, place=position)] = (self.stock.vehicles[vehicle_id].retrieval - self.t0).total_seconds()
-                else:
-                    self.observation[self._dict("lanes", number=lane_global_id, place=position)] = 0
-
-        #pénalisation d'utilisation de nouvelles lanes:
         """
-        for lane in self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]:
+        for lane in self.observation.data[self._dict("lanes")[0]: self._dict("lanes")[1]]:
             self.lanes_occupated = 0
             if not (lane==0.).all():
                 self.lanes_occupated += 1
         self.simulation.algorithm.reward -= 10*self.lanes_occupated
         """
 
-        self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
+        self.done = self.done or not self.simulation.vehicles_left_to_handle
 
-        if self.done:
-            #input()
-            pass
-        return self.observation, self.simulation.algorithm.reward, self.done, {}
+        return self.observation.data, self.simulation.algorithm.reward, self.done, {}
 
     def reset(self):
-        #print(self.observation)
+
         self.parking = self.parking._empty_copy()
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.last_step_t = None
         if self.display:
             #self.simulation.display.shutdown()
             pass
+        RLAlgorithm = rl_algorithm_builder(None, self._dict, self.number_arguments)
         self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
         if self.display:
             #self.simulation.start_display(time_interval=1.)
             pass
 
         
-        self.observation = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
-        for lane_global_id in range(1, self.parking.number_lanes+1):
-            block_id, lane_id = self.parking.dict_lanes[lane_global_id]
-            init, end = self._dict("lanes", number=lane_global_id)
-            self.observation[init,:end] = self.parking.blocks[block_id].lanes[lane_id].list_vehicles
-
-        for i_vehicle, vehicle in enumerate(self.stock.vehicles.values()):
-            deposit_in_sec = (vehicle.deposit - self.t0).total_seconds()
-            retrieval_in_sec = (vehicle.retrieval - self.t0).total_seconds()
-            self.observation[self._dict("stock_dates", number=i_vehicle)] = deposit_in_sec
-            self.observation[self._dict("stock_dates", number=i_vehicle, retrieval=True)] = retrieval_in_sec
+        self.observation = self.simulation.algorithm.observation
         
         self.done = False
-        return self.observation
+        return self.observation.data
         
 
     def render(self, mode='human', close=False):
-        #print(self.simulation.t)
+        print(self.simulation.t)
         #display = Display(self.simulation.t, self.stock, [Robot(1), Robot(2)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
-        #print("stock_dates=", self.observation[self._dict("stock_dates")[0]:self._dict("stock_dates")[0]+7, 0:2])
-        print("lanes=", self.observation[self._dict("lanes")[0]: self._dict("lanes")[1]]) 
-        print("robot_actions_lanes=", self.observation[self._dict("robot_actions_lanes")[0]:self._dict("robot_actions_lanes")[1], 0])
+        #print("stock_dates=", self.observation.data[self._dict("stock_dates")[0]:self._dict("stock_dates")[0]+7, 0:2])
+        print("lanes=", self.observation.data[self._dict("lanes")[0]: self._dict("lanes")[1]])
+        print("robot_actions_lanes=", self.observation.data[self._dict("robot_actions_lanes")[0]:self._dict("robot_actions_lanes")[1], 0])
+        print(self.simulation.pending_deposits)
+        print(self.simulation.pending_retrievals)
+        print(self.simulation.parking)
         #print(self.observation)
 
 
@@ -271,3 +222,4 @@ class MLEnv(gym.Env):
             self.simulation.display.shutdown()
             """
             pass
+

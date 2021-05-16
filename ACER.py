@@ -58,7 +58,7 @@ if learning:
     model = PPO2(MlpPolicy, env, verbose=1)
 
 
-    model.learn(total_timesteps=1000)
+    model.learn(total_timesteps=100000)
 
     if saving:
 
@@ -80,18 +80,18 @@ def evaluate_model(model, repetition):
             action, _states = model.predict(obs)
             obs, reward, done, info = env.step(action)
             i+=1
-            if i==500:
+            if i==100:
+                env.render()
                 print("score=", score)
                 i=0
             score+=reward
             #input()
-        env.render()
         print("score final=", score)
         statics.append(score)
     return statics
 
 
-statics_100000 = evaluate_model(model, 10)
+statics_100000 = evaluate_model(model, 1)
 print(statics_100000)
 
 """
