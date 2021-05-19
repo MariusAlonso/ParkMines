@@ -308,7 +308,30 @@ class TestTest():
         performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmZeroMinus)
 
         # test
-        performance.refineParametersZeroMinusOnPool(variation_coef, nb_steps, initial_parameters)
+        marks = performance.refineParametersZeroMinusOnPool(variation_coef=variation_coef, nb_steps=nb_steps, initial_parameters=initial_parameters)
+        print(marks)
+        assert 0 == 0
+
+    def testCutViewAlgorithmOnPool(self, start=0.5, stop=10, step=0.5, other_parameters=[100., -10.]):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmZeroMinus)
+
+        # test
+        marks = performance.cutViewZeroMinusOnPool(start, stop, step, other_parameters)
+        print(marks)
+        assert 0 == 0
+    
+    def testLogCutViewAlgorithmOnPool(self, start=0.5, stop=10, step=0.5, other_parameters=[100., -10.]):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmZeroMinus)
+
+        # test
+        marks = performance.logCutViewZeroMinusOnPool(start, stop, step, other_parameters)
+        print(marks)
         assert 0 == 0
 
 
@@ -331,4 +354,7 @@ test = TestTest()
 
 #test.testMarkOnPool(AlgorithmZeroMinus)
 
-test.testRefineAlgorithmOnPool(variation_coef=0.9, nb_steps=10, initial_parameters=[1., 1.1, 20., -5.])
+#test.testRefineAlgorithmOnPool(variation_coef=0.75, nb_steps=10, initial_parameters=[1., 5., 100., -10])
+
+test.testCutViewAlgorithmOnPool(start=6.5, stop=10, step=0.5, other_parameters=[100., -10.])
+#test.testLogCutViewAlgorithmOnPool(start=-3, stop=5, step=1, other_parameters=[100., -10.])

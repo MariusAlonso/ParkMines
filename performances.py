@@ -940,7 +940,10 @@ class Performance():
                 average_mark += dashboard.Mark()
                 effective_nb_repetitions += 1
 
-        average_mark /= effective_nb_repetitions
+        try:
+            average_mark /= effective_nb_repetitions
+        except ZeroDivisionError:
+            average_mark = 1000
 
         return average_mark
 
@@ -961,7 +964,10 @@ class Performance():
                 average_mark += dashboard.Mark()
                 effective_nb_repetitions += 1
 
-        average_mark /= effective_nb_repetitions
+        try:
+            average_mark /= effective_nb_repetitions
+        except ZeroDivisionError:
+            average_mark = 1000
 
         return average_mark
 
@@ -1011,7 +1017,7 @@ class Performance():
             print(f"{best_optimization_parameters} : {best_mark}")
         return marks
 
-    def refineParametersZeroMinusOnPool(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 1.1, 20., -5.]):
+    def refineParametersZeroMinusOnPool(self, variation_coef=0.9, nb_steps=10, initial_parameters=[1., 1.1, 20., -5.]):
         """
         Affine les paramètres de 0- sur nb_repetitions
         """
@@ -1025,8 +1031,9 @@ class Performance():
             # création d'un dictionnaire des notes "locales" et ajout de la référence
             local_marks = {}
             best_optimization_parameters = list(best_optimization_parameters)
-            mark = self.algorithmMarkOnPool(optimization_parameters=best_optimization_parameters)
-            local_marks[tuple(best_optimization_parameters)] = mark
+            best_mark = self.algorithmMarkOnPool(optimization_parameters=best_optimization_parameters)
+            local_marks[tuple(best_optimization_parameters)] = best_mark
+            print(f"{best_optimization_parameters} : {best_mark}")
             # parcours des jeux de paramètres adjacents
             for i in range(len(best_optimization_parameters)):
                 # on essaie en diminuant un peu le i-ème paramètre
@@ -1049,9 +1056,50 @@ class Performance():
 
             # mise à jour des paramètres de référence
             best_mark = local_marks[tuple(best_optimization_parameters)]
+            changed = False
             for parameters, mark in local_marks.items():
                 if mark < best_mark:
+                    changed = True
                     best_optimization_parameters = parameters
                     best_mark = mark
-            print(f"{best_optimization_parameters} : {best_mark}")
+            
+            # cas où on a atteint un minimum local
+            if not changed:
+                return marks
+        return marks
+
+    def cutViewZeroMinusOnPool(self, start=0.5, stop=10, step=0.5, other_parameters=[100., -10.]):
+        """
+        calcule le score pour une gamme de valeurs ded alpha et beta
+        """
+
+        # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
+        marks = {}
+
+        for alpha in [start+n*step for n in range(int((stop-start)/step))]:
+            for beta in [start+n*step for n in range(int((stop-start)/step))]:
+                if alpha < beta:
+                    optimization_parameters = [alpha, beta] + other_parameters
+                    mark = self.algorithmMarkOnPool(optimization_parameters=optimization_parameters)
+                    print(f"{tuple(optimization_parameters)} : {mark:.3f}")
+                    marks[tuple(optimization_parameters)] = mark
+        return marks
+    
+    def logCutViewZeroMinusOnPool(self, start=-3, stop=5, step=1, other_parameters=[100., -10.]):
+        """
+        calcule le score pour une gamme de valeurs ded alpha et beta
+        """
+
+        # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
+        marks = {}
+
+        for log_alpha in range(start, stop, step):
+            for log_beta in range(log_alpha, stop, step):
+                alpha = 2**log_alpha
+                beta = 2**log_beta
+                if alpha < beta:
+                    optimization_parameters = [alpha, beta] + other_parameters
+                    mark = self.algorithmMarkOnPool(optimization_parameters=optimization_parameters)
+                    print(f"{tuple(optimization_parameters)} : {mark:.3f}")
+                    marks[tuple(optimization_parameters)] = mark
         return marks

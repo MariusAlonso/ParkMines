@@ -831,7 +831,7 @@ class AlgorithmUnimodal(Algorithm):
         return "Unimodal"
 
 ###########################################################################
-#################### Changement de classe d'algorithmes ####################
+#################### Changement de classe d'algorithmes ###################
 ###########################################################################
 
 
@@ -858,13 +858,13 @@ class AlgorithmZeroMinus(Algorithm):
         lane = self.parking.blocks[block_id].lanes[lane_id]
 
         # On simule l'évolution de la lane : il ne faut pas prendre en compte les véhicules qui seront partis quand le notre arrivera (/!\ est-ce bien utile / pas risqué ?)
-        time_of_arrival = date + self.parking.travel_time(start_position, lane_end)
-        before_time_of_arrival = time_of_arrival - datetime.timedelta(minutes=1)
-        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = before_time_of_arrival)
+        travel_time = self.parking.travel_time(start_position, lane_end)
+        time_of_arrival = date + travel_time
+        events_to_reverse = self.parking.future_config(block_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
         lane.push(vehicle.id, side, self.stock)
         # on ajoute les évènements simulés à la liste des évènements à annuler (events_to_reverse)
         events_to_reverse.append((side,))
-        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = before_time_of_arrival, ))
+        events_to_reverse.extend(self.parking.future_config(block_id, lane_id, self.robots, self.stock, min_time = time_of_arrival, ))
 
 
         ### détermination des variables régissant le poids ###
@@ -885,8 +885,11 @@ class AlgorithmZeroMinus(Algorithm):
             delta_t = 0
             overweight += self.start_new_lane_weight
 
+        # détermination du temps de trajet en minutes
+        travel_time = travel_time.total_seconds()/60
+
         # calcul du poids
-        weight = self.alpha*delta_t + self.beta*abs(delta_t) + self.distance_to_lane_end_coef*distance_to_lane_end + overweight
+        weight = self.alpha*delta_t + self.beta*abs(delta_t) + self.distance_to_lane_end_coef*distance_to_lane_end + overweight + travel_time
 
         # On annule les évènements simulés pour permettre le calcul
         self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
