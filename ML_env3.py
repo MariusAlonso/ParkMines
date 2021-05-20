@@ -14,9 +14,9 @@ class MLEnv(gym.Env):
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         tiny_parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.parking = tiny_parking
-        self.number_robots = 3
+        self.number_robots = 1
         self.simulation_length = 3
-        self.daily_flow = 3
+        self.daily_flow = 9
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*3)
         self.display = display
@@ -151,7 +151,7 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.pending_action = False
         #if action[0]=='nan':
             #return self.observation, -10e20, True, {}
-        wake_up_date = self.simulation.t + datetime.timedelta(minutes= 5*int(action[self._dict("idleness_date")]))
+        wake_up_date = self.simulation.t + datetime.timedelta(minutes= 10*int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
         init2, end2 = self._dict("robot_actions_sides", action_space=True)
         self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)
@@ -160,9 +160,11 @@ class MLEnv(gym.Env):
         while True:
             if self.simulation.t > self.tmax:
                 self.done = True
+                print("Ohh... la simulation est arrivée à la fin des temps")
                 break          
             if not (self.simulation.events) and not(self.simulation.pending_retrievals):
                 self.done = True
+                print("Bien joué, vous avez réussi tous les évènements")
                 break
             
             if not (self.simulation.events) or self.simulation.events[0].date > wake_up_date:
@@ -216,7 +218,8 @@ class MLEnv(gym.Env):
                 self.lanes_occupated += 1
         self.simulation.algorithm.reward -= 10*self.lanes_occupated
         """
-
+        if not (self.simulation.events) and not(self.simulation.pending_retrievals):
+            print("Bien joué, vous avez réussi tous les évènements !")
         self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
         if self.done:
