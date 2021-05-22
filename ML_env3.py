@@ -15,7 +15,7 @@ class MLEnv(gym.Env):
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         tiny_parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
         self.parking = tiny_parking
-        self.number_robots = 3
+        self.number_robots = 1
         self.simulation_length = 3
         self.daily_flow = 3
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
@@ -59,20 +59,23 @@ class MLEnv(gym.Env):
         #[current_time, robot1_lane, robot2_lane..., robot1_side, robot2_side,..., stock_date_deposit_vehicule1, ..., stock_date_retrieval_vehicule1, ....]
         
         
-        Linf = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
-        Lsup = np.zeros((self.number_arguments, self.parking.nb_max_lanes))
+        Linf = np.zeros((self.number_arguments, self.parking.nb_max_lanes+2))
+        Lsup = np.zeros((self.number_arguments, self.parking.nb_max_lanes+2))
         Lsup[0,0] = np.inf
         for id_robot in range(self.number_robots):    #id des robots commencent a 0
-            Lsup[id_robot+1,0], Lsup[id_robot+1,1] = self.parking.number_lanes+0.9, 1
+            Lsup[id_robot+1,0], Lsup[id_robot+1,1] = self.parking.number_lanes, 1
+            Lsup[id_robot+1,2], Lsup[id_robot+1,3] = 1, np.inf
         
         for id_global_lane in range (1, self.parking.number_lanes+1):
             id_block, id_lane = self.parking.dict_lanes[id_global_lane]
             lane = self.parking.blocks[id_block].lanes[id_lane]
-            Lsup[self.number_robots+id_global_lane, :lane.length] = np.array([np.inf]*lane.length)
+            Lsup[self.number_robots+id_global_lane, 0:2] = np.array([lane.length]*2)
+            Lsup[self.number_robots+id_global_lane, 2:(lane.length+2)] = np.array([np.inf]*lane.length)
 
         Lsup[self.number_robots+self.parking.number_lanes+1:, 0:2] = np.inf*np.ones((self.max_stock_visible, 2))
+        Lsup[self.number_robots+self.parking.number_lanes+1:, 2] = np.ones((self.max_stock_visible,))
         
-        self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.parking.nb_max_lanes))
+        self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.parking.nb_max_lanes+2))
 
         #input()
         print(self.observation_space)
@@ -113,6 +116,27 @@ class MLEnv(gym.Env):
                 else:
                     return 1+number+self.number_robots
 
+        elif string == "robot_actions_is_carrying":
+            if not action_space:
+                if number == None:
+                    return  1, self.number_robots+1
+                else:
+                    return 1+number, 2
+            else:
+                pass
+
+        elif string == "robot_actions_vehicles":
+            if not action_space:
+                if number == None:
+                    return  1, self.number_robots+1
+                else:
+                    return 1+number, 3
+            else:
+                pass
+
+
+        elif string == "lanes_ends":
+            return self.number_robots+number
 
         elif string == "lanes":
             if number == None:    #number lane
@@ -124,7 +148,7 @@ class MLEnv(gym.Env):
                 return self.number_robots+number, lane.length 
               
             else:
-                return  self.number_robots+number, place
+                return  self.number_robots+number, place+2
 
         elif string == "stock_dates":
             if number == None:

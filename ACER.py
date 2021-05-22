@@ -1,4 +1,4 @@
-import gym 
+import gym
 """
 import ray
 from ray import tune
@@ -10,6 +10,12 @@ from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
 from ML_env3 import MLEnv
+from performances import Performance
+from rl import rl_algorithm_builder
+from robot import Robot
+from simulation import Simulation
+from vehicle import RandomStock
+import datetime
 
 """
 environment_name =
@@ -48,8 +54,8 @@ env.close()
 
 # env = DummyVecEnv([lambda: env])
 
-learning = True
-saving = False
+learning = False
+saving = True
 
 
 
@@ -58,14 +64,14 @@ if learning:
     model = PPO2(MlpPolicy, env, verbose=1)
 
 
-    model.learn(total_timesteps=100000)
+    model.learn(total_timesteps=1000000)
 
     if saving:
 
-        model.save("ppo2_cartpole")
+        model.save("RL03")
         del model # remove to demonstrate saving and loading
 
-# model = PPO2.load("ppo2_cartpole")
+model = PPO2.load("RL03")
 
 
 def evaluate_model(model, repetition):
@@ -88,11 +94,24 @@ def evaluate_model(model, repetition):
             #input()
         print("score final=", score)
         statics.append(score)
+        env.render()
     return statics
 
 
 statics_100000 = evaluate_model(model, 1)
 print(statics_100000)
+
+
+RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments)
+
+performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
+performance.printAverageDashboard(10)
+"""
+stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
+simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = False)
+simulation.start_display(12, 20)
+simulation.display.run()
+"""
 
 """
 # ray.init(include_dashboard=False)
