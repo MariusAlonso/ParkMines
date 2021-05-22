@@ -10,13 +10,14 @@ from display import Display
 
 class Simulation():
 
-    def __init__(self, t0, stock, robots, parking, AlgorithmType, order=True, print_in_terminal=False, display=None):
+    def __init__(self, t0, stock, robots, parking, AlgorithmType, order=True, print_in_terminal=False, display=None, max_t=None):
         """
         t0 : date d'initialisation
         """
         self.stock = stock
         self.robots = robots
         self.t = t0
+        self.max_t = max_t
         self.parking = parking
         self.print_in_terminal = print_in_terminal
 
@@ -32,13 +33,14 @@ class Simulation():
 
         # Création de la file d'événements : ajout des commandes
         self.events = []
+        heapq.heappush(self.events, Event(None, t0, "start"))
         for v in self.stock.vehicles.values():
             if order:
                 heapq.heappush(self.events, Event(v, v.order_deposit, "order_deposit"))
                 heapq.heappush(self.events, Event(v, v.order_retrieval, "order_retrieval"))
             else:
                 heapq.heappush(self.events, Event(v, v.deposit, "deposit"))
-                heapq.heappush(self.events, Event(v, v.retrieval, "retrieval"))                
+                heapq.heappush(self.events, Event(v, v.retrieval, "retrieval"))     
 
 
         self.pending_deposits = []
@@ -98,7 +100,10 @@ class Simulation():
 
         vehicle = event.vehicle
 
-        if event.event_type == "order_deposit":
+        if event.event_type == "start":
+            self.algorithm.update_start()
+
+        elif event.event_type == "order_deposit":
             heapq.heappush(self.events, Event(vehicle, vehicle.deposit, "deposit"))
             time_wake_up = max(self.t, vehicle.deposit - datetime.timedelta(hours=0.25))
             heapq.heappush(self.events, Event(vehicle, time_wake_up, "wake_up_robots_deposit"))
@@ -168,6 +173,7 @@ class Simulation():
                 if i_block == 0:
                     
                     success = True
+                    self.retrieval_delays.append(self.t - vehicle.retrieval)
 
                     self.vehicles_left_to_handle.remove(vehicle.id)
 
@@ -217,8 +223,15 @@ class Simulation():
                     heapq.heappush(self.pending_retrievals, event)
             else:
                 for pdg_deposit in self.pending_deposits:
+                    print(vehicle, pdg_deposit)
                     if vehicle.id == pdg_deposit.vehicle.id:
                         self.pending_deposits.remove(pdg_deposit)
+                        
+                        # ajout du retard éventuel à la liste des retards au dépôt
+                        self.before_deposit_delays.append(self.t - pdg_deposit.date)
+                        # mise à jour de la date de dépôt effectif du véhicule
+                        pdg_deposit.vehicle.effective_deposit = self.t
+
                         break
                 else:
                     heapq.heappush(self.pending_retrievals, event)
@@ -267,9 +280,10 @@ class Simulation():
             self.parking.occupation[vehicle.id] = (block_id, lane_id, lane.end_position(side))
 
             if block_id == 0:
+                """
                 # ajout du retard éventuel à la liste des retards à la sortie
                 self.retrieval_delays.append(self.t - vehicle.retrieval)
-            
+                """
                 for pdg_retrieval in self.pending_retrievals:
                     # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
                     if pdg_retrieval.vehicle.id == vehicle.id:
@@ -385,7 +399,7 @@ class Simulation():
         """
         event = None
         r = 0
-        while (r is None or r < repeat) and (until is None or until > self.t):
+        while (repeat is None or r < repeat) and (until is None or until > self.t):
             if self.events:
                 time_start = time.time()
                 event = heapq.heappop(self.events)
@@ -400,15 +414,18 @@ class Simulation():
             else:
                 if self.print_in_terminal:
                     print("THE SIMULATION IS COMPLETED")  
-                break    
-        return bool(self.events), event
+                break
+        if self.max_t:
+            return (bool(self.vehicles_left_to_handle) and self.t <= self.max_t), event
+        else:
+            return (bool(self.vehicles_left_to_handle)), event
             
     def complete(self):
         """
         Finit la simulation
         """
         while True:
-            if not self.next_event():
+            if not self.next_event()[0]:
                 break
         
         # simulation terminée : on nettoie les dictionnaires d'état du parking et des robots
@@ -499,6 +516,9 @@ class Algorithm():
         pass
 
     def update_robot_end_task(self, robot, lane_end, success, current_time):
+        pass
+
+    def update_start(self):
         pass
 
 class BaseAlgorithm(Algorithm):

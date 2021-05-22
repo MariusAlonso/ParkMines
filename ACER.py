@@ -11,6 +11,12 @@ from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
 from ML_env3 import MLEnv
+from performances import Performance
+from rl import rl_algorithm_builder
+from robot import Robot
+from simulation import Simulation
+from vehicle import RandomStock
+import datetime
 
 """
 environment_name =
@@ -100,11 +106,24 @@ def evaluate_model(model, repetition, _input=False):
         env.render()
         print(f'score final={score} of iteration {iteration+1}/{repetition}')
         statics.append(score)
+        env.render()
     return statics
 
 
 statics = evaluate_model(model, 10, _input=True)
 print(f'statics_{timesteps} = {statics}')
+
+
+RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments)
+
+performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
+performance.printAverageDashboard(10)
+"""
+stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
+simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = False)
+simulation.start_display(12, 20)
+simulation.display.run()
+"""
 
 """
 # ray.init(include_dashboard=False)

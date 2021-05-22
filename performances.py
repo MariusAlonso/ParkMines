@@ -16,10 +16,7 @@ class Dashboard():
         puis calcule la performance
         """
         self.completed = True
-        try:
-            simulation.complete()
-        except:
-            self.completed = False
+        simulation.complete()
         self.simulation = simulation
 
     def averageIntermediateMovesPerVehicle(self):
@@ -115,8 +112,9 @@ class Performance():
         average_retrieval_delay_rates = {key: 0. for key in self.delays}
 
         for _ in range(nb_repetition):
-            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
+            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), False, max_t=self.t+self.stock_args[1]+datetime.timedelta(days=45))
             dashboard = Dashboard(simulation)
+            print(dashboard.simulation.retrieval_delays)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
                 average_intermediate_mpv += dashboard.averageIntermediateMovesPerVehicle()
                 average_before_deposit_delay += dashboard.averageBeforeDepositDelay()

@@ -115,7 +115,7 @@ class Parking():
         arrival : (block_id, lane_id, side)
         """
         if departure == arrival:
-            return datetime.timedelta(0)
+            return datetime.timedelta(0,30, minutes=1)
         else:
             if departure[2] == 'top':
                 place1 = (departure[0], departure[1], 0)
