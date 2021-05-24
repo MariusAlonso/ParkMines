@@ -9,7 +9,7 @@ from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
-from ML_env3 import MLEnv
+from ML_env4 import MLEnv
 from performances import Performance
 from rl import rl_algorithm_builder
 from robot import Robot
@@ -54,24 +54,23 @@ env.close()
 
 # env = DummyVecEnv([lambda: env])
 
-learning = False
+learning = True
 saving = True
 
 
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1)
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL0611tensorboard/")
 
-
-    model.learn(total_timesteps=1000000)
+    model.learn(total_timesteps=20000000)
 
     if saving:
 
-        model.save("RL03")
+        model.save("RL0612")
         del model # remove to demonstrate saving and loading
 
-model = PPO2.load("RL03")
+model = PPO2.load("RL0612")
 
 
 def evaluate_model(model, repetition):
@@ -83,18 +82,21 @@ def evaluate_model(model, repetition):
         score = 0
         i=0
         while not done:
+            print(env.observation.data)
+            print(env.simulation.t)
+            input("")
             action, _states = model.predict(obs)
             obs, reward, done, info = env.step(action)
             i+=1
             if i==100:
-                env.render()
+                #env.render()
                 print("score=", score)
                 i=0
             score+=reward
             #input()
         print("score final=", score)
         statics.append(score)
-        env.render()
+        #env.render()
     return statics
 
 
@@ -102,7 +104,7 @@ statics_100000 = evaluate_model(model, 1)
 print(statics_100000)
 
 
-RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments)
+RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible)
 
 performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
 performance.printAverageDashboard(10)

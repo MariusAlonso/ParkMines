@@ -6,6 +6,7 @@ import datetime
 from robot import Robot
 import time
 from display import Display
+from sortedcontainers import SortedList
 
 
 class Simulation():
@@ -32,21 +33,23 @@ class Simulation():
         self.nb_events_tracker = {}
 
         # Création de la file d'événements : ajout des commandes
-        self.events = []
-        heapq.heappush(self.events, Event(None, t0, "start"))
+        self.events = SortedList()
+        self.deposit_events = SortedList()
+        self.events.add(Event(None, t0, "start"))
         for v in self.stock.vehicles.values():
             if order:
-                heapq.heappush(self.events, Event(v, v.order_deposit, "order_deposit"))
-                heapq.heappush(self.events, Event(v, v.order_retrieval, "order_retrieval"))
+                self.events.add(Event(v, v.order_deposit, "order_deposit"))
+                self.events.add(Event(v, v.order_retrieval, "order_retrieval"))
             else:
-                heapq.heappush(self.events, Event(v, v.deposit, "deposit"))
-                heapq.heappush(self.events, Event(v, v.retrieval, "retrieval"))     
+                deposit_event = Event(v, v.deposit, "deposit")
+                self.events.add(deposit_event)
+                self.events.add(Event(v, v.retrieval, "retrieval"))    
+                self.deposit_events.add(deposit_event)
 
-
-        self.pending_deposits = []
-        self.pending_retrievals = []
+        self.pending_deposits = SortedList()
+        self.pending_retrievals = SortedList()
         self.vehicles_left_to_handle = set(self.stock.vehicles.keys())
-        print(self.vehicles_left_to_handle)
+        # print(self.vehicles_left_to_handle)
 
         self.vehicles_to_retrieve = []
     
@@ -67,14 +70,19 @@ class Simulation():
 
         # Exécution de tous les évènements antérieurs à la date d'initialisation
         while self.events:
-            if self.events[0].date >= t0:
+            if self.events[-1].date == t0:
                 break
-            event = heapq.heappop(self.events)
+            event = self.events.pop()
             self.t = event.date
             self.execute(event)
 
     def execute(self, event):
-
+        """
+        print("----------")
+        print(event)
+        print(self.deposit_events)
+        print(self.pending_deposits)
+        """
         if self.display:
             self.display.show_robot()
         if self.print_in_terminal:
@@ -104,15 +112,15 @@ class Simulation():
             self.algorithm.update_start()
 
         elif event.event_type == "order_deposit":
-            heapq.heappush(self.events, Event(vehicle, vehicle.deposit, "deposit"))
+            self.events.add(Event(vehicle, vehicle.deposit, "deposit"))
             time_wake_up = max(self.t, vehicle.deposit - datetime.timedelta(hours=0.25))
-            heapq.heappush(self.events, Event(vehicle, time_wake_up, "wake_up_robots_deposit"))
+            self.events.add(Event(vehicle, time_wake_up, "wake_up_robots_deposit"))
           
         elif event.event_type == "order_retrieval":
             event_retrieval = Event(vehicle, vehicle.retrieval, "retrieval")
-            heapq.heappush(self.events, event_retrieval)
+            self.events.add(event_retrieval)
             time_wake_up = max(self.t, vehicle.retrieval - datetime.timedelta(hours=1))
-            heapq.heappush(self.events, Event(vehicle, time_wake_up, "wake_up_robots_retrieval", event_retrieval=event_retrieval))
+            self.events.add(Event(vehicle, time_wake_up, "wake_up_robots_retrieval", event_retrieval=event_retrieval))
 
         elif event.event_type == "wake_up_robots_retrieval":
             self.algorithm.check_redirections(event, self.t)
@@ -140,10 +148,10 @@ class Simulation():
 
             lane_id = self.parking.blocks[0].empty_lane()
             if lane_id == "full":
-                heapq.heappush(self.pending_deposits, event)
+                self.pending_deposits.add(event)
             else:
                 success = True
-
+                self.deposit_events.pop()
                 self.parking.blocks[0].lanes[lane_id].push_reserve(vehicle.id, "top")
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top", self.stock)
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
@@ -193,7 +201,8 @@ class Simulation():
                     del self.parking.occupation[event.vehicle.id]
 
                     if self.pending_deposits:
-                        event_deposit = heapq.heappop(self.pending_deposits)
+                        self.deposit_events.pop()
+                        event_deposit = self.pending_deposits.pop()
                         self.parking.blocks[0].lanes[i_lane].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[i_lane].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, i_lane, 0)
@@ -202,6 +211,8 @@ class Simulation():
                         self.before_deposit_delays.append(self.t - event_deposit.date)
                         # mise à jour de la date de dépôt effectif du véhicule
                         event_deposit.vehicle.effective_deposit = self.t
+
+                        self.algorithm.update_deposit(event_deposit.vehicle, True, self.t)
 
                         if self.display:
                             self.display.draw_vehicle(event_deposit.vehicle)
@@ -220,13 +231,13 @@ class Simulation():
                         print("")
 
                 else:
-                    heapq.heappush(self.pending_retrievals, event)
+                    self.pending_retrievals.add(event)
             else:
                 for pdg_deposit in self.pending_deposits:
-                    print(vehicle, pdg_deposit)
                     if vehicle.id == pdg_deposit.vehicle.id:
                         self.pending_deposits.remove(pdg_deposit)
-                        
+                        self.deposit_events.remove(pdg_deposit)
+                        self.algorithm.update_deposit(pdg_deposit.vehicle, True, self.t)
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.before_deposit_delays.append(self.t - pdg_deposit.date)
                         # mise à jour de la date de dépôt effectif du véhicule
@@ -234,7 +245,7 @@ class Simulation():
 
                         break
                 else:
-                    heapq.heappush(self.pending_retrievals, event)
+                    self.pending_retrievals.add(event)
             
             self.algorithm.update_retrieval(vehicle, success, self.t)
 
@@ -343,7 +354,8 @@ class Simulation():
                 if block_id == 0:
                     self.parking.blocks[0].nb_places_available += 1
                     if self.pending_deposits:
-                        event_deposit = heapq.heappop(self.pending_deposits)
+                        self.deposit_events.pop()
+                        event_deposit = self.pending_deposits.pop()
                         self.parking.blocks[0].lanes[lane_id].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
@@ -352,6 +364,8 @@ class Simulation():
                         self.before_deposit_delays.append(self.t - event_deposit.date)
                         # mise à jour de la date de dépôt effectif du véhicule
                         event_deposit.vehicle.effective_deposit = self.t
+
+                        self.algorithm.update_deposit(event_deposit.vehicle, True, self.t)
 
                         if self.display:
                             self.display.draw_vehicle(event_deposit.vehicle)
@@ -402,7 +416,7 @@ class Simulation():
         while (repeat is None or r < repeat) and (until is None or until > self.t):
             if self.events:
                 time_start = time.time()
-                event = heapq.heappop(self.events)
+                event = self.events.pop()
                 self.t = event.date
                 self.nb_events_tracker[self.t] = len(self.events)
                 self.execute(event)
@@ -481,7 +495,9 @@ class Event():
         return self.id == other.id
 
     def __lt__(self, other):
-        return self.date < other.date
+        if self.date == other.date:
+            return self.id > other.id
+        return self.date > other.date
     
     def __repr__(self):
         if self.robot is not None: 
@@ -561,7 +577,7 @@ class BaseAlgorithm(Algorithm):
                     event.event_retrieval.unassigned_tasks = 0
                     
                     event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
-                    heapq.heappush(self.events, event_end_task)
+                    self.events.add(event_end_task)
 
                     robot.doing.canceled = True
                     robot.doing = event_end_task
@@ -589,7 +605,7 @@ class BaseAlgorithm(Algorithm):
                         # Calcul du temps de trajet faux
                         robot.goal_time  = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
                         event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
-                        heapq.heappush(self.events, event_end_task)
+                        self.events.add(event_end_task)
 
                         robot.doing.canceled = True
                         robot.doing = event_end_task
@@ -632,7 +648,7 @@ class BaseAlgorithm(Algorithm):
                 
                 robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
                 event_end_task = Event(moved_vehicle, robot.goal_time, "robot_end_task", robot)
-                heapq.heappush(self.events, Event(moved_vehicle, robot.goal_time, "robot_end_task", robot))
+                self.events.add(Event(moved_vehicle, robot.goal_time, "robot_end_task", robot))
                 robot.doing = event_end_task
 
             else:
@@ -641,7 +657,7 @@ class BaseAlgorithm(Algorithm):
                 
                 robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
                 event_end_task = Event(moved_vehicle, robot.goal_time, "robot_end_task", robot)
-                heapq.heappush(self.events, Event(moved_vehicle, robot.goal_time, "robot_end_task", robot))
+                self.events.add(Event(moved_vehicle, robot.goal_time, "robot_end_task", robot))
                 robot.doing = event_end_task
 
     def update_robot_end_task(self, robot, lane_end, success, current_time):
@@ -668,7 +684,7 @@ class BaseAlgorithm(Algorithm):
                     robot.goal_time = current_time + self.parking.travel_time((0, lane_id, "bottom"), robot.goal_position)
 
                     event_arrival = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "robot_arrival", robot)
-                    heapq.heappush(self.events, event_arrival)
+                    self.events.add(event_arrival)
                     robot.doing = event_arrival
 
                     event = Event(self.stock.vehicles[vehicle.id], robot.goal_time, "empty_interface", robot)
@@ -707,7 +723,7 @@ class BaseAlgorithm(Algorithm):
 
             event.robot = robot
             event_arrival = Event(event.vehicle, robot.goal_time, "robot_arrival", robot)
-            heapq.heappush(self.events, event_arrival)
+            self.events.add(event_arrival)
 
             robot.doing = event_arrival
             robot.target = event
@@ -716,9 +732,9 @@ class BaseAlgorithm(Algorithm):
         
     def find_unassigned_events(self, are_available_places_interface, current_time):
         # On verifie d'abord si des retrievals sont en retard
-        i = 0
-        while i < len(self.pending_retrievals):
-            event = self.pending_retrievals[i]
+        i = 1
+        while i <= len(self.pending_retrievals):
+            event = self.pending_retrievals[-i]
             if event.vehicle.id in self.parking.occupation:
                 block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
                 if block_id != 0:
@@ -733,9 +749,9 @@ class BaseAlgorithm(Algorithm):
             i += 1
 
         # On s'intéresse ensuite aux retrievals qui sont prévus dans moins d'une heure
-        i = 0
-        while i < len(self.events):
-            event = self.events[i]
+        i = 1
+        while i <= len(self.events):
+            event = self.events[-i]
             if event.date - current_time > datetime.timedelta(hours=1):
                 break
             if event.event_type == "retrieval" and event.vehicle.id in self.parking.occupation:
@@ -883,7 +899,7 @@ class RLAlgorithm(Algorithm):
                 else:
                     event = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
                 robot.doing = event
-                heapq.heappush(self.events, event)
+                self.events.add(event)
     
     def check_pick(self, lane_end, moved_vehicle, current_time):
         return True
