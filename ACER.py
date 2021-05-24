@@ -110,8 +110,8 @@ def evaluate_model(model, repetition, _input=False):
     return statics
 
 
-statics = evaluate_model(model, 10, _input=True)
-print(f'statics_{timesteps} = {statics}')
+#statics = evaluate_model(model, 10, _input=True)
+#print(f'statics_{timesteps} = {statics}')
 
 
 RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments)

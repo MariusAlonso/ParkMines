@@ -168,9 +168,9 @@ class MLEnv(gym.Env):
         wake_up_date = self.simulation.t + datetime.timedelta(minutes= 10*int(action[self._dict("idleness_date")]))
         init, end = self._dict("robot_actions_lanes")
         init2, end2 = self._dict("robot_actions_sides", action_space=True)
-        self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)
+        #self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)
         
-        #self.simulation.algorithm.take_decision(action, self.simulation.t)
+        self.simulation.algorithm.take_decision(action, self.simulation.t)
 
         
         while True:
