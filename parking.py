@@ -25,7 +25,13 @@ class Parking():
         L = []
         for block in self.blocks:
             L.append(len(block.lanes))
-        self.nb_max_lanes = max(L)          #lane la plus longue du parking
+        self.nb_max_lanes = max(L)          #lane la plus longue du parking => NON
+
+        L = []
+        for block in self.blocks:
+            L.append(len(block.lanes[0].list_vehicles))
+        self.longest_lane = max(L)          #lane la plus longue du parking
+
 
         # Calcul des coordonnées du maillage correspondant à la matrice disposal
         self.disposal = disposal

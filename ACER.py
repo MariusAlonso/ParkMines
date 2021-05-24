@@ -10,7 +10,7 @@ from stable_baselines.common.vec_env import DummyVecEnv
 # from stable_baselines.common.evaluation import evaluate_policy
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import PPO2
-from ML_env3 import MLEnv
+from ML_env4 import MLEnv
 from performances import Performance
 from rl import rl_algorithm_builder
 from robot import Robot
@@ -63,7 +63,7 @@ timesteps = 1e3
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1)
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL0611tensorboard/")
 
 
     model.learn(total_timesteps=int(timesteps))
@@ -86,6 +86,9 @@ def evaluate_model(model, repetition, _input=False):
         i=0
         last_obs_lane = obs[env._dict("lanes")[0]: env._dict("lanes")[1]]
         while not done:
+            print(env.observation.data)
+            print(env.simulation.t)
+            input("")
             action, _states = model.predict(obs)
             obs, reward, done, info = env.step(action)
             i+=1
@@ -106,7 +109,7 @@ def evaluate_model(model, repetition, _input=False):
         env.render()
         print(f'score final={score} of iteration {iteration+1}/{repetition}')
         statics.append(score)
-        env.render()
+        #env.render()
     return statics
 
 
@@ -114,7 +117,7 @@ def evaluate_model(model, repetition, _input=False):
 #print(f'statics_{timesteps} = {statics}')
 
 
-RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments)
+RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible)
 
 performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
 performance.printAverageDashboard(10)
