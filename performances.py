@@ -11,6 +11,8 @@ from math import isclose, sqrt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from itertools import product
+import xlrd
+from xlwt import Workbook, Formula
 
 class Dashboard():
 
@@ -1186,7 +1188,8 @@ class Performance():
         """
         effective_nb_repetitions = 0
         average_mark = 0
-        root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        #root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
 
         for i in range(10):
             path = root_path + 'stock_' + str(i) + '.csv'
@@ -1312,6 +1315,11 @@ class Performance():
         """
         calcule le score pour une gamme de valeurs ded alpha et beta
         """
+        # On créer un "classeur"
+        classeur = Workbook()
+        # On ajoute une feuille au classeur
+        feuille = classeur.add_sheet("test 0-")
+        i, j = 0, 0 #lignes et colonnes
 
         # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
         marks = {}
@@ -1323,13 +1331,23 @@ class Performance():
                     mark = self.algorithmMarkOnPool(optimization_parameters=optimization_parameters)
                     print(f"{tuple(optimization_parameters)} : {mark:.3f}")
                     marks[tuple(optimization_parameters)] = mark
+
+                    feuille.write(i, j, mark)
+                j += 1
+            i += 1
+            j = 0
+        classeur.save(r"C:\Users\laure\Desktop\git\ParkMines\inputs\pool_for_optim\stock.xls")
         return marks
     
     def logCutViewZeroMinusOnPool(self, start=-3, stop=5, step=1, other_parameters=[100., -10.]):
         """
-        calcule le score pour une gamme de valeurs ded alpha et beta
+        calcule le score pour une gamme de valeurs de alpha et beta
         """
-
+        # On créer un "classeur"
+        classeur = Workbook()
+        # On ajoute une feuille au classeur
+        feuille = classeur.add_sheet("test 0- log")
+        i, j = 0, 0 #lignes et colonnes
         # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
         marks = {}
 
@@ -1342,4 +1360,10 @@ class Performance():
                     mark = self.algorithmMarkOnPool(optimization_parameters=optimization_parameters)
                     print(f"{tuple(optimization_parameters)} : {mark:.3f}")
                     marks[tuple(optimization_parameters)] = mark
+                    
+                    feuille.write(i, j, mark)
+                j += 1
+            i += 1
+            j = 0
+        classeur.save(r"C:\Users\laure\Desktop\git\ParkMines\inputs\pool_for_optim\stock.xls")
         return marks
