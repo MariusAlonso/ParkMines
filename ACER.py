@@ -1,4 +1,5 @@
 import gym
+import numpy as np
 """
 import ray
 from ray import tune
@@ -16,6 +17,25 @@ from robot import Robot
 from simulation import Simulation
 from vehicle import RandomStock
 import datetime
+
+import tensorflow as tf
+from stable_baselines.common.callbacks import BaseCallback
+
+class TensorboardCallback(BaseCallback):
+    """
+    Custom callback for plotting additional values in tensorboard.
+    """
+    def __init__(self, verbose=0):
+        self.is_tb_set = False
+        super(TensorboardCallback, self).__init__(verbose)
+
+    def _on_step(self) -> bool:
+        # Log scalar value (here a random variable)
+        value = np.random.random()
+        summary = tf.Summary(value=[tf.Summary.Value(tag='random_value', simple_value=value)])
+        self.locals['writer'].add_summary(summary, self.num_timesteps)
+        return True
+
 
 """
 environment_name =
@@ -55,7 +75,7 @@ env.close()
 # env = DummyVecEnv([lambda: env])
 
 learning = True
-saving = True
+saving = False
 
 
 
@@ -63,14 +83,14 @@ saving = True
 if learning:
     model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL0611tensorboard/")
 
-    model.learn(total_timesteps=20000000)
+    model.learn(total_timesteps=30000000, callback=TensorboardCallback())
 
     if saving:
 
-        model.save("RL0612")
+        model.save("RL0613")
         del model # remove to demonstrate saving and loading
 
-model = PPO2.load("RL0612")
+model = PPO2.load("RL0613")
 
 
 def evaluate_model(model, repetition):
@@ -99,13 +119,13 @@ def evaluate_model(model, repetition):
         #env.render()
     return statics
 
-
+"""
 statics_100000 = evaluate_model(model, 1)
 print(statics_100000)
+"""
 
-
-RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible)
-
+RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
+"""
 performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
 performance.printAverageDashboard(10)
 """
@@ -113,7 +133,7 @@ stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_lengt
 simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = False)
 simulation.start_display(12, 20)
 simulation.display.run()
-"""
+
 
 """
 # ray.init(include_dashboard=False)

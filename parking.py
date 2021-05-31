@@ -120,6 +120,8 @@ class Parking():
         departure : (block_id, lane_id, side)
         arrival : (block_id, lane_id, side)
         """
+        if True:
+            return datetime.timedelta(minutes=5)
         if departure == arrival:
             return datetime.timedelta(0,30, minutes=1)
         else:

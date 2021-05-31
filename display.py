@@ -212,8 +212,6 @@ class Display():
             for vehicle_id in self.parking.occupation:
                 self.draw_vehicle(self.stock.vehicles[vehicle_id])
             
-            print("\n\n\n\ntthrrhtyjty\n\n\n\n")
-            
             pg.display.update()
 
             #on trace la figure de plt
@@ -275,7 +273,7 @@ class Display():
                 color = (min(255,150-24*k*100),max(0,150+24*k*150,0),0)
         pg.draw.rect(self.screen, color, rect)
         
-        # Affichage de l'identifiant du véhicule
+        # Affichage de l'identifiant du véhicule tthrrhtyjty
         t_surf = self.font.render(str(vehicle.id), True, (0, 0, 0))
         self.screen.blit(t_surf, (x, y))
 
