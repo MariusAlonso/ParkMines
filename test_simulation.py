@@ -69,6 +69,7 @@ class TestTest():
 test = TestTest()
 test.testNbEvents()
 """
+
 if __name__ == "__main__":
     N = 400
     terminal = sys.stdout

@@ -16,7 +16,7 @@ class Analysis():
         self.nb_entree_array = np.array([None]*n)
         self.nb_sortie_array = np.array([None]*n)
         self.nb_voiture_array = np.array([None]*n)
-        self.nb_voiture_interface_array = np.array([None]*n)
+        self.nb_vehicles_interface_array = np.array([None]*n)
         self.taux_occupation_array = np.array([None]*n)
         self.taux_occupation_interface_array = np.array([None]*n)
         self.flux_moyen_array = np.array([None]*n)
@@ -39,7 +39,7 @@ class Analysis():
             else :
                 self.nb_sortie_array[jour] = (self.simulation.nb_sortie[jour] + self.simulation.nb_sortie[M[-1]])/2
             M.append(jour)
-        print (self.nb_sortie_array, self.simulation.nb_sortie)
+        #print (self.nb_sortie_array, self.simulation.nb_sortie)
 
     def count_vehicle(self):
         try:
@@ -52,6 +52,7 @@ class Analysis():
             self.nb_voiture_array[jour] = nb_vehicle
             self.taux_occupation_array[jour] = nb_vehicle/self.simulation.parking.nb_of_places
 
+    """
     def count_vehicle_interface(self):
         try:
             nb_vehicle = self.simulation.nb_sortie_interface[0] - self.simulation.nb_entree[0]
@@ -60,8 +61,13 @@ class Analysis():
 
         for jour in self.simulation.nb_sortie.keys():
             nb_vehicle = nb_vehicle + self.simulation.nb_entree.get(jour, 0) - self.simulation.nb_sortie_interface.get(jour, 0) 
-            self.nb_voiture_interface_array[jour] = nb_vehicle
+            self.nb_vehicles_interface_array[jour] = nb_vehicle
             self.taux_occupation_interface_array[jour] = nb_vehicle/self.simulation.parking.nb_of_places
+    """
+
+    def max_interface(self):    
+        for jour in self.simulation.nb_sortie.keys():
+            self.nb_vehicles_interface_array[jour] = self.simulation.nb_vehicles_interface[jour]
 
     def flux(self):
         for jour in self.simulation.nb_sortie.keys():

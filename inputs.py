@@ -5,8 +5,6 @@ from vehicle import Vehicle
 import sys
 from input_gen import generate
 
-#path = "inputs/movements.csv"
-
 #### récupération du path ####
 
 def getPath():
@@ -17,39 +15,40 @@ def getPath():
 
 #### import des véhicules à partir d'un fichier texte ####
 
-def importFromFile(congestion_coeff=1.):
+def importFromFile(path=None):
 
-    movements_list = []
-    path = getPath()
+    Vehicle.next_id = 1
 
-    generate(congestion_coeff)
+    vehicles_list = []
+    if path is None:
+        path = getPath()
 
-    with open(path, "r") as movements:
+    with open(path, "r") as vehicles:
         first_line = True
 
-        for line in movements:
+        for line in vehicles:
 
             # non-traitement de l'en-tête
             if first_line:
                 first_line = False
             else:
 
-                movement = line.split(",")
+                vehicle = line.split(",")
                 # reformatage des données véhicule
 
-                deposit = movement[0]
-                retrieval = movement[1]
+                deposit = vehicle[1]
+                retrieval = vehicle[2]
 
-                if len(movement) > 2:
-                    order_deposit = movement[3]
-                    order_retrieval = movement[4]                   
+                if len(vehicle) > 2:
+                    order_deposit = vehicle[4]
+                    order_retrieval = vehicle[5]                   
 
                 # reformatage des dates
                 delimiters = [':', 'T', 'Z']
                 for delimiter in delimiters:
                     deposit = deposit.replace(delimiter, '-')
                     retrieval = retrieval.replace(delimiter, '-')
-                    if len(movement) > 2:
+                    if len(vehicle) > 2:
                         order_deposit = order_deposit.replace(delimiter, '-')
                         order_retrieval = order_retrieval.replace(delimiter, '-') 
                 
@@ -64,6 +63,6 @@ def importFromFile(congestion_coeff=1.):
                 order_deposit = datetime.datetime(*(int(item) for item in order_deposit))
                 order_retrieval = datetime.datetime(*(int(item) for item in order_retrieval))
 
-                movements_list.append(Vehicle(deposit, retrieval, order_deposit, order_retrieval))
+                vehicles_list.append(Vehicle(deposit, retrieval, order_deposit, order_retrieval))
 
-    return movements_list
+    return vehicles_list

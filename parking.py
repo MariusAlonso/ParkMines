@@ -222,7 +222,7 @@ class Block():
         block_copied = copy(self)
         block_copied.lanes = [deepcopy(lane) for lane in self.lanes]
         if isinstance(self, BlockInterface):
-            block_copied.targeted = self.targeted[:]
+            block_copied.targeted = self.targeted[:]    # message d'erreur car l'attribut n'existe que pour l'interface
         return block_copied
 
     def _empty_copy(self):
@@ -332,8 +332,9 @@ class Lane() :
         if side == "bottom":
             return self.future_bottom_position
 
-    def push(self, id_vehicle, coté, stock):
-        if coté == "top":
+
+    def push(self, id_vehicle, side, stock):
+        if side == "top":
             if self.top_position == None:
                 if not self.bottom_access:
                     self.list_vehicles[-1] = id_vehicle
@@ -352,7 +353,7 @@ class Lane() :
                     self.argmax_retrieval -= 1
                 self.top_position -= 1
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.bottom_position == None:
                 if not self.top_access:
                     self.list_vehicles[0] = id_vehicle
@@ -371,8 +372,8 @@ class Lane() :
                     self.argmax_retrieval += 1
                 self.bottom_position += 1
 
-    def push_reserve(self, id_vehicle, coté, mark=True):
-        if coté == "top":
+    def push_reserve(self, id_vehicle, side, mark=True):
+        if side == "top":
             if self.future_top_position == None:
                 if not self.bottom_access:
                     self.future_top_position = self.length - 1
@@ -383,7 +384,7 @@ class Lane() :
             else:
                 self.future_top_position -= 1
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.future_bottom_position == None:
                 if not self.top_access:
                     self.future_top_position = 0
@@ -394,36 +395,36 @@ class Lane() :
             else:
                 self.future_bottom_position += 1
 
-    def push_cancel_reserve(self, coté):
-        if coté == "top":
+    def push_cancel_reserve(self, side):
+        if side == "top":
             if self.future_top_position != None:
                 self.future_top_position += 1
-                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.future_top_position = None
                     self.future_bottom_position = None
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.future_bottom_position != None:
                 self.future_bottom_position -= 1
-                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.future_top_position > self.future_bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.future_top_position = None
                     self.future_bottom_position = None
 
 
-    def pop_reserve(self, coté):
-        self.push_cancel_reserve(coté)
+    def pop_reserve(self, side):
+        self.push_cancel_reserve(side)
 
 
-    def pop_cancel_reserve(self, coté):
-        self.push_reserve(0, coté)
+    def pop_cancel_reserve(self, side):
+        self.push_reserve(0, side)
 
-    def pop(self, coté):
-        if coté == "top":
+    def pop(self, side):
+        if side == "top":
             if self.top_position != None:
                 vehicle_id = self.list_vehicles[self.top_position]
                 self.list_vehicles[self.top_position] = 0
                 self.top_position += 1
-                if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
                     self.argmax_retrieval = None
@@ -431,12 +432,12 @@ class Lane() :
                     self.argmax_retrieval = self.top_position
                 return vehicle_id
 
-        elif coté == "bottom":
+        elif side == "bottom":
             if self.bottom_position != None:
                 vehicle_id = self.list_vehicles[self.bottom_position]
                 self.list_vehicles[self.bottom_position] = 0
                 self.bottom_position -= 1
-                if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
+                if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
                     self.argmax_retrieval = None
@@ -444,3 +445,56 @@ class Lane() :
                     self.argmax_retrieval = self.bottom_position
                 return vehicle_id
 
+
+    def retrieval_side(self, position, stock):
+        """
+        renvoie le côté de sortie (a priori) du véhicule situé en position position, None si il n'y en a pas
+        """
+        vehicle = stock.vehicles[self.list_vehicles[position]]
+        # on vérifie qu'il y a bien un véhicule à cette place
+        if vehicle:
+            bottom_displacement = 0
+            top_displacement = 0
+            # on parcours toutes les positions pour voir si le véhicule gène
+            for i in range(self.length):
+                # on vérifie qu'il y a bien un véhicule en place i
+                if self.list_vehicles[i]:
+                    vehicle_i = stock.vehicles[self.list_vehicles[i]]
+                    # on regarde si il va falloir le déplacer
+                    if vehicle_i.retrieval > vehicle.retrieval:
+                        # il faudra déplacer ce véhicule, on regarde si il est côté top ou côté bottom
+                        if i < position:
+                            top_displacement += 1 
+                        else:
+                            bottom_displacement += 1
+            # on renvoie le côté pour lequel le nombre de véhicules à déplacer est le plus petit
+            if top_displacement <= bottom_displacement:
+                return "top"
+            else:
+                return "bottom"
+        else:
+            return None
+
+    
+    def next_retrieval(self, side, stock, exception=None):
+        """
+        renvoie la date de prochaine sortie d'un véhicule par ce coté de la lane
+        on suppose qu'un véhicule sort par le côté où il y a le moins de véhicule à déplacer
+        Attention : peut renvoyer None si la lane est vide
+        """
+        retrieval = None
+
+        for position, vehicle_id in enumerate(self.list_vehicles):
+            # on vérifie que le véhicule n'est pas None et qu'il va bien sortir par notre côté
+            if vehicle_id and self.retrieval_side(position, stock) == side:
+                vehicle = stock.vehicles[vehicle_id]
+                # on diminue la date de prochaine sortie de ce côté si besoin
+                if retrieval is None or retrieval > vehicle.retrieval:
+                    if not vehicle.retrieval == exception:
+                        retrieval = vehicle.retrieval
+        
+        return retrieval
+
+
+
+    
