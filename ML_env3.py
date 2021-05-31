@@ -17,7 +17,7 @@ class MLEnv(gym.Env):
         self.parking = tiny_parking
         self.number_robots = 1
         self.simulation_length = 3
-        self.daily_flow = 3
+        self.daily_flow = 9
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.max_number_vehicles = int(self.simulation_length*self.daily_flow*3)
         self.display = display
@@ -163,6 +163,12 @@ class MLEnv(gym.Env):
         self.last_step_t = self.simulation.t
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
+        #if action[0]=='nan':
+            #return self.observation, -10e20, True, {}
+        wake_up_date = self.simulation.t + datetime.timedelta(minutes= 10*int(action[self._dict("idleness_date")]))
+        init, end = self._dict("robot_actions_lanes")
+        init2, end2 = self._dict("robot_actions_sides", action_space=True)
+        #self.simulation.algorithm.take_decision(action[init:end].astype(int), np.around(action[init2:end2]).astype(int), self.simulation.t)
         
         self.simulation.algorithm.take_decision(action, self.simulation.t)
 
@@ -171,9 +177,11 @@ class MLEnv(gym.Env):
 
             if self.simulation.t > self.tmax:
                 self.done = True
+                print("Ohh... la simulation est arrivée à la fin des temps")
                 break          
             if not self.simulation.vehicles_left_to_handle:
                 self.done = True
+                print("Bien joué, vous avez réussi tous les évènements")
                 break
 
             self.simulation.next_event()
@@ -188,7 +196,6 @@ class MLEnv(gym.Env):
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
-                # print("punition=", 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600)
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
@@ -201,6 +208,9 @@ class MLEnv(gym.Env):
                 self.lanes_occupated += 1
         self.simulation.algorithm.reward -= 10*self.lanes_occupated
         """
+        if not (self.simulation.events) and not(self.simulation.pending_retrievals):
+            print("Bien joué, vous avez réussi tous les évènements !")
+        #self.done = self.done or (not (self.simulation.events) and not(self.simulation.pending_retrievals))
 
         self.done = self.done or not self.simulation.vehicles_left_to_handle
 

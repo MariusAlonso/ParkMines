@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+import copy
 """
 import ray
 from ray import tune
@@ -76,6 +77,7 @@ env.close()
 
 learning = True
 saving = False
+timesteps = 1e9
 
 
 
@@ -83,7 +85,7 @@ saving = False
 if learning:
     model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL0611tensorboard/")
 
-    model.learn(total_timesteps=30000000, callback=TensorboardCallback())
+    model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
 
     if saving:
 
@@ -93,14 +95,15 @@ if learning:
 model = PPO2.load("RL0613")
 
 
-def evaluate_model(model, repetition):
+def evaluate_model(model, repetition, _input=False):
     statics = []
-    for _ in range(repetition):
+    for iteration in range(repetition):
         obs = env.reset()
         #input()
         done = False
         score = 0
         i=0
+        last_obs_lane = obs[env._dict("lanes")[0]: env._dict("lanes")[1]]
         while not done:
             print(env.observation.data)
             print(env.simulation.t)
@@ -108,21 +111,29 @@ def evaluate_model(model, repetition):
             action, _states = model.predict(obs)
             obs, reward, done, info = env.step(action)
             i+=1
-            if i==100:
-                #env.render()
+            obs_lane = obs[env._dict("lanes")[0]: env._dict("lanes")[1]]
+            if i==1000 and not _input:
                 print("score=", score)
                 i=0
+                env.render()
             score+=reward
+            if _input:
+                if (last_obs_lane != obs_lane).any():
+                    env.render()
+                    input()
+                last_obs_lane = copy.deepcopy(obs_lane)
+
             #input()
-        print("score final=", score)
+
+        env.render()
+        print(f'score final={score} of iteration {iteration+1}/{repetition}')
         statics.append(score)
         #env.render()
     return statics
 
-"""
-statics_100000 = evaluate_model(model, 1)
-print(statics_100000)
-"""
+
+#statics = evaluate_model(model, 10, _input=True)
+#print(f'statics_{timesteps} = {statics}')
 
 RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
 """
