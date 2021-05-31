@@ -65,10 +65,10 @@ class TestTest():
         plt.ylabel("nombre d'évènements dans la pile")
         plt.title("évolution du nombre d'évènements dans la pile au cours du temps")
         plt.show()
-
+"""
 test = TestTest()
 test.testNbEvents()
-
+"""
 if __name__ == "__main__":
     N = 400
     terminal = sys.stdout
@@ -77,12 +77,15 @@ if __name__ == "__main__":
             try:
                 sys.stdout = log_file
                 Vehicle.next_id = 1
-                stock = RandomStock(10)
-                parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 15, 10, "leftright"), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-                simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], parking, AlgorithmRandom, print_in_terminal=False)
+                stock = RandomStock(7)
+                parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 10, 10, "leftright"), Block([Lane(1, 4), Lane(2, 4)]), Block([],6,3)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]],{})
+                simulation = Simulation(datetime.datetime(2016,1,1,0,0,0,0), stock, [Robot(1), Robot(2), Robot(3)], parking, AlgorithmUnimodal, print_in_terminal=False)
                 simulation.complete()
-            except:
+            except ValueError:
+                sys.stdout = terminal
+                print("Parking surchargé :", len(parking.occupation), "véhicules dans le parking")
                 pass
+        
         if 100*n % N < 100:
             sys.stdout = terminal
             print(f"{int(round(n*100/N, 0))+1}% des simulations effectué")

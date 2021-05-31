@@ -5,7 +5,7 @@ import pandas as pd
 import time as comptime
 import numpy as np
 from sklearn.mixture import GaussianMixture
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # En jours
 mu_deposit_order = 2
@@ -142,7 +142,10 @@ def generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31),
         
         date += datetime.timedelta(days=1)
     
-    return dict_vehicles
+    if dict_vehicles:
+        return dict_vehicles
+    else:
+        return generateStock(Vehicle, vehicles_per_day, time, start_date)
 
 if __name__ == "__main__":
 
@@ -165,8 +168,10 @@ if __name__ == "__main__":
             if days_to_retrieval >= 0:
                 break
         res.append(days_to_retrieval)
+    """
     plt.hist(res, bins = range(40), density = True)
     plt.show()
+    """
 
 
 

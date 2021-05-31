@@ -5,12 +5,17 @@ import distance as dist
 from copy import copy, deepcopy
 
 class Parking():
-    def __init__(self, blocks, disposal=[[]], occupation=dict()):
+    def __init__(self, blocks, disposal=[[]], occupation={}):
+
+        self.real_parking = [BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]]
         """
         Attributs variant au cours d'une simulation
         """
         self.blocks = blocks
+        self.number_blocks = len(blocks)
         self.occupation = occupation
+
+        print("Dictionnaire vide :", occupation)
         """
         Attributs ne variant pas au cours d'une simulation
         """
@@ -20,7 +25,13 @@ class Parking():
         L = []
         for block in self.blocks:
             L.append(len(block.lanes))
-        self.nb_max_lanes = max(L)          #lane la plus longue du parking
+        self.nb_max_lanes = max(L)          #lane la plus longue du parking => NON
+
+        L = []
+        for block in self.blocks:
+            L.append(len(block.lanes[0].list_vehicles))
+        self.longest_lane = max(L)          #lane la plus longue du parking
+
 
         # Calcul des coordonnées du maillage correspondant à la matrice disposal
         self.disposal = disposal
@@ -66,6 +77,17 @@ class Parking():
         distance = dist.Distance(self)
         distance.fill_matrix_time()
         self.matrix_time = distance.matrix_time
+        self.dict_lanes = dict()
+        self.to_global_id = dict()
+        self.number_lanes = 0
+        counter_lanes = 1                              #LA NUMEROTAION DES LANES COMMENCE A 1
+        for block_id, block in enumerate(self.blocks):
+            self.number_lanes += block.nb_lanes
+            for lane_id, lane in enumerate(block.lanes):
+                self.dict_lanes[counter_lanes] = (block_id, lane_id)
+                self.to_global_id[(block_id, lane_id)] = counter_lanes
+                counter_lanes += 1
+         
 
     
     def _copy(self):
@@ -98,8 +120,10 @@ class Parking():
         departure : (block_id, lane_id, side)
         arrival : (block_id, lane_id, side)
         """
+        if True:
+            return datetime.timedelta(minutes=5)
         if departure == arrival:
-            return datetime.timedelta(0)
+            return datetime.timedelta(0,30, minutes=1)
         else:
             if departure[2] == 'top':
                 place1 = (departure[0], departure[1], 0)
@@ -133,6 +157,43 @@ class Parking():
         elif type(block_id) == str and block_id[0] == "f":
             return int(block_id[1:].split(":")[1])
         return self.blocks[block_id].lanes[0].length*self.place_ratio + 1
+    
+    def opposite(self, side):
+        if side == "top":
+            return "bottom"
+        if side == "bottom":
+            return "top"
+
+    def future_config(self, block_id, lane_id, robots, stock, min_time = None, max_time = None):
+
+        lane = self.blocks[block_id].lanes[lane_id]
+        events_to_reverse = []
+
+        for robot in robots:
+            if not robot.doing is None:
+                if (not max_time or robot.goal_time and robot.goal_time <= max_time):
+                    if (not min_time or robot.goal_time and robot.goal_time > min_time):
+                        if robot.goal_position[0:2] == (block_id, lane_id):
+                            side = robot.goal_position[2]
+                            if robot.vehicle is None:
+                                events_to_reverse.append((side, lane.pop(side)))
+                            else:
+                                lane.push(robot.vehicle.id, side, stock)
+                                events_to_reverse.append((side,))
+        
+        return events_to_reverse
+    
+    def reverse_config(self, block_id, lane_id, events_to_reverse, stock):
+
+        lane = self.blocks[block_id].lanes[lane_id]
+
+        for event in events_to_reverse[::-1]:
+            if len(event) == 1:
+                lane.pop(event[0])
+            else:
+                lane.push(event[1], event[0], stock)
+                 
+
 
 class Block():
     def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
@@ -179,7 +240,7 @@ class Block():
         matrix = np.empty((self.height, self.width), dtype='<U6')
         for row_index, lane in enumerate(self.lanes):
             liste = lane.list_vehicles[:]
-            liste = [str(item).replace('None', '-') for item in liste]
+            liste = [str(item).replace("0", '-') for item in liste]
             matrix[row_index] = liste
 
         # les lanes sont les colonnes (la première à gauche)
@@ -190,20 +251,20 @@ class Block():
 class BlockInterface(Block):
 
     def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
-        super().__init__(lanes)
+        super().__init__(lanes, nb_lanes, lane_length, direction)
         self.nb_places_available = self.height
         self.targeted = [False]*self.height
 
     def empty_lane(self): #renvoie "full" si interface est pleine, et return premier vehicule
         for i_lane, lane in enumerate(self.lanes):
-            if lane.list_vehicles[0] == None:
+            if lane.list_vehicles[0] == 0:
                 return i_lane
         else:
             return "full"
 
     def occupied_lane(self): #renvoie "empty" si interface est pleine, et return premier vehicule
         for i_lane, lane in enumerate(self.lanes):
-            if lane.list_vehicles[0] != None:
+            if lane.list_vehicles[0] != 0:
                 return i_lane
         else:
             return "empty"
@@ -214,20 +275,21 @@ class Lane() :
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
         self.id = id_lane
-        self.list_vehicles = np.array([None]*self.length)  
+        self.list_vehicles = [0]*self.length
         self.top_position = None                # indice de la premiere voiture occupée dans la lane (None si pas de voiture)
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
         self.future_top_position = None  
         self.future_bottom_position = None      
         self.top_access = top_access
         self.bottom_access = bottom_access
+        self.argmax_retrieval = None
     
     def _empty_copy(self):
         return Lane(self.id, self.length, self.top_access, self.bottom_access)
 
     def __repr__(self):
         liste = self.list_vehicles[:]
-        liste = [str(item).replace('None', '-') for item in liste]
+        liste = [str(item).replace('0', '-') for item in liste]
         return liste.__repr__()
 
     def is_top_available(self):
@@ -245,9 +307,32 @@ class Lane() :
         if not self.bottom_position is None:
             M = max(M, self.bottom_position)   
         return self.bottom_access and M < self.length - 1
+    
+    def is_end_available(self, side):
+        if side == "top":
+            return self.is_top_available()
+        if side == "bottom":
+            return self.is_bottom_available()
 
+    def end_position(self, side):
+        if side == "top":
+            return self.top_position
+        if side == "bottom":
+            return self.bottom_position
+    
+    def end_limit(self, side):
+        if side == "top":
+            return 0
+        if side == "bottom":
+            return self.length - 1
 
-    def push(self, id_vehicle, coté):
+    def future_end_position(self, side):
+        if side == "top":
+            return self.future_top_position
+        if side == "bottom":
+            return self.future_bottom_position
+
+    def push(self, id_vehicle, coté, stock):
         if coté == "top":
             if self.top_position == None:
                 if not self.bottom_access:
@@ -258,8 +343,13 @@ class Lane() :
                     self.list_vehicles[self.length//2] = id_vehicle
                     self.top_position = self.length//2
                     self.bottom_position = self.length//2
+                
+                self.argmax_retrieval = self.top_position
             else:
                 self.list_vehicles[self.top_position-1] = id_vehicle
+                max_retrieval = stock.vehicles[self.list_vehicles[self.argmax_retrieval]].retrieval
+                if self.argmax_retrieval == self.top_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
+                    self.argmax_retrieval -= 1
                 self.top_position -= 1
 
         elif coté == "bottom":
@@ -272,11 +362,16 @@ class Lane() :
                     self.list_vehicles[self.length//2] = id_vehicle
                     self.top_position = self.length//2
                     self.bottom_position = self.length//2
+                
+                self.argmax_retrieval = self.top_position
             else:
                 self.list_vehicles[self.bottom_position + 1] = id_vehicle
+                max_retrieval = stock.vehicles[self.list_vehicles[self.argmax_retrieval]].retrieval
+                if self.argmax_retrieval == self.bottom_position and stock.vehicles[id_vehicle].retrieval > max_retrieval:
+                    self.argmax_retrieval += 1
                 self.bottom_position += 1
 
-    def push_reserve(self, coté):
+    def push_reserve(self, id_vehicle, coté, mark=True):
         if coté == "top":
             if self.future_top_position == None:
                 if not self.bottom_access:
@@ -320,32 +415,32 @@ class Lane() :
 
 
     def pop_cancel_reserve(self, coté):
-        self.push_reserve(coté)
+        self.push_reserve(0, coté)
 
     def pop(self, coté):
         if coté == "top":
             if self.top_position != None:
                 vehicle_id = self.list_vehicles[self.top_position]
-                self.list_vehicles[self.top_position] = None
+                self.list_vehicles[self.top_position] = 0
                 self.top_position += 1
                 if self.top_position > self.bottom_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.top_position = None
                     self.bottom_position = None
+                    self.argmax_retrieval = None
+                elif self.top_position > self.argmax_retrieval:
+                    self.argmax_retrieval = self.top_position
                 return vehicle_id
 
         elif coté == "bottom":
             if self.bottom_position != None:
                 vehicle_id = self.list_vehicles[self.bottom_position]
-                self.list_vehicles[self.bottom_position] = None
+                self.list_vehicles[self.bottom_position] = 0
                 self.bottom_position -= 1
                 if self.bottom_position < self.top_position: # si jamais l'indice de la premiere voiture est plus grand que celui de la dernière, ca veut dire qu'il n'y a plus de voiture
                     self.bottom_position = None
                     self.top_position = None
+                    self.argmax_retrieval = None
+                elif self.bottom_position < self.argmax_retrieval:
+                    self.argmax_retrieval = self.bottom_position
                 return vehicle_id
 
-
-
-
-
-
-    

@@ -1,73 +1,39 @@
 import pygame as pg
-from simulation import *
 import numpy as np
+import datetime
+import time
 from sim_analysis import Analysis
 import matplotlib.pyplot as plt
 plt.ion()
-
-class TextInputBox(pg.sprite.Sprite):
-
-    def __init__(self, x, y, w, font):
-        super().__init__()
-        self.color = (255, 255, 255)
-        self.backcolor = None
-        self.pos = (x, y) 
-        self.width = w
-        self.font = font
-        self.active = False
-        self.text = ""
-        self.render_text()
-
-    def render_text(self):
-        t_surf = self.font.render(self.text, True, self.color, self.backcolor)
-        self.image = pg.Surface((max(self.width, t_surf.get_width()+10), t_surf.get_height()+10), pg.SRCALPHA)
-        if self.backcolor:
-            self.image.fill(self.backcolor)
-        self.image.blit(t_surf, (5, 5))
-        pg.draw.rect(self.image, self.color, self.image.get_rect().inflate(-2, -2), 2)
-        self.rect = self.image.get_rect(topleft = self.pos)
-
-    def update(self, event_list):
-        for event in event_list:
-            if event.type == pg.MOUSEBUTTONDOWN and not self.active:
-                self.active = self.rect.collidepoint(event.pos)
-            if event.type == pg.KEYDOWN and self.active:
-                if event.key == pg.K_RETURN:
-                    self.active = False
-                elif event.key == pg.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                else:
-                    self.text += event.unicode
-                self.render_text()
-
 
 class Display():
 
     def __bool__(self):
         return True
 
-    def __init__(self, t0, stock, robots, parking, AlgorithmType, place_width=15, place_length=20, print_in_terminal=False):
-        self.stock = stock
-        self.robots = robots
-        self.t = t0
-        self.parking = parking
+    def __init__(self, simulation, place_width=15, place_length=20, time_interval=0.):
+        self.stock = simulation.stock
+        self.robots = simulation.robots
+        self.t = simulation.t
+        self.parking = simulation.parking
         self.place_length = place_length
         self.place_width = place_width
 
         self.last_update_day = 0
 
-        self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
-        self.analysis = Analysis(self.simulation)
+        self.simulation = simulation
+        self.simulation.display = self
+        if False:
+            self.analysis = Analysis(self.simulation)
+            self.figure = plt.figure()
         self.speed = 0
-        self.time_interval = 0
+        self.time_interval = time_interval
 
 
         pg.init()
         self.screen = pg.display.set_mode((1200, 800))
         self.screen.fill((255, 255, 255))
-        clock = pg.time.Clock()
 
-        self.figure = plt.figure()
 
         max_i_disposal = len(self.parking.disposal)
         max_j_disposal = len(self.parking.disposal[0])
@@ -176,20 +142,22 @@ class Display():
         #print(x0, y0)
         self.font = pg.font.SysFont(None, 2*self.place_length//4)
         self.font_fixed = pg.font.SysFont(None, 30)
-        """
-        text_input_box = TextInputBox(50, 50, 400, font)
-        group = pg.sprite.Group(text_input_box)
-        """
 
         #On affiche Robot 1 :, Robot 2 : ...
         for i in range(4):
             text = self.font_fixed.render(f"Robot {i+1} :", True, (0, 0, 0))
-            self.screen.blit(text, (700, i*70 + 40))
+            self.screen.blit(text, (900, i*70 + 40))
 
+        pg.display.update()
+    
+        self.last_display_t = time.time()
+    
+    def run(self):
+        
+        clock = pg.time.Clock()
 
         running = True
         complete = False
-        last_display_t = time.time()
 
         while running:
             clock.tick(100)
@@ -215,8 +183,9 @@ class Display():
                     if event.key == pg.K_s:
                         self.speed += 1
                         self.speed %= 4
+
             if complete:
-                if time.time() - last_display_t > self.time_interval:
+                if time.time() - self.last_display_t > self.time_interval:
                     if self.speed == 0:
                         complete = self.simulation.next_event()
                     if self.speed == 1:
@@ -225,24 +194,28 @@ class Display():
                         complete = self.simulation.next_event(self.simulation.t.replace(minute=0, second=0) + datetime.timedelta(hours=1))
                     if self.speed == 3:
                         complete = self.simulation.next_event(self.simulation.t.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1))
-                    last_display_t = time.time()      
-           
-            #self.screen.fill(0)
-            """
-            group.update(event_list)
-            group.draw(self.screen)
-            """
+
+        # Enfin on rajoute un appel à pg.quit()
+        # Cet appel va permettre à pg de "bien s'éteindre" et éviter des bugs sous Windows
+        pg.quit()
+    
+    def update(self):
+        
+        if time.time() - self.last_display_t > self.time_interval:
+
+            self.last_display_t = time.time()
+
             pg.draw.rect(self.screen, (255, 255, 255), pg.Rect(900,10,300,30))
             t_surf = self.font_fixed.render(str(self.simulation.t), True, (0, 0, 0))
             self.screen.blit(t_surf, (900, 10))
 
             for vehicle_id in self.parking.occupation:
-                self.draw_vehicle(self.stock.vehicles[vehicle_id])  
-
+                self.draw_vehicle(self.stock.vehicles[vehicle_id])
+            
             pg.display.update()
 
             #on trace la figure de plt
-            if self.simulation.t.day != self.last_update_day:
+            if False and self.simulation.t.day != self.last_update_day:
                 self.analysis.entree_vehicle()
                 self.analysis.sortie_vehicle()
                 self.analysis.count_vehicle()
@@ -251,11 +224,10 @@ class Display():
                 self.update_figure()
                 self.figure.canvas.draw()
                 self.last_update_day = self.simulation.t.day
-
-        # Enfin on rajoute un appel à pg.quit()
-        # Cet appel va permettre à pg de "bien s'éteindre" et éviter des bugs sous Windows
-        pg.quit()
     
+    def shutdown(self):
+        pg.quit()
+
     def block_width(self, block_id):
         if block_id == "s":
             return self.place_width
@@ -301,7 +273,7 @@ class Display():
                 color = (min(255,150-24*k*100),max(0,150+24*k*150,0),0)
         pg.draw.rect(self.screen, color, rect)
         
-        # Affichage de l'identifiant du véhicule
+        # Affichage de l'identifiant du véhicule tthrrhtyjty
         t_surf = self.font.render(str(vehicle.id), True, (0, 0, 0))
         self.screen.blit(t_surf, (x, y))
 
@@ -322,8 +294,8 @@ class Display():
 
     def show_robot(self):
         for i in range(4):
-            rect3 = pg.Rect(790, i*70 + 40, 100 ,20) #recouvrement numéro de voiture
-            rect4 = pg.Rect(700, i*70 + 60, 200, 30) #recouvrement jauge
+            rect3 = pg.Rect(990, i*70 + 40, 100 ,20) #recouvrement numéro de voiture
+            rect4 = pg.Rect(900, i*70 + 60, 200, 30) #recouvrement jauge
             pg.draw.rect(self.screen, (255,255,255), rect3) #on actualise en couvrant avec un rectangle blanc
             pg.draw.rect(self.screen, (255,255,255), rect4)
 
@@ -332,18 +304,18 @@ class Display():
             if x.vehicle: #le robot transporte un véhicule
                 if x.target: #le robot a une cible en tête
                     text = self.font_fixed.render(f"{x.vehicle.id}", True, (0, 0, 0))
-                    self.screen.blit(text, (795, i*70 + 40)) #placement du texte
+                    self.screen.blit(text, (995, i*70 + 40)) #placement du texte
 
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
                 L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
                 
-                rect = pg.Rect(700, i*70 + 60, L*30000 + 100, 30)
+                rect = pg.Rect(900, i*70 + 60, L*30000 + 100, 30)
                 pg.draw.rect(self.screen, (0, 0, 0), rect)
             
                 if x.start_time :
                     if x.goal_time > x.start_time:
                         pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
-                        rect2 = pg.Rect(700, i*70 + 60, pourc*(L*30000+100), 30)
+                        rect2 = pg.Rect(900, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
             pg.display.update()
 
