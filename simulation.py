@@ -640,7 +640,7 @@ class Event():
 
 class Algorithm():
 
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False):
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, optimization_parameters = None):
         self.robots = robots
         self.stock = stock
         self.t0 = t0
