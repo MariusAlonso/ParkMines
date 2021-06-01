@@ -57,13 +57,13 @@ env.close()
 
 learning = True
 saving = True
-timesteps = 1e3
+timesteps = 5e4
 
 
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL0611tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./resultats_2/")
 
 
     model.learn(total_timesteps=int(timesteps))

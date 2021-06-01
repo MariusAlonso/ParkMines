@@ -44,7 +44,7 @@ class MLEnv(gym.Env):
         #Lsup = np.array([10e4]+[self.parking.number_lanes + 0.9]*self.number_robots + [1]*self.number_robots)
         #self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
 
-        Lsup2 = [1000]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
+        Lsup2 = [1000]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots + [self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
         self.action_space = MultiDiscrete(Lsup2)
         
 
@@ -271,10 +271,10 @@ class MLEnv(gym.Env):
 
 
         if self.display:
-            """
+            
             self.simulation.start_display()       
             self.simulation.display.update()
             self.simulation.display.shutdown()
-            """
+          
             pass
 
