@@ -4,7 +4,7 @@ import datetime
 import time
 from sim_analysis import Analysis
 import matplotlib.pyplot as plt
-plt.ion()
+# plt.ion()
 
 class Display():
 

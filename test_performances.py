@@ -270,14 +270,14 @@ class TestTest():
         performance.variableAlgorithmsAndFlow(nb_repetitions, algorithms)
         assert 0 == 0
     
-    def testVariableAlgorithmsAnticipationTimeAndFlowRealParking(self, stock_args=(30, ), nb_repetitions=10, delays=[i for i in range(300)], display=False, algorithms=[AlgorithmRandom, AlgorithmZeroMinus], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4), datetime.timedelta(hours=8)]):
+    def testVariableAlgorithmsAnticipationTimeAndFlowRealParking(self, stock_args=(20, ), nb_repetitions=10, delays=[i for i in range(300)], factors=[i for i in range(-4, 3)], display=False, algorithms=[AlgorithmRandom, AlgorithmZeroMinus], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4), datetime.timedelta(hours=8)]):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmRandom, delays=delays)
 
         # test
-        performance.variableAlgorithmsAnticipationTimeAndFlow(nb_repetitions=nb_repetitions, algorithms=algorithms, anticipation_times=anticipation_times)
+        performance.variableAlgorithmsAnticipationTimeAndFlow(nb_repetitions=nb_repetitions, factors=factors, algorithms=algorithms, anticipation_times=anticipation_times)
         assert 0 == 0
     
     def testMark(self, algorithm, stock_args=(30, datetime.timedelta(days=150)), nb_repetitions=100):
@@ -363,11 +363,11 @@ test = TestTest()
 
 #test.testRefineAlgorithm(variation_coef=0.9, nb_steps=5, nb_repetitions=2, initial_parameters=[1., 1.1, 20., -5.])
 
-test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10.))
+#test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10.))
 
 #test.testRefineAlgorithmOnPool(variation_coef=0.75, nb_steps=10, initial_parameters=[1., 5., 100., -10])
 
 #test.testCutViewAlgorithmOnPool(start=6.5, stop=10, step=0.5, other_parameters=[100., -10.])
 #test.testLogCutViewAlgorithmOnPool(start=-10, stop=10, step=1, other_parameters=[100., -10.])
 
-#test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=10, algorithms=[AlgorithmZeroMinus])
+test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=10, stock_args=(20, ), factors=[0.6, 0.8, 1.0], algorithms=[AlgorithmZeroMinus, AlgorithmRandom], anticipation_times=[datetime.timedelta(hours=1)])

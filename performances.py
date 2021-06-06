@@ -1192,19 +1192,20 @@ class Performance():
 
 
         for i in range(10):
+            print("i : ", i)
             path = root_path_marius + 'stock_' + str(i) + '.csv'
             simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
-                
-                average_mark += dashboard.mark()
+                mark = dashboard.mark()
+                print(mark)
+                average_mark += mark
                 effective_nb_repetitions += 1
 
         try:
             average_mark /= effective_nb_repetitions
         except ZeroDivisionError:
             average_mark = 1000
-
         return average_mark
 
 

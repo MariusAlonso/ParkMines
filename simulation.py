@@ -22,6 +22,7 @@ class Simulation():
         self.parking = parking
         self.print_in_terminal = print_in_terminal
         self.optimization_parameters = optimization_parameters
+        self.last_printed_date = None
 
         self.before_deposit_delays = []
         self.after_deposit_delays = []
@@ -89,6 +90,9 @@ class Simulation():
         """
         if self.display:
             self.display.show_robot()
+        if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
+            print(self.t)
+            self.last_printed_date = self.t
         if self.print_in_terminal:
             print(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nEXECUTION at time {self.t}")
             print("event :", event)
@@ -521,9 +525,9 @@ class Simulation():
             self.display.update()
 
         if self.max_t:
-            return (bool(self.vehicles_left_to_handle) and self.t <= self.max_t), event
+            return (bool(self.vehicles_left_to_handle) and self.t <= self.max_t and self.events), event
         else:
-            return (bool(self.vehicles_left_to_handle)), event
+            return (bool(self.vehicles_left_to_handle) and self.events), event
             
     def complete(self):
         """
@@ -1078,10 +1082,6 @@ class WeightAlgorithm(BaseAlgorithm):
             return min_lane_end
         # sinon c'est qu'aucune extrémité de lane n'est disponible (le poids minimum reste à None) : erreur
         else:
-            if True: #self.print_in_terminal:
-                print("ERREUR DE PLACEMENT")
-                print(self.parking)
-                print(self.locked_lanes)
             raise ValueError("le placement n'a pas pu être effectué")
     
     def weight(self, vehicle, start_position, lane_end, date):
