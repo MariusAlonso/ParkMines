@@ -20,7 +20,10 @@ class Dashboard():
         puis calcule la performance
         """
         self.completed = True
-        simulation.complete()
+        try:
+            simulation.complete()
+        except ValueError:
+            self.completed = False
         self.simulation = simulation
 
     def averageIntermediateMovesPerVehicle(self):
@@ -1185,9 +1188,11 @@ class Performance():
         effective_nb_repetitions = 0
         average_mark = 0
         root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        root_path_marius = "C:/Users/alons/desktop/MINES/INFO/ParkMines/inputs/pool_for_optim/"
+
 
         for i in range(10):
-            path = root_path + 'stock_' + str(i) + '.csv'
+            path = root_path_marius + 'stock_' + str(i) + '.csv'
             simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation

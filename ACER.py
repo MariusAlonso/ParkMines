@@ -75,7 +75,7 @@ env.close()
 
 # env = DummyVecEnv([lambda: env])
 
-learning = True
+learning = False
 saving = False
 timesteps = 1e9
 

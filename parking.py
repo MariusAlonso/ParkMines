@@ -14,8 +14,6 @@ class Parking():
         self.blocks = blocks
         self.number_blocks = len(blocks)
         self.occupation = occupation
-
-        print("Dictionnaire vide :", occupation)
         """
         Attributs ne variant pas au cours d'une simulation
         """
@@ -120,8 +118,10 @@ class Parking():
         departure : (block_id, lane_id, side)
         arrival : (block_id, lane_id, side)
         """
+        """
         if True:
             return datetime.timedelta(minutes=5)
+        """
         if departure == arrival:
             return datetime.timedelta(0,30, minutes=1)
         else:
@@ -164,10 +164,12 @@ class Parking():
         if side == "bottom":
             return "top"
 
-    def future_config(self, block_id, lane_id, robots, stock, min_time = None, max_time = None):
+    def future_config(self, lane, block_id, lane_id, robots, stock, min_time = None, max_time = None, on_place=False):
 
-        lane = self.blocks[block_id].lanes[lane_id]
-        events_to_reverse = []
+        if on_place:
+            lane_copy = lane
+        else:
+            lane_copy = deepcopy(lane)
 
         for robot in robots:
             if not robot.doing is None:
@@ -176,14 +178,15 @@ class Parking():
                         if robot.goal_position[0:2] == (block_id, lane_id):
                             side = robot.goal_position[2]
                             if robot.vehicle is None:
-                                events_to_reverse.append((side, lane.pop(side)))
+                                lane_copy.pop(side)
                             else:
-                                lane.push(robot.vehicle.id, side, stock)
-                                events_to_reverse.append((side,))
+                                lane_copy.push(robot.vehicle.id, side, stock)
         
-        return events_to_reverse
+        return lane_copy
     
     def reverse_config(self, block_id, lane_id, events_to_reverse, stock):
+
+        input("ATTENTION\nParking.reverse_config NON FONCTIONNEL")
 
         lane = self.blocks[block_id].lanes[lane_id]
 

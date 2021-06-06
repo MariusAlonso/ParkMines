@@ -357,13 +357,13 @@ test = TestTest()
 
 #test.testVariableAlgorithmsAndFlowRealParking(nb_repetitions=30, algorithms=[AlgorithmRandom, AlgorithmNewUnimodal, AlgorithmUnimodalRefined0, AlgorithmZeroMinus])
 
-#test.testMark(AlgorithmRandom)
+#test.testMarkOnPool(AlgorithmRandom)
 #test.testMark(AlgorithmNewUnimodal)
 #test.testMark(AlgorithmZeroMinus)
 
 #test.testRefineAlgorithm(variation_coef=0.9, nb_steps=5, nb_repetitions=2, initial_parameters=[1., 1.1, 20., -5.])
 
-#test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10.))
+test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10.))
 
 #test.testRefineAlgorithmOnPool(variation_coef=0.75, nb_steps=10, initial_parameters=[1., 5., 100., -10])
 
