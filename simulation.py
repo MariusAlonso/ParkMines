@@ -88,8 +88,6 @@ class Simulation():
         print(self.deposit_events)
         print(self.pending_deposits)
         """
-        if self.display:
-            self.display.show_robot()
         if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
             print(self.t)
             self.last_printed_date = self.t
@@ -229,9 +227,6 @@ class Simulation():
 
                     
                     self.nb_interface -= 1 # un véhicule sort de l'interface pour être rendu
-                    
-                    if self.display:
-                        self.display.erase_vehicle(vehicle)
 
                     del self.parking.occupation[event.vehicle.id]
 
@@ -825,7 +820,7 @@ class BaseAlgorithm(Algorithm):
 
                     # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
                     for robot in self.robots:
-                        if not (robot.vehicle is None) and robot.goal_position == (block_id, lane_id, side):
+                        if not (robot.vehicle is None) and robot.doing and robot.goal_position == (block_id, lane_id, side):
                             self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
                             robot.goal_position = self.place(robot.vehicle, robot.start_position, current_time)
                             # Calcul du temps de trajet faux
@@ -852,7 +847,7 @@ class BaseAlgorithm(Algorithm):
 
                 # Si un robot voulait placer un véhicule dans la lane et le côté par lequel on veut sortir le véhicule cible du retrieval
                 for robot in self.robots:
-                    if not (robot.vehicle is None) and robot.goal_position == (block_id, lane_id, side):
+                    if not (robot.vehicle is None) and robot.doing and robot.goal_position == (block_id, lane_id, side):
                         self.parking.blocks[block_id].lanes[lane_id].push_cancel_reserve(side)
                         robot.goal_position = self.place(robot.vehicle, robot.start_position, current_time)
                         # Calcul du temps de trajet faux
@@ -865,15 +860,16 @@ class BaseAlgorithm(Algorithm):
 
         # Si un robot veut retirer de l'interface un véhicule cible d'un retrieval   
         for robot in self.robots:
-            if (not robot.target is None) and robot.target.event_type == "empty_interface" and robot.target.vehicle.id == event.vehicle.id:
-                robot.target = None
-                robot.doing.canceled = True
-                robot.doing = None
-                _, lane_id, _ = robot.goal_position
-                self.parking.blocks[0].targeted[lane_id] = False
-                self.parking.blocks[0].lanes[lane_id].pop_cancel_reserve("bottom")
-                robot.goal_position = robot.start_position
-                self.assign_task(robot)
+            if (not robot.goal_position is None) and robot.doing:
+                block_id, lane_id, side = robot.goal_position
+                if block_id == 0 and self.parking.blocks[0].lanes[lane_id].list_vehicles[0] == event.vehicle.id:
+                    robot.target = None
+                    robot.doing.canceled = True
+                    robot.doing = None
+                    self.parking.blocks[0].targeted[lane_id] = False
+                    self.parking.blocks[0].lanes[lane_id].pop_cancel_reserve("bottom")
+                    robot.goal_position = robot.start_position
+                    self.assign_task(robot)
     
     def update_deposit(self, vehicle, success, current_time):
         self.update(current_time)
