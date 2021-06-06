@@ -24,7 +24,7 @@ class Dashboard():
         self.completed = True
         try:
             simulation.complete()
-        except:
+        except ValueError:
             self.completed = False
         self.simulation = simulation
 
@@ -138,6 +138,7 @@ class Performance():
         for _ in range(nb_repetitions):
             simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
             dashboard = Dashboard(simulation)
+            print(dashboard.simulation.retrieval_delays)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
                 average_intermediate_mpv += dashboard.averageIntermediateMovesPerVehicle()
                 average_before_deposit_delay += dashboard.averageBeforeDepositDelay()
@@ -1189,22 +1190,25 @@ class Performance():
         effective_nb_repetitions = 0
         average_mark = 0
         root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
-        #root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
+        root_path_laure = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
+        root_path_marius = "C:/Users/alons/desktop/MINES/INFO/ParkMines/inputs/pool_for_optim/"
+
 
         for i in range(10):
-            path = root_path + 'stock_' + str(i) + '.csv'
+            print("i : ", i)
+            path = root_path_marius + 'stock_' + str(i) + '.csv'
             simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
-                
-                average_mark += dashboard.mark()
+                mark = dashboard.mark()
+                print(mark)
+                average_mark += mark
                 effective_nb_repetitions += 1
 
         try:
             average_mark /= effective_nb_repetitions
         except ZeroDivisionError:
             average_mark = 1000
-
         return average_mark
 
 

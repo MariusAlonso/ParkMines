@@ -5,7 +5,7 @@ import pandas as pd
 import time as comptime
 import numpy as np
 from sklearn.mixture import GaussianMixture
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # En jours
 mu_deposit_order = 2
@@ -53,6 +53,11 @@ def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=da
     mvmts = pd.DataFrame(columns = ["DEPOSIT", "RETRIEVAL", "ID", "ORDER_DEPOSIT", "ORDER_RETRIEVAL"])
     date = start_date
 
+    gm = GaussianMixture(n_components=7, covariance_type='spherical')
+    gm.weights_ = np.array([0.12,0.32,0.125,0.05,0.02,0.005,0.36])
+    gm.means_ = np.array([[3.],[7.],[14.],[21.],[28.],[35.],[12.]])
+    gm.covariances_ = np.array([3.,1.,1.,1.,1.,1.,30.])
+
     while date - start_date < time:
 
         weekday = date.weekday()
@@ -61,7 +66,7 @@ def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=da
         for _ in range(nb_entrances):
     
             while True:
-                days_to_retrieval = int(round(random.normalvariate(mu_stay_duration, sigma_stay_duration)))
+                days_to_retrieval = int(np.round(gm.sample()[0]))
                 if days_to_retrieval >= 0:
                     break
             while True:
@@ -137,7 +142,10 @@ def generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31),
         
         date += datetime.timedelta(days=1)
     
-    return dict_vehicles
+    if dict_vehicles:
+        return dict_vehicles
+    else:
+        return generateStock(Vehicle, vehicles_per_day, time, start_date)
 
 if __name__ == "__main__":
 
@@ -160,8 +168,10 @@ if __name__ == "__main__":
             if days_to_retrieval >= 0:
                 break
         res.append(days_to_retrieval)
+    """
     plt.hist(res, bins = range(40), density = True)
     plt.show()
+    """
 
 
 
