@@ -46,7 +46,7 @@ class Display():
     def __bool__(self):
         return True
 
-    def __init__(self, t0, stock, robots, parking, AlgorithmType, place_width=15, place_length=20, print_in_terminal=False):
+    def __init__(self, t0, stock, robots, parking, AlgorithmType, place_width=15, place_length=20, print_in_terminal=False, optimization_parameters=None):
         self.stock = stock
         self.robots = robots
         self.t = t0
@@ -56,11 +56,10 @@ class Display():
 
         self.last_update_day = 0
 
-        self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal, self)
+        self.simulation = Simulation(t0, stock, robots, parking, AlgorithmType, print_in_terminal=print_in_terminal, display=self, optimization_parameters=optimization_parameters)
         self.analysis = Analysis(self.simulation)
         self.speed = 0
         self.time_interval = 0
-
 
         pg.init()
         self.screen = pg.display.set_mode((1200, 800))

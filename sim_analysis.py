@@ -68,7 +68,10 @@ class Analysis():
 
     def max_interface(self):    
         for jour in self.simulation.nb_sortie.keys():
-            self.nb_vehicles_interface_array[jour] = self.simulation.nb_vehicles_interface[jour]
+            try:
+                self.nb_vehicles_interface_array[jour] = self.simulation.nb_vehicles_interface[jour]
+            except KeyError:
+                self.nb_vehicles_interface_array[jour] = -1
 
     def flux(self):
         for jour in self.simulation.nb_sortie.keys():

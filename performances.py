@@ -93,7 +93,7 @@ class Dashboard():
         mark = 0
         nb_vehicles = len(self.simulation.stock)
 
-        for delay in range(600):
+        for delay in range(120):
             mark += pow(np.sum(datetime.timedelta(minutes=delay) < retrieval_delays) - np.sum(datetime.timedelta(minutes=delay+1) < retrieval_delays), 3/2)
         
         mark /= nb_vehicles
@@ -1188,8 +1188,8 @@ class Performance():
         """
         effective_nb_repetitions = 0
         average_mark = 0
-        #root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
-        root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
+        root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        #root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
 
         for i in range(10):
             path = root_path + 'stock_' + str(i) + '.csv'
@@ -1306,9 +1306,9 @@ class Performance():
             # si on arrive à améliorer le coût : on rapproche le coefficient de variation de la cible haute (proche de 1)
             if changed:
                 variation_coef = sqrt(variation_coef*high_variation_coef)
-            # si on n'arrive pas à améliorer le coût, i.e. on est dans un minimum local : on rapproche le coefficient de variation de la cible basse (plus proche de 0)
+            # si on n'arrive pas à améliorer le coût, i.e. on est dans un minimum local : on rapproche le coefficient de variation de 0 (assez brutal)
             else:
-                variation_coef = sqrt(variation_coef*low_variation_coef)
+                variation_coef = variation_coef*low_variation_coef
         return marks, path
 
     def cutViewZeroMinusOnPool(self, start=0.5, stop=10, step=0.5, other_parameters=[100., -10.]):
@@ -1336,7 +1336,7 @@ class Performance():
                 j += 1
             i += 1
             j = 0
-        classeur.save(r"C:\Users\laure\Desktop\git\ParkMines\inputs\pool_for_optim\stock.xls")
+        classeur.save(r"C:\Users\LOUIS\mines\ParkMines\inputs\pool_for_optim\stock.xls")
         return marks
     
     def logCutViewZeroMinusOnPool(self, start=-3, stop=5, step=1, other_parameters=[100., -10.]):

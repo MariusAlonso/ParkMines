@@ -1,3 +1,4 @@
+#from _typeshed import SupportsLessThan     ???
 from datetime import datetime
 from parking import *
 from simulation import *
@@ -312,15 +313,55 @@ class TestTest():
         print(f"{algorithm.__repr__()} algorithm mark :  {mark}")
         assert 0 == 0
     
-    def testRefineAlgorithmOnPool(self, variation_coef=0.9, nb_steps=10, initial_parameters=[1., 1.1, 20., -5.]):
+    def testRefineAlgorithmOnPool(self, low_variation_coef=0.5, high_variation_coef=0.9, nb_steps=10, initial_parameters=[1., 1.1, 20., -5.]):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmZeroMinus)
 
         # test
-        marks = performance.refineParametersZeroMinusOnPool(variation_coef=variation_coef, nb_steps=nb_steps, initial_parameters=initial_parameters)
-        print(marks)
+        marks, path = performance.refineParametersZeroMinusOnPool(low_variation_coef=low_variation_coef, high_variation_coef=high_variation_coef, nb_steps=nb_steps, initial_parameters=initial_parameters)
+        for line in path:
+            print(line)
+        #récupération des résultats dans un classeur
+
+        # On créer un "classeur"
+        classeur = Workbook()
+        # On ajoute une feuille au classeur
+        feuille_chemin = classeur.add_sheet("chemin")
+
+        columns_titles = ["alpha", "beta", "new_lane", "dist_ext", "mark", "variation_coef"]
+        j = 0
+        for title in columns_titles:
+                feuille_chemin.write(j, 0, title)
+                j += 1
+
+        i = 1
+        for line in path:
+            (alpha, beta, new_lane, dist_ext), mark, variation_coef = line
+            columns = [alpha, beta, new_lane, dist_ext, mark, variation_coef]
+            j = 0
+            for value in columns:
+                feuille_chemin.write(j, i, value)
+                j += 1
+            i +=1
+        
+        # On ajoute une feuille au classeur
+        feuille_chemin = classeur.add_sheet("points")
+
+        columns_titles = ["alpha", "beta", "new_lane", "dist_ext", "mark"]
+        for title in columns_titles:
+                feuille_chemin.write(i, j, title)
+        
+        i = 1
+        for parameters, mark in marks.items():
+            alpha, beta, new_lane, dist_ext = parameters
+            columns = [alpha, beta, new_lane, dist_ext, mark]
+            j = 0
+            for value in columns:
+                feuille_chemin.write(i, j, value)
+
+        classeur.save(r"C:\Users\LOUIS\mines\ParkMines\results.xls")
         assert 0 == 0
 
     def testCutViewAlgorithmOnPool(self, start=0.5, stop=10, step=0.5, other_parameters=[100., -10.]):
@@ -365,9 +406,9 @@ test = TestTest()
 
 #test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10.))
 
-#test.testRefineAlgorithmOnPool(variation_coef=0.75, nb_steps=10, initial_parameters=[1., 5., 100., -10])
+#test.testRefineAlgorithmOnPool(nb_steps=20, initial_parameters=[10., 30., 30., -5.])
 
-#test.testCutViewAlgorithmOnPool(start=6.5, stop=10, step=0.5, other_parameters=[100., -10.])
+test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
 #test.testLogCutViewAlgorithmOnPool(start=-10, stop=10, step=1, other_parameters=[100., -10.])
 
 #test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=10, algorithms=[AlgorithmZeroMinus])
