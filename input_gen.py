@@ -47,7 +47,7 @@ def random_hour(typ):
     
     return datetime.timedelta(hours=hour)
 
-def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0), path="inputs\\mvmts.csv"):
+def generate(vehicles_per_day=5, time=datetime.timedelta(days=100), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0), path="inputs\\mvmts.csv"):
 
     vehicle_id = 1
     mvmts = pd.DataFrame(columns = ["DEPOSIT", "RETRIEVAL", "ID", "ORDER_DEPOSIT", "ORDER_RETRIEVAL"])

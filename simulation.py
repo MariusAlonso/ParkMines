@@ -90,9 +90,9 @@ class Simulation():
         """
         if self.display:
             self.display.show_robot()
-        if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
-            print(self.t)
-            self.last_printed_date = self.t
+        #if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
+        #    print(self.t)
+        #    self.last_printed_date = self.t
         if self.print_in_terminal:
             print(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nEXECUTION at time {self.t}")
             print("event :", event)

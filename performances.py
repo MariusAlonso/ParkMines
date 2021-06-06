@@ -138,7 +138,7 @@ class Performance():
         for _ in range(nb_repetitions):
             simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
             dashboard = Dashboard(simulation)
-            print(dashboard.simulation.retrieval_delays)
+            #print(dashboard.simulation.retrieval_delays)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
                 average_intermediate_mpv += dashboard.averageIntermediateMovesPerVehicle()
                 average_before_deposit_delay += dashboard.averageBeforeDepositDelay()
@@ -1195,8 +1195,7 @@ class Performance():
 
 
         for i in range(10):
-            print("i : ", i)
-            path = root_path_marius + 'stock_' + str(i) + '.csv'
+            path = root_path + 'stock_' + str(i) + '.csv'
             simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
