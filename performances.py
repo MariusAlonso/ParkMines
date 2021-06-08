@@ -1200,7 +1200,6 @@ class Performance():
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
                 mark = dashboard.mark()
-                print(mark)
                 average_mark += mark
                 effective_nb_repetitions += 1
 

@@ -54,7 +54,6 @@ class Simulation():
         # print(self.vehicles_left_to_handle)
 
         self.vehicles_to_retrieve = []
-        print(len(self.stock.vehicles))
     
         # Dictionnaire des extrémités de lanes
         self.locked_lanes = {}
@@ -1086,7 +1085,7 @@ class WeightAlgorithm(BaseAlgorithm):
     
     def weight(self, vehicle, start_position, lane_end, date):
         return 0
- 
+
 
 class AlgorithmZeroMinus(WeightAlgorithm):
 
@@ -1149,7 +1148,6 @@ class AlgorithmZeroMinus(WeightAlgorithm):
         self.start_new_lane_weight = start_new_lane_weight
         self.distance_to_lane_end_coef = distance_to_lane_end_coef
 
-        print(self.optimization_parameters)
         self.optimization_parameters = list(optimization_parameters)    # /!\ changement de type
 
     def weight(self, vehicle, start_position, lane_end, date):

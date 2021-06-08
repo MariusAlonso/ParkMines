@@ -408,7 +408,7 @@ test = TestTest()
 
 #test.testRefineAlgorithmOnPool(nb_steps=20, initial_parameters=[10., 30., 30., -5.])
 
-#test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
+test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
 #test.testLogCutViewAlgorithmOnPool(start=-10, stop=10, step=1, other_parameters=[100., -10.])
 
-test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=50, stock_args=(30, ), algorithms=[AlgorithmZeroMinus, AlgorithmRandom], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4)])
+#test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=50, stock_args=(30, ), algorithms=[AlgorithmZeroMinus, AlgorithmRandom], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4)])
