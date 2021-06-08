@@ -294,7 +294,7 @@ class Display():
             rect = pg.Rect(x, y, self.place_length, self.place_width)           
         pg.draw.rect(self.screen, (100, 100, 100), rect)
 
-    def show_robot(self):
+    def show_robot(self): 
         for i in range(4):
             rect3 = pg.Rect(990, i*70 + 40, 100 ,20) #recouvrement numéro de voiture
             rect4 = pg.Rect(900, i*70 + 60, 200, 30) #recouvrement jauge
@@ -309,17 +309,20 @@ class Display():
                     self.screen.blit(text, (995, i*70 + 40)) #placement du texte
 
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
-                L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
+                L = 10 #(x.goal_time - x.start_time)/datetime.timedelta(1,1)
                 
                 rect = pg.Rect(900, i*70 + 60, L*30000 + 100, 30)
                 pg.draw.rect(self.screen, (0, 0, 0), rect)
             
                 if x.start_time :
+                    """
                     if x.goal_time > x.start_time:
-                        pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
+                        pourc = 10# (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
                         rect2 = pg.Rect(900, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
+                    """
             pg.display.update()
+      
 
     def update_figure(self):
         

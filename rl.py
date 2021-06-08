@@ -177,7 +177,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible):
 
             if need_wake_up:
                 wake_up_date = self.simulation.t + datetime.timedelta(minutes= 5*(int(action[self._dict("idleness_date")])+1))
-                print("Wake_up", wake_up_date)
+                #print("Wake_up", wake_up_date)
                 self.current_wake_up = Event(None, wake_up_date, "wake_up_robots", None)
                 self.events.add(self.current_wake_up)
             else:
@@ -358,6 +358,7 @@ class Observation():
                 self.data[self._dict("lanes_ends", number=lane_global_id),0:2] = np.array([lane.top_position, lane.bottom_position])
             for position, vehicle_id in enumerate(lane.list_vehicles):
                 if vehicle_id:
+                    #print(self._dict("lanes", number=lane_global_id, place=position), (self.simulation.stock.vehicles[vehicle_id].retrieval - self.simulation.t).total_seconds())
                     self.data[self._dict("lanes", number=lane_global_id, place=position)] = (self.simulation.stock.vehicles[vehicle_id].retrieval - self.simulation.t).total_seconds()
                 else:
                     self.data[self._dict("lanes", number=lane_global_id, place=position)] = 0

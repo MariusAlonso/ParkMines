@@ -14,7 +14,7 @@ class MLEnv(gym.Env):
     def __init__(self, display = False):
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
         tiny_parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-        self.parking = tiny_parking
+        self.parking = real_parking
         self.number_robots = 1
         self.simulation_length = 3
         self.daily_flow = 3
@@ -24,6 +24,8 @@ class MLEnv(gym.Env):
         self.last_step_t = None
         self.max_stock_visible = self.max_number_vehicles
         self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
+        self.time_max_waiting = 5*24*3600   #temps maximal de retard admis
+        self.max_penalty = 1e8
         
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
         self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
@@ -217,12 +219,20 @@ class MLEnv(gym.Env):
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
-                # print("punition=", 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600)
+                if (self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds() > self.time_max_waiting:
+                    self.simulation.algorithm.reward -= self.max_penalty
+                    self.done = True
+                    
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
+                
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
+                if (self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds() > self.time_max_waiting:
+                    self.simulation.algorithm.reward -= self.max_penalty
+                    self.done = True
+                   
         """
         for lane in self.observation.data[self._dict("lanes")[0]: self._dict("lanes")[1]]:
             self.lanes_occupated = 0
@@ -230,10 +240,10 @@ class MLEnv(gym.Env):
                 self.lanes_occupated += 1
         self.simulation.algorithm.reward -= 10*self.lanes_occupated
         """
-
         self.done = self.done or not self.simulation.vehicles_left_to_handle
         #print(self.observation.data)
         #print(self.simulation.deposit_events)
+    
 
         return self.observation.data, self.simulation.algorithm.reward, self.done, {}
 
@@ -271,10 +281,10 @@ class MLEnv(gym.Env):
 
 
         if self.display:
-            
+            """
             self.simulation.start_display()       
             self.simulation.display.update()
             self.simulation.display.shutdown()
-          
+            """
             pass
 

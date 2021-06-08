@@ -55,15 +55,15 @@ env.close()
 
 # env = DummyVecEnv([lambda: env])
 
-learning = True
+learning = False
 saving = True
-timesteps = 5e4
+timesteps = 2e6
 
 
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./resultats_2/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./resultats_essai_RL_2e6/")
 
 
     model.learn(total_timesteps=int(timesteps))
@@ -119,14 +119,14 @@ def evaluate_model(model, repetition, _input=False):
 
 RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible)
 
-performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
-performance.printAverageDashboard(10)
-"""
+#performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
+#performance.printAverageDashboard(10)
+
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
 simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = False)
 simulation.start_display(12, 20)
 simulation.display.run()
-"""
+
 
 """
 # ray.init(include_dashboard=False)
