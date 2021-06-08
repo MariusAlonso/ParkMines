@@ -717,8 +717,8 @@ class Algorithm():
 
 class AlgorithmRandom(Algorithm):
 
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, anticipation_time=datetime.timedelta(hours=8)):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, anticipation_time)
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, anticipation_time=datetime.timedelta(hours=8), optimization_parameters = None):
+        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, anticipation_time, optimization_parameters = optimization_parameters)
 
     def place(self, vehicle, start_position, time, max_iter=1000):
         self.nb_placements += 1

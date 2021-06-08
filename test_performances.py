@@ -378,7 +378,7 @@ test = TestTest()
 
 #test.testRefineAlgorithmOnPool(variation_coef=0.75, nb_steps=10, initial_parameters=[1., 5., 100., -10])
 
-#test.testCutViewAlgorithmOnPool(start=6.5, stop=10, step=0.5, other_parameters=[100., -10.])
+test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
 #test.testLogCutViewAlgorithmOnPool(start=-3, stop=5, step=1, other_parameters=[100., -10.])
 
-test.testMarksList(AlgorithmZeroMinus)
+#test.testMarksList(AlgorithmRandom)
