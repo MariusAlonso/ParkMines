@@ -1214,8 +1214,8 @@ class Performance():
         """
         calcule les "notes" de l'algorithme : somme(retards^3/2)/nb_véhicules pour 10 stocks
         """
-        #root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
-        root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
+        root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        #root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
         MarksList = []
 
         for i in range(10):
