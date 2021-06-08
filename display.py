@@ -211,6 +211,8 @@ class Display():
             for vehicle_id in self.parking.occupation:
                 self.draw_vehicle(self.stock.vehicles[vehicle_id])
             
+            self.show_robot()
+            
             pg.display.update()
 
             #on trace la figure de plt
@@ -293,6 +295,8 @@ class Display():
             y = y_block + (self.place_width+1)*lane_id + 1
             rect = pg.Rect(x, y, self.place_length, self.place_width)           
         pg.draw.rect(self.screen, (100, 100, 100), rect)
+        if not self.speed:
+            pg.display.update()
 
     def show_robot(self):
         for i in range(4):
@@ -304,10 +308,10 @@ class Display():
         for i, x in enumerate(self.robots): #on parcourt tous les robots utilisés
             # pg.display.update()             
             if x.vehicle: #le robot transporte un véhicule
-                if x.target: #le robot a une cible en tête
-                    text = self.font_fixed.render(f"{x.vehicle.id}", True, (0, 0, 0))
-                    self.screen.blit(text, (995, i*70 + 40)) #placement du texte
+                text = self.font_fixed.render(f"{x.vehicle.id}", True, (0, 0, 0))
+                self.screen.blit(text, (995, i*70 + 40)) #placement du texte
 
+            if x.doing:
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
                 L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
                 
@@ -319,7 +323,6 @@ class Display():
                         pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
                         rect2 = pg.Rect(900, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
-            pg.display.update()
 
     def update_figure(self):
         
