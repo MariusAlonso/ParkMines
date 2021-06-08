@@ -4,7 +4,7 @@ import datetime
 import time
 from sim_analysis import Analysis
 import matplotlib.pyplot as plt
-plt.ion()
+# plt.ion()
 
 class Display():
 
@@ -187,13 +187,13 @@ class Display():
             if complete:
                 if time.time() - self.last_display_t > self.time_interval:
                     if self.speed == 0:
-                        complete = self.simulation.next_event()
+                        complete = self.simulation.next_event()[0]
                     if self.speed == 1:
-                        complete = self.simulation.next_event(self.simulation.t + datetime.timedelta(minutes=15))
+                        complete = self.simulation.next_event(self.simulation.t + datetime.timedelta(minutes=15), None)[0]
                     if self.speed == 2:
-                        complete = self.simulation.next_event(self.simulation.t.replace(minute=0, second=0) + datetime.timedelta(hours=1))
+                        complete = self.simulation.next_event(self.simulation.t.replace(minute=0, second=0) + datetime.timedelta(hours=1), None)[0]
                     if self.speed == 3:
-                        complete = self.simulation.next_event(self.simulation.t.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1))
+                        complete = self.simulation.next_event(self.simulation.t.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1), None)[0]
 
         # Enfin on rajoute un appel à pg.quit()
         # Cet appel va permettre à pg de "bien s'éteindre" et éviter des bugs sous Windows
@@ -212,16 +212,16 @@ class Display():
             for vehicle_id in self.parking.occupation:
                 self.draw_vehicle(self.stock.vehicles[vehicle_id])
             
-            print("\n\n\n\ntthrrhtyjty\n\n\n\n")
+            self.show_robot()
             
             pg.display.update()
 
             #on trace la figure de plt
-            if False and self.simulation.t.day != self.last_update_day:
+            if False: #self.simulation.t.day != self.last_update_day:
                 self.analysis.entree_vehicle()
                 self.analysis.sortie_vehicle()
                 self.analysis.count_vehicle()
-                self.analysis.count_vehicle_interface()
+                self.analysis.max_interface()
                 self.analysis.flux()
                 self.update_figure()
                 self.figure.canvas.draw()
@@ -264,15 +264,18 @@ class Display():
             x = x_block + (self.place_length+1)*position + (self.place_width - 3*self.place_width//4)//2 + 1
             y = y_block + (self.place_width+1)*lane_id + (self.place_width - 3*self.place_width//4)//2 + 1
             rect = pg.Rect(x, y, 3*self.place_length//4, 3*self.place_width//4)  
+        
+        color1 = np.array([0,120,0])
+        color2 = np.array([255,255,0])
+        color3 = np.array([255,0,0])
 
-        if self.simulation.t < vehicle.order_retrieval:
-            color = (75,200,0)
+        k = (vehicle.retrieval - self.simulation.t).total_seconds()
+        if k >= 0:
+            k = max(0,min(1,k/(86400*30)))**(1/3)
+            color = color2 + k*(color1-color2)
         else:
-            k = (vehicle.retrieval - self.simulation.t).total_seconds()/86400
-            if k >= 0:
-                color = (max(150-k*150/30,0),min(150+k*100/30,255),0)
-            else:
-                color = (min(255,150-24*k*100),max(0,150+24*k*150,0),0)
+            k = 0.5*max(0,min(1,-k/(86400)))**(1/3) + 0.5
+            color = color2 + k*(color3-color2)
         pg.draw.rect(self.screen, color, rect)
         
         # Affichage de l'identifiant du véhicule
@@ -293,6 +296,8 @@ class Display():
             y = y_block + (self.place_width+1)*lane_id + 1
             rect = pg.Rect(x, y, self.place_length, self.place_width)           
         pg.draw.rect(self.screen, (100, 100, 100), rect)
+        if not self.speed:
+            pg.display.update()
 
     def show_robot(self): 
         for i in range(4):
@@ -304,10 +309,10 @@ class Display():
         for i, x in enumerate(self.robots): #on parcourt tous les robots utilisés
             # pg.display.update()             
             if x.vehicle: #le robot transporte un véhicule
-                if x.target: #le robot a une cible en tête
-                    text = self.font_fixed.render(f"{x.vehicle.id}", True, (0, 0, 0))
-                    self.screen.blit(text, (995, i*70 + 40)) #placement du texte
+                text = self.font_fixed.render(f"{x.vehicle.id}", True, (0, 0, 0))
+                self.screen.blit(text, (995, i*70 + 40)) #placement du texte
 
+            if x.doing:
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
                 L = 10 #(x.goal_time - x.start_time)/datetime.timedelta(1,1)
                 
@@ -315,14 +320,11 @@ class Display():
                 pg.draw.rect(self.screen, (0, 0, 0), rect)
             
                 if x.start_time :
-                    """
                     if x.goal_time > x.start_time:
                         pourc = 10# (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
                         rect2 = pg.Rect(900, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
-                    """
-            pg.display.update()
-      
+                    
 
     def update_figure(self):
         
@@ -331,20 +333,24 @@ class Display():
         t = [k for k in range(n)]
         plt.clf()
 
-        plt.subplot(3,1,1)
+        plt.subplot(4,1,1)
         plt.plot(t, [0]*n, color='white') #permet de tracer la fenêtre aux bonnes dimensions
         plt.plot(self.analysis.nb_entree_array, label="Nombre d'entrées")
         plt.plot(self.analysis.nb_sortie_array, label="Nombre de sorties")
         plt.ylabel('Nombre de voitures')
         plt.legend()
 
-        plt.subplot(3,1,2)
+        plt.subplot(4,1,2)
         plt.plot(t, [1] + [0]*(n-1), color='white')
         plt.plot(self.analysis.taux_occupation_array, label="Taux d'occupation du parking")
-        plt.plot(self.analysis.taux_occupation_interface_array, label="Taux d'occupation de l'interface")
         plt.legend()
 
-        plt.subplot(3,1,3)
+        plt.subplot(4,1,3)
+        plt.plot(t, [1] + [0]*(n-1), color='white')
+        plt.plot(self.analysis.nb_vehicles_interface_array, label="Occupation maximale de l'interface")
+        plt.legend()
+
+        plt.subplot(4,1,4)
         plt.plot(t, [0]*n, color='white')
         plt.plot(self.analysis.flux_moyen_array)
         plt.xlabel('Jour')

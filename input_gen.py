@@ -47,11 +47,16 @@ def random_hour(typ):
     
     return datetime.timedelta(hours=hour)
 
-def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0)):
+def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0), path="inputs\\mvmts.csv"):
 
     vehicle_id = 1
     mvmts = pd.DataFrame(columns = ["DEPOSIT", "RETRIEVAL", "ID", "ORDER_DEPOSIT", "ORDER_RETRIEVAL"])
     date = start_date
+
+    gm = GaussianMixture(n_components=7, covariance_type='spherical')
+    gm.weights_ = np.array([0.12,0.32,0.125,0.05,0.02,0.005,0.36])
+    gm.means_ = np.array([[3.],[7.],[14.],[21.],[28.],[35.],[12.]])
+    gm.covariances_ = np.array([3.,1.,1.,1.,1.,1.,30.])
 
     while date - start_date < time:
 
@@ -61,7 +66,7 @@ def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=da
         for _ in range(nb_entrances):
     
             while True:
-                days_to_retrieval = int(round(random.normalvariate(mu_stay_duration, sigma_stay_duration)))
+                days_to_retrieval = int(np.round(gm.sample()[0]))
                 if days_to_retrieval >= 0:
                     break
             while True:
@@ -90,8 +95,8 @@ def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=da
             vehicle_id += 1
         
         date += datetime.timedelta(days=1)
-
-    mvmts.to_csv("inputs\\mvmts.csv", index=False)
+    
+    mvmts.to_csv(path)
 
 
 def generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0)):

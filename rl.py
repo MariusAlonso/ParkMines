@@ -92,7 +92,7 @@ def rl_algorithm_builder2(model, _dict, number_arguments):
     
     return RLAlgorithm
 
-def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible):
+def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, print_action=False):
 
     class RLAlgorithm(Algorithm):
 
@@ -108,6 +108,8 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible):
             self.observation = Observation(t0, self.simulation, number_arguments, _dict, max_stock_visible)
         
         def take_decision(self, action, current_time):
+            if print_action:
+                print(action)
             init, end = self._dict("robot_pick_lane")
             init2, end2 = self._dict("robot_pick_side", action_space=True)
             init3, end3 = self._dict("robot_drop_lane", action_space=True) 
@@ -316,7 +318,7 @@ class Observation():
 
         for i in range(self.max_stock_visible):
             if i < len(self.simulation.deposit_events):
-                vehicle = self.simulation.deposit_events[i].vehicle
+                vehicle = self.simulation.deposit_events[-i-1].vehicle
                 deposit_in_sec = (vehicle.deposit - self.simulation.t).total_seconds()
                 retrieval_in_sec = (vehicle.retrieval - self.simulation.t).total_seconds()
                 self.data[self._dict("stock_dates", number=i)] = deposit_in_sec
@@ -365,7 +367,7 @@ class Observation():
         
         for i in range(self.max_stock_visible):
             if i < len(self.simulation.deposit_events):
-                vehicle = self.simulation.deposit_events[i].vehicle
+                vehicle = self.simulation.deposit_events[-i-1].vehicle
                 deposit_in_sec = (vehicle.deposit - self.simulation.t).total_seconds()
                 retrieval_in_sec = (vehicle.retrieval - self.simulation.t).total_seconds()
                 self.data[self._dict("stock_dates", number=i)] = deposit_in_sec
