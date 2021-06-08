@@ -386,6 +386,17 @@ class TestTest():
         print(marks)
         assert 0 == 0
 
+    def testMarksList(self, algorithm, stock_args=(20, datetime.timedelta(days=150)), optimization_parameters = (1.5, 3, 100, -10)):
+        # création du parking
+        Vehicle.next_id = 1
+        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3), Robot(4), Robot(5)], real_parking, algorithm)
+
+        # test
+        marks = performance.algorithmMarksList(optimization_parameters)
+        print(marks)
+        assert 0 == 0
+
 
 # exécution hors pytest
 
@@ -409,6 +420,12 @@ test = TestTest()
 #test.testRefineAlgorithmOnPool(nb_steps=20, initial_parameters=[10., 30., 30., -5.])
 
 test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
+<<<<<<< HEAD
 #test.testLogCutViewAlgorithmOnPool(start=-10, stop=10, step=1, other_parameters=[100., -10.])
 
 #test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=50, stock_args=(30, ), algorithms=[AlgorithmZeroMinus, AlgorithmRandom], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4)])
+=======
+#test.testLogCutViewAlgorithmOnPool(start=-3, stop=5, step=1, other_parameters=[100., -10.])
+
+#test.testMarksList(AlgorithmRandom)
+>>>>>>> ad97a8b41d3662b0d21d153a66ebee91bebe78ba

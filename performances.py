@@ -1195,7 +1195,7 @@ class Performance():
 
 
         for i in range(10):
-            path = root_path + 'stock_' + str(i) + '.csv'
+            path = root_path + 'easy_stock_' + str(i) + '.csv'
             simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
@@ -1208,6 +1208,30 @@ class Performance():
         except ZeroDivisionError:
             average_mark = 1000
         return average_mark
+
+
+    def algorithmMarksList(self, optimization_parameters=None):
+        """
+        calcule les "notes" de l'algorithme : somme(retards^3/2)/nb_véhicules pour 10 stocks
+        """
+        #root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
+        MarksList = []
+
+        for i in range(10):
+            path = root_path + 'easy_stock_' + str(i) + '.csv'
+            simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
+            dashboard = Dashboard(simulation)
+            if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
+                x = dashboard.mark()
+                print(x, i)
+                MarksList.append(x)
+
+        MarksArray = np.array(MarksList)
+        moy = np.mean(MarksArray)
+        std = np.std(MarksArray)
+
+        return MarksList, moy, std
 
 
     def refineParametersZeroMinus(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 1.1, 20., -5.]):

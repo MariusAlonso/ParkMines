@@ -929,9 +929,20 @@ class BaseAlgorithm(Algorithm):
         
         return nb_vehicules_interface/interface_size < 0.75
 
+<<<<<<< HEAD
     """
             block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
             lane_vehicle = self.parking.blocks[block_id].lanes[lane_id]
+=======
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, anticipation_time=datetime.timedelta(hours=8), optimization_parameters = None):
+        self.robots = robots
+        self.stock = stock
+        self.t0 = t0
+        self.parking = parking
+        self.events = events
+        self.locked_lanes = locked_lanes
+        self.print_in_terminal = print_in_terminal
+>>>>>>> ad97a8b41d3662b0d21d153a66ebee91bebe78ba
 
             if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
                 side = "bottom"
@@ -1089,6 +1100,7 @@ class WeightAlgorithm(BaseAlgorithm):
 
 class AlgorithmZeroMinus(WeightAlgorithm):
 
+<<<<<<< HEAD
     """
                         # On simule l'évolution de la lane
                         time_of_arrival = time + self.parking.travel_time(start_position, lane_end)
@@ -1098,6 +1110,10 @@ class AlgorithmZeroMinus(WeightAlgorithm):
                         x = lane.end_position(side)          
                         events_to_reverse.append((side,))
                         events_to_reverse.extend(self.parking.future_config(block block_id, lane_id,_id, lane_id, self.robots, self.stock, min_time = time_of_arrival))
+=======
+    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, anticipation_time=datetime.timedelta(hours=8), optimization_parameters = None):
+        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, anticipation_time, optimization_parameters = optimization_parameters)
+>>>>>>> ad97a8b41d3662b0d21d153a66ebee91bebe78ba
 
                         if side == "top":
                             distance_to_lane_end = lane.top_position
