@@ -314,6 +314,11 @@ class Display():
 
             if x.doing:
                 #tracer le fond de la jauge proportionnelle à la durée de la tâche
+                """
+                print(x.doing)
+                print(x.start_time)
+                print(x.goal_time)
+                """
                 L = (x.goal_time - x.start_time)/datetime.timedelta(1,1)
                 
                 rect = pg.Rect(900, i*70 + 60, L*30000 + 100, 30)

@@ -120,6 +120,8 @@ class Simulation():
             print("-------------")
             print(self.pending_retrievals)
             print("-------------")
+            print(self.parking.occupation)
+            print("-------------")
             
 
         vehicle = event.vehicle
@@ -468,7 +470,10 @@ class Simulation():
 
                 if block_id == 0:
                     # ajout du retard éventuel à la liste des retards au dépôt
-                    self.after_deposit_delays.append(self.t - moved_vehicle.effective_deposit)
+                    try:
+                        self.after_deposit_delays.append(self.t - moved_vehicle.effective_deposit)
+                    except:
+                        self.after_deposit_delays.append(self.t - moved_vehicle.deposit)
                     # la place n'est plus le siège d'un évènement empty_interface
                     self.parking.blocks[0].targeted[lane_id] = False
 

@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import copy
+from parking import *
 """
 import ray
 from ray import tune
@@ -43,7 +44,8 @@ environment_name =
 
 env = gym.make(environment_name)
 """
-env = MLEnv()
+parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+env = MLEnv(parking, 10, 1)
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
@@ -75,24 +77,24 @@ env.close()
 
 # env = DummyVecEnv([lambda: env])
 
-learning = False
-saving = False
-timesteps = 1e9
+learning = True
+saving = True
+timesteps = 1000
 
 
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL0611tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL08tensorboard/")
 
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
 
     if saving:
 
-        model.save("RL0613")
+        model.save("RL08")
         del model # remove to demonstrate saving and loading
 
-model = PPO2.load("RL0613")
+model = PPO2.load("RL08")
 
 
 def evaluate_model(model, repetition, _input=False):
@@ -141,7 +143,7 @@ performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.s
 performance.printAverageDashboard(10)
 """
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
-simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = False)
+simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = True)
 simulation.start_display(12, 20)
 simulation.display.run()
 

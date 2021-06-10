@@ -136,6 +136,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                         block_id, lane_id = self.parking.dict_lanes[lane_global_id]
                         robot.goal_position = (block_id, lane_id, side)
 
+                        robot.start_time = current_time
                         robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
 
                         event = Event(None, robot.goal_time, "robot_arrival", robot)
@@ -169,6 +170,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                         block_id, lane_id = self.parking.dict_lanes[lane_global_id]
                         robot.goal_position = (block_id, lane_id, side)
 
+                        robot.start_time = current_time
                         robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
 
                         event = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
