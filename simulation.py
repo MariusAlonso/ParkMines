@@ -50,6 +50,7 @@ class Simulation():
 
         self.pending_deposits = SortedList()
         self.pending_retrievals = SortedList()
+        self.retrievals_in_parking = SortedList()
         self.vehicles_left_to_handle = set(self.stock.vehicles.keys())
         # print(self.vehicles_left_to_handle)
 
@@ -88,7 +89,7 @@ class Simulation():
         print(self.deposit_events)
         print(self.pending_deposits)
         """
-        if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
+        if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=700):
             print(self.t)
             self.last_printed_date = self.t
         if self.print_in_terminal:
@@ -181,6 +182,7 @@ class Simulation():
             else:
                 success = True
                 self.deposit_events.pop()
+                self.retrievals_in_parking.add(vehicle)
                 self.parking.blocks[0].lanes[lane_id].push_reserve(vehicle.id, "top")
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top", self.stock)
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
@@ -215,6 +217,11 @@ class Simulation():
 
                     self.vehicles_left_to_handle.remove(vehicle.id)
 
+                    if vehicle in self.retrievals_in_parking:
+                        self.retrievals_in_parking.remove(vehicle)
+                    else:
+                        print("ERROR")
+
                     if nb_jour in self.nb_sortie.keys():
                         self.nb_sortie[nb_jour] += 1
                     else:
@@ -238,6 +245,7 @@ class Simulation():
                         self.parking.blocks[0].lanes[i_lane].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[i_lane].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, i_lane, 0)
+                        self.retrievals_in_parking.add(event_deposit.vehicle)
 
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.before_deposit_delays.append(self.t - event_deposit.date)
@@ -449,6 +457,7 @@ class Simulation():
                         self.parking.blocks[0].lanes[lane_id].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
+                        self.retrievals_in_parking.add(event_deposit.vehicle)
 
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.before_deposit_delays.append(self.t - event_deposit.date)

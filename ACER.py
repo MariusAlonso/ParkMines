@@ -33,8 +33,9 @@ class TensorboardCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         # Log scalar value (here a random variable)
-        value = np.random.random()
-        summary = tf.Summary(value=[tf.Summary.Value(tag='random_value', simple_value=value)])
+        environment = self.model.get_env()
+        value = environment.envs[0].robot_action_avg
+        summary = tf.Summary(value=[tf.Summary.Value(tag='robot_activity', simple_value=value)])
         self.locals['writer'].add_summary(summary, self.num_timesteps)
         return True
 
@@ -79,22 +80,22 @@ env.close()
 
 learning = True
 saving = True
-timesteps = 1000
+timesteps = 10000000
 
 
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL08tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL09tensorboard/")
 
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
 
     if saving:
 
-        model.save("RL08")
+        model.save("RL11")
         del model # remove to demonstrate saving and loading
 
-model = PPO2.load("RL08")
+model = PPO2.load("RL11")
 
 
 def evaluate_model(model, repetition, _input=False):
