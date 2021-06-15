@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import copy
+import save_RL
 """
 import ray
 from ray import tune
@@ -75,9 +76,9 @@ env.close()
 
 # env = DummyVecEnv([lambda: env])
 
-learning = False
-saving = False
-timesteps = 1e9
+learning = True
+saving = True
+timesteps = int(3e2)
 
 
 
@@ -89,10 +90,10 @@ if learning:
 
     if saving:
 
-        model.save("RL0613")
+        model.save("RL0614")
         del model # remove to demonstrate saving and loading
 
-model = PPO2.load("RL0613")
+model = PPO2.load("RL0614")
 
 
 def evaluate_model(model, repetition, _input=False):
@@ -136,6 +137,7 @@ def evaluate_model(model, repetition, _input=False):
 #print(f'statics_{timesteps} = {statics}')
 
 RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
+save_RL.Brain(model, timesteps, env.max_stock_visible, env.number_robots, env.daily_flow, env.simulation_length)
 """
 performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
 performance.printAverageDashboard(10)
@@ -143,7 +145,7 @@ performance.printAverageDashboard(10)
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
 simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = False)
 simulation.start_display(12, 20)
-simulation.display.run()
+#simulation.display.run()
 
 
 """
