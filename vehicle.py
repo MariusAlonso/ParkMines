@@ -18,6 +18,12 @@ class Vehicle():
     
     def __repr__(self):
         return self.id.__repr__()
+    
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __lt__(self, other):
+        return self.retrieval < other.retrieval
 
 class Stock():
 
@@ -30,7 +36,7 @@ class Stock():
             self.vehicles[v.id] = v
 
         self.first_day, self.last_day = self.duration_simu()
-    
+
     def __len__(self):
         return len(self.vehicles)
    

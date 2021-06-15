@@ -50,6 +50,7 @@ class Simulation():
 
         self.pending_deposits = SortedList()
         self.pending_retrievals = SortedList()
+        self.retrievals_in_parking = SortedList()
         self.vehicles_left_to_handle = set(self.stock.vehicles.keys())
         # print(self.vehicles_left_to_handle)
 
@@ -91,9 +92,12 @@ class Simulation():
         if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
             print(self.t)
             self.last_printed_date = self.t
-        if self.print_in_terminal:
+        if False: #True:
             print(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nEXECUTION at time {self.t}")
             print("event :", event)
+            print(self.vehicles_left_to_handle)
+            print(self.deposit_events)
+        if self.print_in_terminal:
             print(self.parking.blocks[0].targeted)
             c = 0
             for x in self.parking.blocks[0].targeted:
@@ -119,6 +123,8 @@ class Simulation():
                 print((block_id, lane_id, side), lane.future_top_position, lane.future_bottom_position)
             print("-------------")
             print(self.pending_retrievals)
+            print("-------------")
+            print(self.parking.occupation)
             print("-------------")
             
 
@@ -179,6 +185,7 @@ class Simulation():
             else:
                 success = True
                 self.deposit_events.pop()
+                self.retrievals_in_parking.add(vehicle)
                 self.parking.blocks[0].lanes[lane_id].push_reserve(vehicle.id, "top")
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top", self.stock)
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
@@ -213,6 +220,11 @@ class Simulation():
 
                     self.vehicles_left_to_handle.remove(vehicle.id)
 
+                    if vehicle in self.retrievals_in_parking:
+                        self.retrievals_in_parking.remove(vehicle)
+                    else:
+                        print("ERROR")
+
                     if nb_jour in self.nb_sortie.keys():
                         self.nb_sortie[nb_jour] += 1
                     else:
@@ -236,6 +248,7 @@ class Simulation():
                         self.parking.blocks[0].lanes[i_lane].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[i_lane].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, i_lane, 0)
+                        self.retrievals_in_parking.add(event_deposit.vehicle)
 
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.before_deposit_delays.append(self.t - event_deposit.date)
@@ -280,6 +293,7 @@ class Simulation():
             else:
                 for pdg_deposit in self.pending_deposits:
                     if vehicle.id == pdg_deposit.vehicle.id:
+                        self.vehicles_left_to_handle.remove(vehicle.id)
                         self.pending_deposits.remove(pdg_deposit)
                         self.deposit_events.remove(pdg_deposit)
                         self.algorithm.update_deposit(pdg_deposit.vehicle, True, self.t)
@@ -447,6 +461,7 @@ class Simulation():
                         self.parking.blocks[0].lanes[lane_id].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
+                        self.retrievals_in_parking.add(event_deposit.vehicle)
 
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.before_deposit_delays.append(self.t - event_deposit.date)
@@ -468,7 +483,10 @@ class Simulation():
 
                 if block_id == 0:
                     # ajout du retard éventuel à la liste des retards au dépôt
-                    self.after_deposit_delays.append(self.t - moved_vehicle.effective_deposit)
+                    try:
+                        self.after_deposit_delays.append(self.t - moved_vehicle.effective_deposit)
+                    except:
+                        self.after_deposit_delays.append(self.t - moved_vehicle.deposit)
                     # la place n'est plus le siège d'un évènement empty_interface
                     self.parking.blocks[0].targeted[lane_id] = False
 

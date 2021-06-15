@@ -1,9 +1,9 @@
 import gym
+import numpy as np
 from gym import error, spaces, utils
 from gym.utils import seeding
 from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 from simulation import *
-from parking import *
 from rl import rl_algorithm_builder
 
 
@@ -11,21 +11,23 @@ from rl import rl_algorithm_builder
 class MLEnv(gym.Env):
     
 
-    def __init__(self, display = False):
-        real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        tiny_parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-        self.parking = real_parking
-        self.number_robots = 1
+    def __init__(self, parking, max_stock_visible, number_robots, display = False):
+        # real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
+        # parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+        self.parking = parking
+        self.number_robots = number_robots
         self.simulation_length = 3
         self.daily_flow = 3
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
-        self.max_number_vehicles = int(self.simulation_length*self.daily_flow*3)
         self.display = display
         self.last_step_t = None
-        self.max_stock_visible = self.max_number_vehicles
+        self.max_stock_visible = max_stock_visible
         self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
         self.time_max_waiting = 5*24*3600   #temps maximal de retard admis
         self.max_penalty = 1e8
+        self.table_width = max(self.parking.longest_lane + 2, 7)
+        self.robot_action_avg = 0.
+        self.nb_actions = 0
         
         self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
         self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
@@ -42,14 +44,15 @@ class MLEnv(gym.Env):
         #               ensuite un Box qui donne le temps d'oisiveté (nombre réel entre 0 et 100)
         
         #self.action_space = MultiDiscrete([10e2] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
-        Linf = np.array([0]*(4*self.number_robots + 1))
-        #Lsup = np.array([10e4]+[self.parking.number_lanes + 0.9]*self.number_robots + [1]*self.number_robots)
-        #self.action_space = Box(low=Linf, high=Lsup, shape=(2*self.number_robots + 1,))
-
-        Lsup2 = [1000]+[self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots + [self.parking.number_lanes + 1]*self.number_robots + [2]*self.number_robots
+        """
+        Linf = np.array([0.]+[0.]*self.number_robots+[1.]*self.number_robots + [0.]*self.number_robots + [1.]*self.number_robots + [0.]*self.number_robots)
+        Lsup = np.array([99995.]+[1.]*self.number_robots+[self.parking.number_lanes+1]*self.number_robots + [1.]*self.number_robots+[self.parking.number_lanes+1]*self.number_robots + [1.]*self.number_robots)
+        """
+        Lsup2 = [10]+[2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots
         self.action_space = MultiDiscrete(Lsup2)
-        
-
+        """
+        self.action_space = Box(Linf, Lsup, shape = (5*self.number_robots + 1,))
+        """
 
         print(self.action_space)
         print("action_space_created")
@@ -61,8 +64,8 @@ class MLEnv(gym.Env):
         #[current_time, robot1_lane, robot2_lane..., robot1_side, robot2_side,..., stock_date_deposit_vehicule1, ..., stock_date_retrieval_vehicule1, ....]
         
         print(self.parking.longest_lane)
-        Linf = np.zeros((self.number_arguments, self.parking.longest_lane+2))
-        Lsup = np.zeros((self.number_arguments, self.parking.longest_lane+2))
+        Linf = np.zeros((self.number_arguments, self.table_width))
+        Lsup = np.zeros((self.number_arguments, self.table_width))
         Lsup[0,0] = 0
         for id_robot in range(self.number_robots):    #id des robots commencent a 0
             Lsup[id_robot+1,0], Lsup[id_robot+1,1] = self.parking.number_lanes, 1
@@ -80,8 +83,13 @@ class MLEnv(gym.Env):
         Lsup[self.number_robots+self.parking.number_lanes+1:, 0:2] = np.inf*np.ones((self.max_stock_visible, 2))
         Linf[self.number_robots+self.parking.number_lanes+1:, 0:2] = - np.inf*np.ones((self.max_stock_visible, 2))
         Lsup[self.number_robots+self.parking.number_lanes+1:, 2] = np.ones((self.max_stock_visible,))
+        Lsup[self.number_robots+self.parking.number_lanes+1:, 3] = np.inf*np.ones((self.max_stock_visible,))
+        Linf[self.number_robots+self.parking.number_lanes+1:, 3] = - np.inf*np.ones((self.max_stock_visible,))
+        Lsup[self.number_robots+self.parking.number_lanes+1:, 4] = self.parking.number_lanes*np.ones((self.max_stock_visible,))
+        Lsup[self.number_robots+self.parking.number_lanes+1:, 5] = self.parking.longest_lane*np.ones((self.max_stock_visible,))
+        Lsup[self.number_robots+self.parking.number_lanes+1:, 6] = np.ones((self.max_stock_visible,))
         
-        self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.parking.longest_lane+2))
+        self.observation_space = Box(low=Linf, high=Lsup, shape=(self.number_arguments, self.table_width))
 
         #input()
         print(self.observation_space)
@@ -106,10 +114,16 @@ class MLEnv(gym.Env):
         
                 
         elif string == "robot_pick_lane":
-            if number == None:
-                return 1, self.number_robots+1
+            if not action_space:
+                if number == None:
+                    return 1, self.number_robots+1
+                else:
+                    return 1+number, 0
             else:
-                return 1+number, 0
+                if number == None:
+                    return  1+self.number_robots, 2*self.number_robots+1
+                else:
+                    return 1+number+self.number_robots
 
         elif string == "robot_pick_side":
             if not action_space:
@@ -119,7 +133,7 @@ class MLEnv(gym.Env):
                     return 1+number, 1
             else:
                 if number == None:
-                    return  1+self.number_robots, 2*self.number_robots+1
+                    return  1+2*self.number_robots, 3*self.number_robots+1
                 else:
                     return 1+number+self.number_robots
 
@@ -131,7 +145,7 @@ class MLEnv(gym.Env):
                     return 1+number, 2
             else:
                 if number == None:
-                    return  1+2*self.number_robots, 3*self.number_robots+1
+                    return  1+3*self.number_robots, 4*self.number_robots+1
                 else:
                     return 1+number+2*self.number_robots
 
@@ -143,7 +157,7 @@ class MLEnv(gym.Env):
                     return 1+number, 3
             else:
                 if number == None:
-                    return  1+3*self.number_robots, 4*self.number_robots+1
+                    return  1+4*self.number_robots, 5*self.number_robots+1
                 else:
                     return 1+number+3*self.number_robots
 
@@ -196,10 +210,13 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
         
+        self.robot_action_avg = (self.robot_action_avg + action[1])/(self.nb_actions+1)
+        self.nb_actions += 1
         self.simulation.algorithm.take_decision(action, self.simulation.t)
 
         
         while True:
+            #print(self.observation.data)
 
             if self.simulation.t > self.tmax:
                 self.done = True
@@ -252,6 +269,8 @@ class MLEnv(gym.Env):
         self.parking = self.parking._empty_copy()
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.last_step_t = None
+        self.robot_action_avg = 0.
+        self.nb_actions = 0
         if self.display:
             #self.simulation.display.shutdown()
             pass

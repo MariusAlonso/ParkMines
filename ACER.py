@@ -2,6 +2,7 @@ import gym
 import numpy as np
 import copy
 import save_RL
+from parking import *
 """
 import ray
 from ray import tune
@@ -33,8 +34,9 @@ class TensorboardCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         # Log scalar value (here a random variable)
-        value = np.random.random()
-        summary = tf.Summary(value=[tf.Summary.Value(tag='random_value', simple_value=value)])
+        environment = self.model.get_env()
+        value = environment.envs[0].robot_action_avg
+        summary = tf.Summary(value=[tf.Summary.Value(tag='robot_activity', simple_value=value)])
         self.locals['writer'].add_summary(summary, self.num_timesteps)
         return True
 
@@ -44,7 +46,8 @@ environment_name =
 
 env = gym.make(environment_name)
 """
-env = MLEnv()
+parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+env = MLEnv(parking, 10, 1)
 print("Enivronnement créé")
 #fonctionnement aleatoire
 
@@ -84,16 +87,16 @@ timesteps = int(3e2)
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./resultats_essai_RL_2e6/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL10tensorboard/")
 
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
 
     if saving:
 
-        model.save("RL0614")
+        model.save("RL11")
         del model # remove to demonstrate saving and loading
 
-model = PPO2.load("RL0614")
+model = PPO2.load("RL11")
 
 
 def evaluate_model(model, repetition, _input=False):
@@ -143,7 +146,7 @@ performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.s
 performance.printAverageDashboard(10)
 """
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
-simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = False)
+simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = True)
 simulation.start_display(12, 20)
 #simulation.display.run()
 
