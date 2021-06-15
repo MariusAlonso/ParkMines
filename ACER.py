@@ -86,7 +86,7 @@ timesteps = 10000000
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL09tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL10tensorboard/")
 
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
 

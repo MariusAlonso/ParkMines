@@ -89,12 +89,15 @@ class Simulation():
         print(self.deposit_events)
         print(self.pending_deposits)
         """
-        if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=700):
+        if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
             print(self.t)
             self.last_printed_date = self.t
-        if self.print_in_terminal:
+        if False: #True:
             print(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nEXECUTION at time {self.t}")
             print("event :", event)
+            print(self.vehicles_left_to_handle)
+            print(self.deposit_events)
+        if self.print_in_terminal:
             print(self.parking.blocks[0].targeted)
             c = 0
             for x in self.parking.blocks[0].targeted:
@@ -290,6 +293,7 @@ class Simulation():
             else:
                 for pdg_deposit in self.pending_deposits:
                     if vehicle.id == pdg_deposit.vehicle.id:
+                        self.vehicles_left_to_handle.remove(vehicle.id)
                         self.pending_deposits.remove(pdg_deposit)
                         self.deposit_events.remove(pdg_deposit)
                         self.algorithm.update_deposit(pdg_deposit.vehicle, True, self.t)

@@ -4,93 +4,6 @@ import numpy as np
 from numpy.core.numerictypes import maximum_sctype
 from simulation import Algorithm, Event
 
-def rl_algorithm_builder2(model, _dict, number_arguments):
-
-    class RLAlgorithm(Algorithm):
-
-        def __init__(self, simulation, t0, stock, robots, parking, events, *args, print_in_terminal=False):
-
-            super().__init__(simulation, t0, stock, robots, parking, events)
-
-            self.model = model
-            if model is None:
-                self.reward = 0
-            self.current_wake_up = None
-            self._dict = _dict
-            self.observation = Observation(t0, self.simulation, number_arguments, _dict)
-        
-        def take_decision(self, action, current_time):
-            init, end = self._dict("robot_actions_lanes")
-            init2, end2 = self._dict("robot_actions_sides", action_space=True)           
-            robot_actions_lanes = action[init:end].astype(int)
-            robot_actions_sides = action[init2:end2].astype(int)
-
-            if np.all(robot_actions_lanes == 0):
-                wake_up_date = self.simulation.t + datetime.timedelta(minutes= 5*(int(action[self._dict("idleness_date")])+1))
-                self.current_wake_up = Event(None, wake_up_date, "wake_up_robots", None)
-                self.events.add(self.current_wake_up)
-            else:
-                self.current_wake_up = None
-
-            for i_robot, robot in enumerate(self.robots):
-                
-                lane_global_id, side_bool = robot_actions_lanes[i_robot], robot_actions_sides[i_robot]
-
-                if lane_global_id:
-                    if self.model is None:
-                        self.reward -= 1.
-                    if side_bool:
-                        side = "bottom"
-                    else:
-                        side = "top"
-                    block_id, lane_id = self.parking.dict_lanes[lane_global_id]
-                    robot.goal_position = (block_id, lane_id, side)
-
-                    robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
-
-                    if robot.vehicle is None:
-                        event = Event(None, robot.goal_time, "robot_arrival", robot)
-                        #self.parking.blocks[block_id].lanes[lane_id].list_vehicles[0] = 5
-                    else:
-                        event = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
-                    robot.doing = event
-                    self.events.add(event)
-            
-
-    
-        def check_pick(self, lane_end, moved_vehicle, current_time):
-            return True
-
-        
-        def update(self, current_time):
-            self.observation.update()
-            if self.model is not None:
-                action = self.model.predict(self.observation.data)[0]
-                self.take_decision(action, self.simulation.t)
-            else:
-                self.pending_action = True
-
-        def update_retrieval(self, vehicle, success, current_time):
-            if self.model is None and success:
-                self.reward += 5.
-       
-        def update_deposit(self, vehicle, success, current_time):
-            pass
-
-        def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
-            if not success and self.model is None:
-                self.reward -= 100
-            self.update(current_time)
-
-        def update_robot_end_task(self, robot, lane_end, success, current_time):
-            if not success and self.model is None:
-                self.reward -= 100
-            self.update(current_time)
-
-        def update_start(self):
-            self.update(self.t0)
-    
-    return RLAlgorithm
 
 def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, print_action=False):
 
@@ -183,6 +96,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                             need_wake_up = False
 
                 if need_wake_up and self.simulation.vehicles_left_to_handle:
+                    # print(len(self.simulation.retrievals_in_parking) + len(self.simulation.deposit_events), len(self.simulation.vehicles_left_to_handle))
 
                     if self.simulation.retrievals_in_parking:
                         next_event = self.simulation.retrievals_in_parking[-1].retrieval
@@ -191,7 +105,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                     else:
                         next_event = self.simulation.deposit_events[-1].date
                     
-                    wake_up_date = next_event - datetime.timedelta(minutes=(int(action[self._dict("idleness_date")])*5)**2)
+                    wake_up_date = max(self.simulation.t + datetime.timedelta(minutes=5), next_event - datetime.timedelta(minutes=(int(action[self._dict("idleness_date")])*5)**2))
                     self.current_wake_up = Event(None, wake_up_date, "wake_up_robots", None)
                     self.events.add(self.current_wake_up)
                 else:
@@ -208,7 +122,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 action = self.model.predict(self.observation.data)[0]
                 self.take_decision(action, self.simulation.t)
             else:
-                self.reward -= 5.
+                self.reward -= 25
                 self.pending_action = True
 
         def update_retrieval(self, vehicle, success, current_time):
@@ -236,14 +150,23 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 robot.doing = event
                 self.events.add(event)   
             else:
-                if not success and self.model is None:
-                    self.reward -= 100
-                self.update(current_time)         
+                self.update(current_time)
+
+            if self.model is None:
+                if success:
+                    self.reward += 0   
+                else:
+                    self.reward -= 5    
 
         def update_robot_end_task(self, robot, lane_end, success, current_time):
-            if not success and self.model is None:
-                self.reward -= 100
+            self.reward += 25
             self.update(current_time)
+        
+            if self.model is None:
+                if success:
+                    self.reward += 0
+                else:
+                    self.reward -= 5  
 
         def update_start(self):
             self.update(self.t0)

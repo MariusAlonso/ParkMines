@@ -231,15 +231,15 @@ class MLEnv(gym.Env):
         # Calcul de la récompense
         for event_deposit in self.simulation.pending_deposits:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward -= 0*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
-                self.simulation.algorithm.reward -= 0*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
                 # print("punition=", 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600)
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward -= 0*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
             else:
-                self.simulation.algorithm.reward -= 0*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
+                self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
         """
         for lane in self.observation.data[self._dict("lanes")[0]: self._dict("lanes")[1]]:
             self.lanes_occupated = 0
