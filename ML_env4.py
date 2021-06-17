@@ -23,6 +23,8 @@ class MLEnv(gym.Env):
         self.last_step_t = None
         self.max_stock_visible = max_stock_visible
         self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
+        self.time_max_waiting = 5*24*3600   #temps maximal de retard admis
+        self.max_penalty = 1e8
         self.table_width = max(self.parking.longest_lane + 2, 7)
         self.robot_action_avg = 0.
         self.nb_actions = 0
@@ -234,12 +236,20 @@ class MLEnv(gym.Env):
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
-                # print("punition=", 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600)
+                if (self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds() > self.time_max_waiting:
+                    self.simulation.algorithm.reward -= self.max_penalty
+                    self.done = True
+                    
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
+                
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
+                if (self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds() > self.time_max_waiting:
+                    self.simulation.algorithm.reward -= self.max_penalty
+                    self.done = True
+                   
         """
         for lane in self.observation.data[self._dict("lanes")[0]: self._dict("lanes")[1]]:
             self.lanes_occupated = 0
@@ -247,10 +257,10 @@ class MLEnv(gym.Env):
                 self.lanes_occupated += 1
         self.simulation.algorithm.reward -= 10*self.lanes_occupated
         """
-
         self.done = self.done or not self.simulation.vehicles_left_to_handle
         #print(self.observation.data)
         #print(self.simulation.deposit_events)
+    
 
         return self.observation.data, self.simulation.algorithm.reward, self.done, {}
 

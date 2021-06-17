@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import copy
+import save_RL
 from parking import *
 """
 import ray
@@ -80,7 +81,7 @@ env.close()
 
 learning = True
 saving = True
-timesteps = 10000000
+timesteps = int(3e2)
 
 
 
@@ -139,6 +140,7 @@ def evaluate_model(model, repetition, _input=False):
 #print(f'statics_{timesteps} = {statics}')
 
 RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
+save_RL.Brain(model, timesteps, env.max_stock_visible, env.number_robots, env.daily_flow, env.simulation_length)
 """
 performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
 performance.printAverageDashboard(10)
@@ -146,7 +148,7 @@ performance.printAverageDashboard(10)
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
 simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = True)
 simulation.start_display(12, 20)
-simulation.display.run()
+#simulation.display.run()
 
 
 """
