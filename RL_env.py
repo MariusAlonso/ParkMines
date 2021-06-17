@@ -4,7 +4,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 from simulation import *
-from rl import rl_algorithm_builder
+from RL_algorithm import rl_algorithm_builder
 
 
 

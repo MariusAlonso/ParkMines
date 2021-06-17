@@ -1,0 +1,2 @@
+
+self.max_stock_visible = 27, self.number_robots = 1, self.daily_flow = 3, self.simulation_length = 3
