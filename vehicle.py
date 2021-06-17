@@ -18,6 +18,12 @@ class Vehicle():
     
     def __repr__(self):
         return self.id.__repr__()
+    
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __lt__(self, other):
+        return self.retrieval < other.retrieval
 
 class Stock():
 
@@ -28,8 +34,9 @@ class Stock():
         self.vehicles = {}
         for v in vehicles:
             self.vehicles[v.id] = v
+
         self.first_day, self.last_day = self.duration_simu()
-    
+
     def __len__(self):
         return len(self.vehicles)
    
@@ -40,14 +47,17 @@ class Stock():
         del self.vehicles[vehicle.id]
 
     def duration_simu(self):
-        first_day = self.vehicles[1].order_deposit
-        last_day = self.vehicles[1].retrieval
+        first_day = None
+        last_day = None
         for _, vehicle in self.vehicles.items():
-            if vehicle.order_deposit < first_day:
+            if first_day is None or vehicle.order_deposit < first_day:
                 first_day = vehicle.order_deposit
-            if vehicle.retrieval > last_day:
+            if last_day is None or vehicle.retrieval > last_day:
                 last_day = vehicle.retrieval
         return first_day, last_day
+
+    def __repr__(self):
+        return self.vehicles.__repr__()
 
 
 class RandomStock(Stock):
@@ -55,6 +65,7 @@ class RandomStock(Stock):
     def __init__(self, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0)):
         Vehicle.next_id = 1
         self.vehicles = generateStock(Vehicle, vehicles_per_day, time, start_date)
+        #print(self.vehicles)
         self.first_day, self.last_day = self.duration_simu()
 
 if __name__ == "__main__":
