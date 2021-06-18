@@ -298,7 +298,7 @@ class Display():
         if not self.speed:
             pg.display.update()
 
-    def show_robot(self):
+    def show_robot(self): 
         for i in range(4):
             rect3 = pg.Rect(990, i*70 + 40, 100 ,20) #recouvrement numéro de voiture
             rect4 = pg.Rect(900, i*70 + 60, 200, 30) #recouvrement jauge
@@ -325,9 +325,10 @@ class Display():
             
                 if x.start_time :
                     if x.goal_time > x.start_time:
-                        pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
+                        pourc = 10# (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
                         rect2 = pg.Rect(900, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
+                    
 
     def update_figure(self):
         

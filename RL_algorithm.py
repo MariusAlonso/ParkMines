@@ -111,6 +111,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
             else:
                 self.current_wake_up = None
                     
+                
     
         def check_pick(self, lane_end, moved_vehicle, current_time):
             return True
@@ -299,6 +300,7 @@ class ObservationBis():
                 self.data[self._dict("lanes_ends", number=lane_global_id),0:2] = np.array([lane.top_position, lane.bottom_position])
             for position, vehicle_id in enumerate(lane.list_vehicles):
                 if vehicle_id:
+                    #print(self._dict("lanes", number=lane_global_id, place=position), (self.simulation.stock.vehicles[vehicle_id].retrieval - self.simulation.t).total_seconds())
                     self.data[self._dict("lanes", number=lane_global_id, place=position)] = (self.simulation.stock.vehicles[vehicle_id].retrieval - self.simulation.t).total_seconds()
                 else:
                     self.data[self._dict("lanes", number=lane_global_id, place=position)] = 0
