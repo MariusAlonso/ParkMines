@@ -95,21 +95,21 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                             self.events.add(event)  
                             need_wake_up = False
 
-                if need_wake_up and self.simulation.vehicles_left_to_handle:
-                    # print(len(self.simulation.retrievals_in_parking) + len(self.simulation.deposit_events), len(self.simulation.vehicles_left_to_handle))
+            if need_wake_up and self.simulation.vehicles_left_to_handle:
+                # print(len(self.simulation.retrievals_in_parking) + len(self.simulation.deposit_events), len(self.simulation.vehicles_left_to_handle))
 
-                    if self.simulation.retrievals_in_parking:
-                        next_event = self.simulation.retrievals_in_parking[-1].retrieval
-                        if self.simulation.deposit_events:
-                            next_event = min(next_event, self.simulation.deposit_events[-1].date)
-                    else:
-                        next_event = self.simulation.deposit_events[-1].date
-                    
-                    wake_up_date = max(self.simulation.t + datetime.timedelta(minutes=5), next_event - datetime.timedelta(minutes=(int(action[self._dict("idleness_date")])*5)**2))
-                    self.current_wake_up = Event(None, wake_up_date, "wake_up_robots", None)
-                    self.events.add(self.current_wake_up)
+                if self.simulation.retrievals_in_parking:
+                    next_event = self.simulation.retrievals_in_parking[-1].retrieval
+                    if self.simulation.deposit_events:
+                        next_event = min(next_event, self.simulation.deposit_events[-1].date)
                 else:
-                    self.current_wake_up = None
+                    next_event = self.simulation.deposit_events[-1].date
+                
+                wake_up_date = max(self.simulation.t + datetime.timedelta(minutes=5), next_event - datetime.timedelta(minutes=(int(action[self._dict("idleness_date")])*5)**2))
+                self.current_wake_up = Event(None, wake_up_date, "wake_up_robots", None)
+                self.events.add(self.current_wake_up)
+            else:
+                self.current_wake_up = None
                     
     
         def check_pick(self, lane_end, moved_vehicle, current_time):
