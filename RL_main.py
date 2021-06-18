@@ -36,63 +36,32 @@ class TensorboardCallback(BaseCallback):
         return True
 
 
-"""
-environment_name =
 
-env = gym.make(environment_name)
-"""
 parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
 env = MLEnv(parking, 10, 1)
-print("Enivronnement créé")
-#fonctionnement aleatoire
 
-episodes = 0
-for episode in range(1, episodes+1):
-    env.reset()
-    done = False
-    score = 0 
-    while not done:
-        
-        env.render()
-        action = env.action_space.sample()
-        
-        n_state, reward, done, info = env.step(action)
-        """
-        if reward !=0:
-            print(n_state[env._dict("stock_dates")[0]:,0], reward, done, info)
-        """
-        #input()
-        score+=reward
-        print(score)
-    print('Episode:{} Score:{}'.format(episode, score))
-env.close()
-
-
-
-
-#apprentissage
-
-# env = DummyVecEnv([lambda: env])
+"""
+Partie consacrée à l'apprentissage renforcé avec l'algorithme PPO0
+"""
 
 learning = True
 saving = True
 timesteps = int(3e2)
-
-
+tensorboard_log = "./RL10tensorboard/"
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL10tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=tensorboard_log)
 
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
 
     if saving:
 
         model.save("RL11")
+
+        save_RL.Brain(model, timesteps, env.max_stock_visible, env.number_robots, env.daily_flow, env.simulation_length)
+
         del model # remove to demonstrate saving and loading
-
-model = PPO2.load("RL11")
-
 
 def evaluate_model(model, repetition, _input=False):
     statics = []
@@ -131,23 +100,14 @@ def evaluate_model(model, repetition, _input=False):
     return statics
 
 
-#statics = evaluate_model(model, 10, _input=True)
-#print(f'statics_{timesteps} = {statics}')
+"""
+Résultat du modèle entraîné sur une simulation
+"""
 
+model = PPO2.load("RL11")
 RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
-save_RL.Brain(model, timesteps, env.max_stock_visible, env.number_robots, env.daily_flow, env.simulation_length)
-"""
-performance = Performance(env.t0, (env.daily_flow, datetime.timedelta(days=env.simulation_length)), [Robot(k) for k in range(env.number_robots)], env.parking, RLAlgorithm)
-performance.printAverageDashboard(10)
-"""
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
 simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = True)
 simulation.start_display(12, 20)
-#simulation.display.run()
-
-
-"""
-# ray.init(include_dashboard=False)
-tune.run(PPOTrainer, config={"env": env}) 
-"""
+simulation.display.run()
 
