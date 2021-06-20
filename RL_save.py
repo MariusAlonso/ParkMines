@@ -10,9 +10,11 @@ class Brain():
     (model, iterations, max_stock_visible, number_robots, daily_flow, simulation_length)
     afin de pouvoir les réutiliser.
     Enregistre les modèles dans les fichiers models_RL sous le format timesteps_date-de-l'apprentissage
-    """ 
+    """
+    def __init__(self):
+        pass
 
-    def __init__(self, model, iterations, max_stock_visible, number_robots, daily_flow, simulation_length):
+    def save(self, model, iterations, max_stock_visible, number_robots, daily_flow, simulation_length):
         self.model = model
         self.max_stock_visible = max_stock_visible
         self.number_robots = number_robots

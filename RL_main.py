@@ -47,6 +47,9 @@ learning = False             #True si on veut procéder à l'apprentissage d'un 
 saving = False               #True si on veut sauvegarder le modèle
 timesteps = int(3e2)         #Nombre de timesteps dans l'apprentissage
 
+name = 'models_RL/300_2021-06-18T10-08-50.zip'
+name_txt = 'models_RL/300_2021-06-18T10-08-50.txt'
+
 if learning:
     model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL10tensorboard/")
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
@@ -59,7 +62,8 @@ if learning:
 Résultat du modèle entraîné sur une simulation
 """
 
-model, max_stock_visible, number_robots, daily_flow, simulation_length = RL_save.Brain.load(name, name_txt)
+
+model, max_stock_visible, number_robots, daily_flow, simulation_length = RL_save.Brain.load(RL_save.Brain, name, name_txt)
 env = MLEnv(parking, max_stock_visible, number_robots, daily_flow, simulation_length)
 
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
