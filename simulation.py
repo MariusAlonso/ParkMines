@@ -633,7 +633,7 @@ class Algorithm():
 
 class BaseAlgorithm(Algorithm):
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=8), print_in_terminal=False):
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=8), print_in_terminal=False, optimization_parameters = (1, 3, 100, -10, 0.75)):
 
         super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal)
 
@@ -644,6 +644,8 @@ class BaseAlgorithm(Algorithm):
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
+
+        self.interface_saturation = optimization_parameters[4]
     
 
     def assign_task(self, robot):
@@ -768,7 +770,10 @@ class BaseAlgorithm(Algorithm):
         """
         Choisit, s'il y en a un, le deposit à faire en priorité
         """
-        # on parcours toutes les places de l'interface pour voir si il y a un véhicule à placer
+
+        best_vehicle = None
+        best_mark = None
+        # on parcourt toutes les places de l'interface pour voir si il y a un véhicule à placer
         for lane_id, lane in enumerate(self.parking.blocks[0].lanes):
             # on vérifie qu'il y a bien un véhicule dans la place d'interface considérée et qu'il n'est pas déjà ciblé par un autre robot 
             if not lane.list_vehicles[0] in [0, "Lock"] and not self.parking.blocks[0].targeted[lane_id]:
@@ -776,8 +781,15 @@ class BaseAlgorithm(Algorithm):
                 vehicle = self.stock.vehicles[lane.list_vehicles[0]]
                 # on vérifie que le véhicule ne va pas être récupérer par le client bientôt (et qu'il est en cours de sortie)
                 if vehicle.order_retrieval > self.simulation.t or vehicle.retrieval - self.simulation.t > self.anticipation_time:
-                    deposit_event = Event(self.stock.vehicles[vehicle.id], vehicle.deposit, "empty_interface", None)
-                    return deposit_event
+                    mark = vehicle.retrieval
+                    # On cherche la place ayant la note la plus élévée 
+                    if best_mark is None or mark < best_mark:
+                        best_mark = mark
+                        best_vehicle = vehicle
+
+        if not best_vehicle is None:
+            deposit_event = Event(self.stock.vehicles[best_vehicle.id], best_vehicle.deposit, "empty_interface", None)
+            return deposit_event
 
     def place(self, *args):
         return (None, None, None)
@@ -927,7 +939,7 @@ class BaseAlgorithm(Algorithm):
         if deposit_event is None:
             return True
         
-        return nb_vehicules_interface/interface_size < 0.75
+        return nb_vehicules_interface/interface_size < self.interface_saturation
 
     """
             block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
