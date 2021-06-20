@@ -243,12 +243,9 @@ class MLEnv(gym.Env):
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
-<<<<<<< HEAD
 
                 # SUICIDE la simulation s'arrête lorsqu'un véhicule attend plus que self.time_max_waiting et il est pénalisé
 
-=======
->>>>>>> parent of 82e28e7... feat : fonctionnement non évènementiel
                 if (self.simulation.t - event_deposit.vehicle.deposit).total_seconds() > self.time_max_waiting:
                     self.simulation.algorithm.reward = - self.max_penalty
                     self.done = True
@@ -259,7 +256,6 @@ class MLEnv(gym.Env):
                 
             else:
                 self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
-<<<<<<< HEAD
 
                 # SUICIDE la simulation s'arrête lorsqu'un véhicule attend plus que self.time_max_waiting et il est pénalisé
 
@@ -286,17 +282,15 @@ class MLEnv(gym.Env):
         
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward -= self.penalty_lateness
+                self.simulation.algorithm.reward -= self.penalty_lateness*0.5
                 self.client_unsatisfaction += (self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
                 
             else:
-                self.simulation.algorithm.reward -= self.penalty_lateness
+                self.simulation.algorithm.reward -= self.penalty_lateness*0.5
                 self.client_unsatisfaction += (self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
 
                 # SUICIDE la simulation s'arrête lorsqu'un véhicule attend plus que self.time_max_waiting et il est pénalisé
 
-=======
->>>>>>> parent of 82e28e7... feat : fonctionnement non évènementiel
                 if (self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds() > self.time_max_waiting:
                     self.simulation.algorithm.reward = - self.max_penalty
                     self.done = True
