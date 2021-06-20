@@ -23,7 +23,7 @@ class MLEnv(gym.Env):
         self.last_step_t = None
         self.max_stock_visible = max_stock_visible
         self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
-        self.time_max_waiting = 5*24*3600   #temps maximal de retard admis
+        self.time_max_waiting = 24*3600   #temps maximal de retard admis
         self.max_penalty = 1e7
         self.table_width = max(self.parking.longest_lane + 2, 7)
         self.robot_action_avg = 0.
@@ -48,7 +48,7 @@ class MLEnv(gym.Env):
         Linf = np.array([0.]+[0.]*self.number_robots+[1.]*self.number_robots + [0.]*self.number_robots + [1.]*self.number_robots + [0.]*self.number_robots)
         Lsup = np.array([99995.]+[1.]*self.number_robots+[self.parking.number_lanes+1]*self.number_robots + [1.]*self.number_robots+[self.parking.number_lanes+1]*self.number_robots + [1.]*self.number_robots)
         """
-        Lsup2 = [10]+[2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots
+        Lsup2 = [1]+[2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots
         self.action_space = MultiDiscrete(Lsup2)
         """
         self.action_space = Box(Linf, Lsup, shape = (5*self.number_robots + 1,))
@@ -233,21 +233,21 @@ class MLEnv(gym.Env):
         # Calcul de la récompense
         for event_deposit in self.simulation.pending_deposits:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward -= 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
+                self.simulation.algorithm.reward -= 20 # 50*(self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
-                self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
+                self.simulation.algorithm.reward -= 20
                 if (self.simulation.t - event_deposit.vehicle.deposit).total_seconds() > self.time_max_waiting:
                     self.simulation.algorithm.reward = - self.max_penalty
                     self.done = True
                     
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward -= 50*(self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
+                self.simulation.algorithm.reward -= 20
                 
             else:
-                self.simulation.algorithm.reward -= 50*(self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
+                self.simulation.algorithm.reward -= 20
                 if (self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds() > self.time_max_waiting:
-                    self.simulation.algorithm.reward = - self.max_penalty
+                    self.simulation.algorithm.reward = - self.max_penalty*0.5
                     self.done = True
                    
         """
@@ -265,6 +265,7 @@ class MLEnv(gym.Env):
         return self.observation.data, self.simulation.algorithm.reward, self.done, {}
 
     def reset(self):
+        print(self.simulation.algorithm.reward)
 
         self.parking = self.parking._empty_copy()
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
