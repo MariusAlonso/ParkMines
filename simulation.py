@@ -22,6 +22,7 @@ class Simulation():
         self.parking = parking
         self.print_in_terminal = print_in_terminal
         self.optimization_parameters = optimization_parameters
+        print(f"paramètre : {self.optimization_parameters}")
         self.last_printed_date = None
 
         self.before_deposit_delays = []
@@ -63,7 +64,7 @@ class Simulation():
                 self.locked_lanes[(block_id, lane_id, "bottom")] = int(not lane.bottom_access)
         
         args = (self, self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes, self.pending_retrievals)
-        self.algorithm = AlgorithmType(*args, print_in_terminal=self.print_in_terminal, optimization_parameters=optimization_parameters)
+        self.algorithm = AlgorithmType(*args, print_in_terminal=self.print_in_terminal, optimization_parameters=self.optimization_parameters)
 
         # Dictionnaires pour l'analyse de flux
         self.nb_entree = {}
@@ -600,7 +601,7 @@ class Event():
 
 class Algorithm():
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, *args, print_in_terminal=False):
+    def __init__(self, simulation, t0, stock, robots, parking, events, *args, print_in_terminal=False, optimization_parameters = None):
         self.simulation = simulation
         self.robots = robots
         self.stock = stock
@@ -608,6 +609,7 @@ class Algorithm():
         self.parking = parking
         self.events = events
         self.print_in_terminal = print_in_terminal
+        self.optimization_parameters = optimization_parameters
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
@@ -633,9 +635,9 @@ class Algorithm():
 
 class BaseAlgorithm(Algorithm):
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False):
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False, optimization_parameters = None):
 
-        super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal)
+        super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal, optimization_parameters = optimization_parameters)
 
         self.locked_lanes = locked_lanes
         self.side_chosen_to_retrieve = {}
@@ -644,6 +646,10 @@ class BaseAlgorithm(Algorithm):
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
+        print(optimization_parameters)
+        self.min_anticipation_time = datetime.timedelta(hours = self.optimization_parameters[4])
+        self.max_anticipation_time = datetime.timedelta(hours = self.optimization_parameters[5])
+        print(self.min_anticipation_time)
     
 
     def assign_task(self, robot):
@@ -768,9 +774,10 @@ class BaseAlgorithm(Algorithm):
         """
         Choisit, s'il y en a un, le deposit à faire en priorité
         """
+
         best_vehicle = None
         best_mark = None
-        # on parcours toutes les places de l'interface pour voir si il y a un véhicule à placer
+        # on parcourt toutes les places de l'interface pour voir si il y a un véhicule à placer
         for lane_id, lane in enumerate(self.parking.blocks[0].lanes):
             # on vérifie qu'il y a bien un véhicule dans la place d'interface considérée et qu'il n'est pas déjà ciblé par un autre robot 
             if not lane.list_vehicles[0] in [0, "Lock"] and not self.parking.blocks[0].targeted[lane_id]:
@@ -779,10 +786,11 @@ class BaseAlgorithm(Algorithm):
                 # on vérifie que le véhicule ne va pas être récupérer par le client bientôt (et qu'il est en cours de sortie)
                 if vehicle.order_retrieval > self.simulation.t or vehicle.retrieval - self.simulation.t > self.anticipation_time:
                     mark = vehicle.retrieval
-                    if best_mark is None or mark > best_mark:
+                    # On cherche la place ayant la note la plus élévée 
+                    if best_mark is None or mark < best_mark:
                         best_mark = mark
                         best_vehicle = vehicle
-        
+
         if not best_vehicle is None:
             deposit_event = Event(self.stock.vehicles[best_vehicle.id], best_vehicle.deposit, "empty_interface", None)
             return deposit_event
@@ -968,8 +976,7 @@ class BaseAlgorithm(Algorithm):
         if deposit_event is None:
             return True
         
-        #return (nb_vehicules_interface + nb_incoming_deposit)/interface_size < 0.9
-        return nb_vehicules_interface/interface_size < 0.75
+        return nb_vehicules_interface + nb_incoming_deposit < interface_size
 
     """
             block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
@@ -1081,7 +1088,7 @@ class AlgorithmRandom(BaseAlgorithm):
 class WeightAlgorithm(BaseAlgorithm):
 
     def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False, optimization_parameters=None):
-        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time, print_in_terminal)
+        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time, print_in_terminal, optimization_parameters=optimization_parameters)
 
     
     def place(self, vehicle, start_position, date):
@@ -1186,17 +1193,16 @@ class AlgorithmZeroMinus(WeightAlgorithm):
                             min_lane_end = lane_end
     """
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False, optimization_parameters=(1., 3., 100., -10., 1.)):
-        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=print_in_terminal)
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False, optimization_parameters=None):
+        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=print_in_terminal, optimization_parameters=optimization_parameters)
         
         #paramètres de contrôle des poids
-        alpha, beta, start_new_lane_weight, distance_to_lane_end_coef, anticipation_time = optimization_parameters
+        alpha, beta, start_new_lane_weight, distance_to_lane_end_coef = optimization_parameters[:4]
 
         self.alpha = alpha
         self.beta = beta
         self.start_new_lane_weight = start_new_lane_weight
         self.distance_to_lane_end_coef = distance_to_lane_end_coef
-        self.anticipation_time = anticipation_time
 
         self.optimization_parameters = list(optimization_parameters)    # /!\ changement de type
 

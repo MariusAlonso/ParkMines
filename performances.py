@@ -1196,13 +1196,15 @@ class Performance():
 
 
         for i in range(10):
-            path = root_path + 'easy_stock_' + str(i) + '.csv'
+            print(i)
+            path = root_path_laure + 'easy_stock_' + str(i) + '.csv'
             simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
                 mark = dashboard.mark()
                 average_mark += mark
                 effective_nb_repetitions += 1
+                print(mark)
 
         try:
             average_mark /= effective_nb_repetitions
@@ -1215,8 +1217,8 @@ class Performance():
         """
         calcule les "notes" de l'algorithme : somme(retards^3/2)/nb_véhicules pour 10 stocks
         """
-        root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
-        #root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
+        #root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
         MarksList = []
 
         for i in range(10):
