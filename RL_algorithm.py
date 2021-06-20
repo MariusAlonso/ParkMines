@@ -23,8 +23,8 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
             ############################## Paramètres #################################################
             ###########################################################################################
 
-            self.reward_stupid_place = 1
-            self.bonus_deposit = 1
+            self.reward_stupid_place = 5
+            self.bonus_deposit = 100
             self.penalty_movement = 0
         
         def take_decision(self, action, current_time):
@@ -50,7 +50,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                         
                         lane_global_id, side_bool = robot_pick_lane[i_robot]+1, robot_pick_side[i_robot]
 
-                        if lane_global_id < self.parking.number_lanes:
+                        if lane_global_id <= self.parking.number_lanes:
 
                             if side_bool:
                                 side = "bottom"
@@ -69,7 +69,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
 
                             lane_global_id, side_bool = robot_drop_lane[i_robot]+1, robot_drop_side[i_robot]
 
-                            if lane_global_id < self.parking.number_lanes:
+                            if lane_global_id <= self.parking.number_lanes:
 
                                 if side_bool:
                                     side = "bottom"
@@ -85,7 +85,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
 
                         lane_global_id, side_bool = robot_drop_lane[i_robot]+1, robot_drop_side[i_robot]
 
-                        if lane_global_id < self.parking.number_lanes:
+                        if lane_global_id <= self.parking.number_lanes:
                             if side_bool:
                                 side = "bottom"
                             else:
@@ -122,26 +122,23 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 action = self.model.predict(self.observation.data)[0]
                 self.take_decision(action, self.simulation.t)
             else:
-
                 # REWARD Pénalisation lorsque l'algorithme se réveille
-
                 self.reward -= self.penalty_movement
                 self.pending_action = True
 
         # REWARD Bonus lorsque le client dépose / retire un véhicule (reward supérieur si ça se fait à l'heure)
  
-        """
         def update_retrieval(self, vehicle, success, current_time):
             if self.model is None and success:
-                self.reward += 100.*(10/len(self.stock))
+                self.reward += self.bonus_deposit*(10/len(self.stock))
                 if vehicle.retrieval == current_time:
-                    self.reward += 400.*(10/len(self.stock))
+                    self.reward += 4*self.bonus_deposit*(10/len(self.stock))
        
         def update_deposit(self, vehicle, success, current_time):
             if self.model is None and success:
-                self.reward += 100.*(10/len(self.stock))
+                self.reward += self.bonus_deposit*(10/len(self.stock))
                 if vehicle.deposit == current_time:
-                    self.reward += 400.*(10/len(self.stock))
+                    self.reward += 4*self.bonus_deposit*(10/len(self.stock))
         """
 
         def update_retrieval(self, vehicle, success, current_time):
@@ -155,6 +152,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 self.reward += self.bonus_deposit
                 if vehicle.deposit == current_time:
                     self.reward += self.bonus_deposit
+        """
 
         def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
             if success and robot.drop_position is not None:
