@@ -19,6 +19,14 @@ def rl_algorithm_builder_evenemential(model, _dict, number_arguments, max_stock_
             self.current_wake_up = None
             self._dict = _dict
             self.observation = Observation(t0, self.simulation, number_arguments, _dict, max_stock_visible)
+
+            ###########################################################################################
+            ############################## Paramètres #################################################
+            ###########################################################################################
+
+            self.reward_stupid_place = 1
+            self.bonus_deposit = 1
+            self.penalty_movement = 0
         
         def take_decision(self, action, current_time):
             if print_action:
@@ -123,9 +131,15 @@ def rl_algorithm_builder_evenemential(model, _dict, number_arguments, max_stock_
                 action = self.model.predict(self.observation.data)[0]
                 self.take_decision(action, self.simulation.t)
             else:
-                self.reward -= 25
+
+                # REWARD Pénalisation lorsque l'algorithme se réveille
+
+                self.reward -= self.penalty_movement
                 self.pending_action = True
 
+        # REWARD Bonus lorsque le client dépose / retire un véhicule (reward supérieur si ça se fait à l'heure)
+ 
+        """
         def update_retrieval(self, vehicle, success, current_time):
             if self.model is None and success:
                 self.reward += 100.*(10/len(self.stock))
@@ -137,7 +151,19 @@ def rl_algorithm_builder_evenemential(model, _dict, number_arguments, max_stock_
                 self.reward += 100.*(10/len(self.stock))
                 if vehicle.deposit == current_time:
                     self.reward += 400.*(10/len(self.stock))
-            pass
+        """
+
+        def update_retrieval(self, vehicle, success, current_time):
+            if self.model is None and success:
+                self.reward += self.bonus_deposit
+                if vehicle.retrieval == current_time:
+                    self.reward += self.bonus_deposit
+       
+        def update_deposit(self, vehicle, success, current_time):
+            if self.model is None and success:
+                self.reward += self.bonus_deposit
+                if vehicle.deposit == current_time:
+                    self.reward += self.bonus_deposit
 
         def update_robot_arrival(self, robot, lane_end, success, moved_vehicle, current_time):
             if success and robot.drop_position is not None:
@@ -154,20 +180,28 @@ def rl_algorithm_builder_evenemential(model, _dict, number_arguments, max_stock_
                 self.update(current_time)
 
             if self.model is None:
+
+                # REWARD si le robot arrive dans une lane où il n'y a pas de véhicule il est pénalisé, sinon rien ne se passe
+
                 if success:
                     self.reward += 0   
                 else:
-                    self.reward -= 5    
+                    self.reward -= self.reward_stupid_place     
 
         def update_robot_end_task(self, robot, lane_end, success, current_time):
-            self.reward += 25
+            if self.model is None:
+                self.reward += 20
+
             self.update(current_time)
         
             if self.model is None:
+
+                # REWARD si le robot arrive dans une lane où il n'y a pas de place il est pénalisé, sinon rien ne se passe
+
                 if success:
                     self.reward += 0
                 else:
-                    self.reward -= 5  
+                    self.reward -= self.reward_stupid_place  
 
         def update_start(self):
             self.update(self.t0)
