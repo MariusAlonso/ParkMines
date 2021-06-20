@@ -281,6 +281,7 @@ class Simulation():
 
                 else:
                     self.pending_retrievals.add(event)
+            
             else:
                 for pdg_deposit in self.pending_deposits:
                     if vehicle.id == pdg_deposit.vehicle.id:
@@ -297,6 +298,9 @@ class Simulation():
                     self.pending_retrievals.add(event)
             
             self.algorithm.update_retrieval(vehicle, success, self.t)
+
+            self.algorithm.update_anticipation_time()
+            print(self.algorithm.anticipation_time)
 
 
         elif event.event_type == "robot_arrival":
@@ -601,7 +605,7 @@ class Event():
 
 class Algorithm():
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, *args, print_in_terminal=False, optimization_parameters = None):
+    def __init__(self, simulation, t0, stock, robots, parking, events, *args, print_in_terminal=False):
         self.simulation = simulation
         self.robots = robots
         self.stock = stock
@@ -609,7 +613,6 @@ class Algorithm():
         self.parking = parking
         self.events = events
         self.print_in_terminal = print_in_terminal
-        self.optimization_parameters = optimization_parameters
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
@@ -636,13 +639,13 @@ class Algorithm():
 class BaseAlgorithm(Algorithm):
 
     def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False, optimization_parameters = None):
-
-        super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal, optimization_parameters = optimization_parameters)
+        super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal)
 
         self.locked_lanes = locked_lanes
         self.side_chosen_to_retrieve = {}
         self.pending_retrievals = pending_retrievals
         self.anticipation_time = anticipation_time
+        self.optimization_parameters = optimization_parameters
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
@@ -650,7 +653,6 @@ class BaseAlgorithm(Algorithm):
         self.min_anticipation_time = datetime.timedelta(hours = self.optimization_parameters[4])
         self.max_anticipation_time = datetime.timedelta(hours = self.optimization_parameters[5])
         print(self.min_anticipation_time)
-    
 
     def assign_task(self, robot):
 
@@ -906,7 +908,7 @@ class BaseAlgorithm(Algorithm):
                 else:
                     break
         
-        self.anticipation_time = self.min_anticipation_time + (1/(1+nb_incoming_deposit))*(self.min_anticipation_time - self.max_anticipation_time)
+        self.anticipation_time = self.min_anticipation_time + (1/(1+nb_incoming_deposit))*(self.max_anticipation_time - self.min_anticipation_time)
 
 
     def update_deposit(self, vehicle, success, current_time):
