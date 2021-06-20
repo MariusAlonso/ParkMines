@@ -104,7 +104,7 @@ class Dashboard():
 
 class Performance():
 
-    def __init__(self, t0, stock_args, robots, parking, AlgorithmType, delays=[i for i in range(180)]):
+    def __init__(self, t0, stock_args, robots, parking, AlgorithmType, delays=[i for i in range(180)], optimization_parameters=None):
         """
         Dans la classe performance, on se donne une simulation de référence
         et on se donne des méthodes qui étudient la réponse à la variation 
@@ -120,6 +120,7 @@ class Performance():
         self.parking = parking
         self.algorithm = AlgorithmType
         self.delays = delays
+        self.optimization_parameters = optimization_parameters
     
     def averageDashboard(self, nb_repetitions=10):
         """
@@ -136,7 +137,7 @@ class Performance():
         average_retrieval_delay_rates = {key: 0. for key in self.delays}
 
         for _ in range(nb_repetitions):
-            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
+            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=self.optimization_parameters)
             dashboard = Dashboard(simulation)
             #print(dashboard.simulation.retrieval_delays)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
@@ -929,7 +930,7 @@ class Performance():
                     hspace=0.35)
         plt.show()
 
-    def variableAlgorithmsAnticipationTimeAndFlow(self, nb_repetitions=10, algorithms=[AlgorithmRandom], factors=[1+0.1*i for i in range(-4, 3)], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4), datetime.timedelta(hours=8)]):
+    def variableAlgorithmsAnticipationTimeAndFlow(self, nb_repetitions=10, algorithms=[AlgorithmRandom], factors=[1+0.1*i for i in range(-4, 3)], anticipation_times=[datetime.timedelta(hours=1)], optimization_parameters=None):
         """
         Compare les performances de différents algorithmes pour un stock variable et différentes durée d'anticipation des sorties
         """
@@ -943,7 +944,7 @@ class Performance():
                 for anticipation_time in anticipation_times:
                     print(algorithm.__repr__(), factor, anticipation_time.total_seconds()/3600)
                     # génération de toutes les sorties
-                    performance = Performance(self.t, stock_args, self.robots, deepcopy(self.parking), deepcopy(algorithm))
+                    performance = Performance(self.t, stock_args, self.robots, deepcopy(self.parking), deepcopy(algorithm), optimization_parameters=optimization_parameters)
                     curves[(factor, algorithm, anticipation_time)] = performance.averageDashboard(nb_repetitions)
 
         # tracé
@@ -1083,7 +1084,7 @@ class Performance():
         success_rate.set_title("taux de succès de l'algorithme")
         success_rate.autoscale(tight=True)
 
-        """
+        
         ### average_deposit_delay_rates ###
         
         deposit_delays = plt.subplot(3, 3, (5, 8))
@@ -1116,11 +1117,11 @@ class Performance():
         deposit_delays.set_ylabel("part des clients concernés")
         deposit_delays.set_title("temps d'attente moyen au dépôt")
         deposit_delays.autoscale(tight=True)
-        """
+        
 
         ### average_retrieval_delay_rates ###
         
-        retrieval_delays = plt.subplot(3, 3, (5, 9))
+        retrieval_delays = plt.subplot(3, 3, (6, 9))
         
         for factor, algorithm, anticipation_time in curves:
             # abscisses : le retard
@@ -1234,7 +1235,7 @@ class Performance():
         return MarksList, moy, std
 
 
-    def refineParametersZeroMinus(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 1.1, 20., -5.]):
+    def refineParametersZeroMinus(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 3., 100., -10.]):
         """
         Affine les paramètres de 0- sur nb_repetitions
         """
@@ -1279,12 +1280,11 @@ class Performance():
             print(f"{best_optimization_parameters} : {best_mark}")
         return marks
 
-    def refineParametersZeroMinusOnPool(self, low_variation_coef=0.5, high_variation_coef=0.9, nb_steps=10, initial_parameters=[1., 3., 100., -10.]):
+    def refineParametersZeroMinusOnPool(self, variation_coef=0.7, nb_steps=10, initial_parameters=[1., 3., 100., -10.]):
         """
         Affine les paramètres de 0- sur nb_repetitions
         """
         best_optimization_parameters = initial_parameters
-        variation_coef = sqrt(low_variation_coef*high_variation_coef)
 
         # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
         marks = {}
@@ -1318,23 +1318,15 @@ class Performance():
                 marks[tuple(parameters)] = mark
                 local_marks[tuple(parameters)] = mark
                 print(f"{tuple(parameters)} : {mark}")
-
+            
             # mise à jour des paramètres de référence
             best_mark = local_marks[tuple(best_optimization_parameters)]
-            changed = False
             for parameters, mark in local_marks.items():
                 if mark < best_mark:
-                    changed = True
                     best_optimization_parameters = parameters
                     best_mark = mark
-            path.append((best_optimization_parameters, best_mark, variation_coef))
-            
-            # si on arrive à améliorer le coût : on rapproche le coefficient de variation de la cible haute (proche de 1)
-            if changed:
-                variation_coef = sqrt(variation_coef*high_variation_coef)
-            # si on n'arrive pas à améliorer le coût, i.e. on est dans un minimum local : on rapproche le coefficient de variation de 0 (assez brutal)
-            else:
-                variation_coef = variation_coef*low_variation_coef
+            print(f"{best_optimization_parameters} : {best_mark}")
+
         return marks, path
 
     def cutViewZeroMinusOnPool(self, start=0.5, stop=10, step=0.5, other_parameters=[100., -10.]):

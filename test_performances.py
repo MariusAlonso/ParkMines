@@ -271,14 +271,14 @@ class TestTest():
         performance.variableAlgorithmsAndFlow(nb_repetitions, algorithms)
         assert 0 == 0
     
-    def testVariableAlgorithmsAnticipationTimeAndFlowRealParking(self, stock_args=(20, ), nb_repetitions=10, delays=[i for i in range(300)], factors=[1 + 0.1*i for i in range(-4, 3)], display=False, algorithms=[AlgorithmRandom, AlgorithmZeroMinus], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4), datetime.timedelta(hours=8)]):
+    def testVariableAlgorithmsAnticipationTimeAndFlowRealParking(self, stock_args=(20, ), nb_repetitions=10, delays=[i for i in range(30)], factors=[1 + 0.1*i for i in range(-1, 2)], display=False, algorithms=[AlgorithmRandom, AlgorithmZeroMinus], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4), datetime.timedelta(hours=8)], optimization_parameters=None):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmRandom, delays=delays)
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmRandom, delays=delays, optimization_parameters=optimization_parameters)
 
         # test
-        performance.variableAlgorithmsAnticipationTimeAndFlow(nb_repetitions=nb_repetitions, factors=factors, algorithms=algorithms, anticipation_times=anticipation_times)
+        performance.variableAlgorithmsAnticipationTimeAndFlow(nb_repetitions=nb_repetitions, factors=factors, algorithms=algorithms, anticipation_times=anticipation_times, optimization_parameters=optimization_parameters)
         assert 0 == 0
     
     def testMark(self, algorithm, stock_args=(30, datetime.timedelta(days=150)), nb_repetitions=100):
@@ -313,14 +313,14 @@ class TestTest():
         print(f"{algorithm.__repr__()} algorithm mark :  {mark}")
         assert 0 == 0
     
-    def testRefineAlgorithmOnPool(self, low_variation_coef=0.5, high_variation_coef=0.9, nb_steps=10, initial_parameters=[1., 1.1, 20., -5.]):
+    def testRefineAlgorithmOnPool(self, Algorithm=AlgorithmZeroMinus, variation_coef=0.9, nb_steps=10, initial_parameters=[1., 3., 20., -5.]):
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, AlgorithmZeroMinus)
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), (30, datetime.timedelta(days=150)), [Robot(1), Robot(2), Robot(3)], real_parking, Algorithm)
 
         # test
-        marks, path = performance.refineParametersZeroMinusOnPool(low_variation_coef=low_variation_coef, high_variation_coef=high_variation_coef, nb_steps=nb_steps, initial_parameters=initial_parameters)
+        marks, path = performance.refineParametersZeroMinusOnPool(variation_coef=variation_coef, nb_steps=nb_steps, initial_parameters=initial_parameters)
         for line in path:
             print(line)
         #récupération des résultats dans un classeur
@@ -390,10 +390,10 @@ class TestTest():
         # création du parking
         Vehicle.next_id = 1
         real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3), Robot(4), Robot(5)], real_parking, algorithm)
+        performance = Performance(datetime.datetime(2016, 1, 1, 0, 0, 0, 0), stock_args, [Robot(1), Robot(2), Robot(3), Robot(4), Robot(5)], real_parking, algorithm, optimization_parameters=optimization_parameters)
 
         # test
-        marks = performance.algorithmMarksList(optimization_parameters)
+        marks = performance.algorithmMarksList(optimization_parameters=optimization_parameters)
         print(marks)
         assert 0 == 0
 
@@ -413,13 +413,13 @@ test = TestTest()
 #test.testMark(AlgorithmNewUnimodal)
 #test.testMark(AlgorithmZeroMinus)
 
-#test.testRefineAlgorithm(variation_coef=0.9, nb_steps=5, nb_repetitions=2, initial_parameters=[1., 1.1, 20., -5.])
+#test.testRefineAlgorithmOnPool(variation_coef=0.75, nb_steps=5, initial_parameters=[0.5, 3., 200., -5.])
 
-#test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10.))
+#test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10., ))
 
-#test.testRefineAlgorithmOnPool(nb_steps=20, initial_parameters=[10., 30., 30., -5.])
+#test.testRefineAlgorithmOnPool(nb_steps=10, variation_coef=0.5, Algorithm=AlgorithmUnimodal, initial_parameters=[1., 100., 1., -1.])
 
-test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
+#test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
 #test.testLogCutViewAlgorithmOnPool(start=-10, stop=10, step=1, other_parameters=[100., -10.])
 
-#test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=50, stock_args=(30, ), algorithms=[AlgorithmZeroMinus, AlgorithmRandom], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4)])
+test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=30, stock_args=(40, ), algorithms=[AlgorithmZeroMinus, AlgorithmUnimodal], anticipation_times=[datetime.timedelta(hours=1)], optimization_parameters=(1., 3., 100., -10.))
