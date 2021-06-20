@@ -43,27 +43,29 @@ env = MLEnv(parking, 10, 1, 3, 3)
 apprentissage
 """
 
-learning = False             #True si on veut procéder à l'apprentissage d'un modèle
-saving = False               #True si on veut sauvegarder le modèle
-timesteps = int(3e2)         #Nombre de timesteps dans l'apprentissage
+learning = True             #True si on veut procéder à l'apprentissage d'un modèle
+saving = True               #True si on veut sauvegarder le modèle
+timesteps = int(1000000)         #Nombre de timesteps dans l'apprentissage
 
 name = 'models_RL/300_2021-06-18T10-08-50.zip'
 name_txt = 'models_RL/300_2021-06-18T10-08-50.txt'
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL10tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL11tensorboard/")
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
     RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
     if saving:
-        RL_save.Brain(model, timesteps, env.max_stock_visible, env.number_robots, env.daily_flow, env.simulation_length)
+        brain = RL_save.Brain()
+        brain.save(model, timesteps, env.max_stock_visible, env.number_robots, env.daily_flow, env.simulation_length)
 
 
 """
 Résultat du modèle entraîné sur une simulation
 """
+name = "models_RL/300_2021-06-15T12-49-27"
 
-
-model, max_stock_visible, number_robots, daily_flow, simulation_length = RL_save.Brain.load(RL_save.Brain, name, name_txt)
+brain = RL_save.Brain()
+model, max_stock_visible, number_robots, daily_flow, simulation_length = brain.load(name)
 env = MLEnv(parking, max_stock_visible, number_robots, daily_flow, simulation_length)
 
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))

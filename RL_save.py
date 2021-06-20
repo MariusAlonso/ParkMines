@@ -30,9 +30,11 @@ class Brain():
 
         model.save(self.name)
 
-    def load(self, name, name_txt):
-        self.model = PPO2.load(name)
-        liste = ["self.max_stock_visible", "None", "self.number_robots", "None", "self.daily_flow", "None", "self.simulation_length"]
+    def load(self, name):
+        name_zip = name + ".zip"
+        name_txt = name + ".txt"
+        self.model = PPO2.load(name_zip)
+        liste = ["None", "self.max_stock_visible", "None", "self.number_robots", "None", "self.daily_flow", "None", "self.simulation_length"]
         with open(name_txt, "r") as fichier:
             for i, line in enumerate(fichier):
                 line = line.strip()
