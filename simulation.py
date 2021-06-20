@@ -882,7 +882,25 @@ class BaseAlgorithm(Algorithm):
                     self.parking.blocks[0].lanes[lane_id].pop_cancel_reserve("bottom")
                     robot.goal_position = robot.start_position
                     self.assign_task(robot)
-    
+
+    def update_anticipation_time(self):
+        # calcul du nombre de dépôts à venir dans d'ici anticipation_time : parcours de self.deposit_events
+        queue = self.simulation.deposit_events[:]
+        nb_incoming_deposit = 0
+        while True:
+            if len(queue) == 0:
+                break
+            else:
+                next_event = queue[-1]
+                queue = queue[:-1]
+                if next_event.date - self.simulation.t > self.anticipation_time:
+                    nb_incoming_deposit += 1
+                else:
+                    break
+        
+        self.anticipation_time = self.min_anticipation_time + (1/(1+nb_incoming_deposit))*(self.min_anticipation_time - self.max_anticipation_time)
+
+
     def update_deposit(self, vehicle, success, current_time):
         self.update(current_time)
 
@@ -931,7 +949,7 @@ class BaseAlgorithm(Algorithm):
             if place_lane.list_vehicles[0] != 0:
                 nb_vehicules_interface += 1
 
-        # calcul du nombre de dépôts à venir dans l'heure : parcours de self.deposit_events
+        # calcul du nombre de dépôts à venir dans d'ici anticipation_time : parcours de self.deposit_events
         queue = self.simulation.deposit_events[:]
         nb_incoming_deposit = 0
         while True:
