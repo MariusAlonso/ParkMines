@@ -25,6 +25,7 @@ class MLEnv(gym.Env):
         self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
         self.time_max_waiting = 1*24*3600   #temps maximal de retard admis
         self.max_penalty = 1e7
+        self.penalty_lateness = 20
         self.table_width = max(self.parking.longest_lane + 2, 7)
         self.robot_action_avg = 0.
         self.nb_actions = 0

@@ -4,7 +4,6 @@ import numpy as np
 from numpy.core.numerictypes import maximum_sctype
 from simulation import Algorithm, Event
 
-
 def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, print_action=False):
 
     class RLAlgorithm(Algorithm):
@@ -49,7 +48,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
 
                     if robot.doing is None and robot.vehicle is None:
                         
-                        lane_global_id, side_bool = robot_pick_lane[i_robot], robot_pick_side[i_robot]
+                        lane_global_id, side_bool = robot_pick_lane[i_robot]+1, robot_pick_side[i_robot]
 
                         if lane_global_id < self.parking.number_lanes:
 
@@ -68,7 +67,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                             self.events.add(event)
                             need_wake_up = False
 
-                            lane_global_id, side_bool = robot_drop_lane[i_robot], robot_drop_side[i_robot]
+                            lane_global_id, side_bool = robot_drop_lane[i_robot]+1, robot_drop_side[i_robot]
 
                             if lane_global_id < self.parking.number_lanes:
 
@@ -84,7 +83,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                     
                     elif robot.doing is None:
 
-                        lane_global_id, side_bool = robot_drop_lane[i_robot], robot_drop_side[i_robot]
+                        lane_global_id, side_bool = robot_drop_lane[i_robot]+1, robot_drop_side[i_robot]
 
                         if lane_global_id < self.parking.number_lanes:
                             if side_bool:
@@ -103,17 +102,9 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                             self.events.add(event)  
                             need_wake_up = False
 
-            if need_wake_up and self.simulation.vehicles_left_to_handle:
-                # print(len(self.simulation.retrievals_in_parking) + len(self.simulation.deposit_events), len(self.simulation.vehicles_left_to_handle))
-
-                if self.simulation.retrievals_in_parking:
-                    next_event = self.simulation.retrievals_in_parking[-1].retrieval
-                    if self.simulation.deposit_events:
-                        next_event = min(next_event, self.simulation.deposit_events[-1].date)
-                else:
-                    next_event = self.simulation.deposit_events[-1].date
+            if self.simulation.vehicles_left_to_handle:
                 
-                wake_up_date = max(self.simulation.t + datetime.timedelta(minutes=5), next_event - datetime.timedelta(minutes=(int(action[self._dict("idleness_date")])*5)**2))
+                wake_up_date = self.simulation.t + datetime.timedelta(minutes=20)
                 self.current_wake_up = Event(None, wake_up_date, "wake_up_robots", None)
                 self.events.add(self.current_wake_up)
             else:
