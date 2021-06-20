@@ -39,7 +39,7 @@ class TestTest():
 
         assert 0 == 0
 
-    def test_zero_minus_algorithm(self, optimization_parameters=(1., 3., 100., -10.)):
+    def test_zero_minus_algorithm(self, optimization_parameters=(1., 1000., 100., -10.)):
         
         Vehicle.next_id = 1
         stock = RandomStock(30, time = datetime.timedelta(days=100))
@@ -50,7 +50,7 @@ class TestTest():
         simulation = Simulation(datetime.datetime(2000,1,1,0,0,0,0), stock, [Robot(1), Robot(2)], real_parking, AlgorithmRandom, print_in_terminal = False, optimization_parameters = optimization_parameters)
         simulation.start_display(12, 20)
         simulation.display.run()
-        print(simulation.display)      
+        print(simulation.display)
 
         assert 0 == 0
 

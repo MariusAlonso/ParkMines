@@ -825,7 +825,8 @@ class BaseAlgorithm(Algorithm):
                     event_end_task = Event(robot.vehicle, robot.goal_time, "robot_end_task", robot)
                     self.events.add(event_end_task)
 
-                    robot.doing.canceled = True
+                    if not robot.doing is None:     # ajout par Pierre pour éviter un bug
+                        robot.doing.canceled = True
                     robot.doing = event_end_task
                 
                 else:
@@ -934,6 +935,20 @@ class BaseAlgorithm(Algorithm):
             if place_lane.list_vehicles[0] != 0:
                 nb_vehicules_interface += 1
 
+        # calcul du nombre de dépôts à venir dans l'heure : parcours de self.deposit_events
+        queue = self.simulation.deposit_events[:]
+        nb_incoming_deposit = 0
+        while True:
+            if len(queue) == 0:
+                break
+            else:
+                next_event = queue[-1]
+                queue = queue[:-1]
+                if next_event.date - self.simulation.t > self.anticipation_time:
+                    nb_incoming_deposit += 1
+                else:
+                    break
+
         if retrieval_event is None:
             return False
         if deposit_event is None:
@@ -1011,9 +1026,10 @@ class BaseAlgorithm(Algorithm):
 
 class AlgorithmRandom(BaseAlgorithm):
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=8), print_in_terminal=False, optimization_parameters=None):
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False, optimization_parameters=None):
         super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time, print_in_terminal)
 
+    
     def place(self, vehicle, start_position, time, max_iter=1000):
         self.nb_placements += 1
         nb_iter = 0
@@ -1048,11 +1064,15 @@ class AlgorithmRandom(BaseAlgorithm):
 ###########################################################################
 
 class WeightAlgorithm(BaseAlgorithm):
+
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False, optimization_parameters=None):
+        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time, print_in_terminal)
+
     
     def place(self, vehicle, start_position, date):
-        """
-        Algorithme de placement avec fonction de coût/pondération externalisée, cette fonction n'a pas à changer quel que soit l'algorithme de placement
-        """
+        
+        #Algorithme de placement avec fonction de coût/pondération externalisée, cette fonction n'a pas à changer quel que soit l'algorithme de placement
+        
 
         # paramètre utilisé dans performances (mesure)
         self.nb_placements += 1
@@ -1151,16 +1171,17 @@ class AlgorithmZeroMinus(WeightAlgorithm):
                             min_lane_end = lane_end
     """
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False, optimization_parameters=(1., 3., 100., -10.)):
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False, optimization_parameters=(1., 3., 100., -10., 1.)):
         super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=print_in_terminal)
         
         #paramètres de contrôle des poids
-        alpha, beta, start_new_lane_weight, distance_to_lane_end_coef = optimization_parameters
+        alpha, beta, start_new_lane_weight, distance_to_lane_end_coef, anticipation_time = optimization_parameters
 
         self.alpha = alpha
         self.beta = beta
         self.start_new_lane_weight = start_new_lane_weight
         self.distance_to_lane_end_coef = distance_to_lane_end_coef
+        self.anticipation_time = anticipation_time
 
         self.optimization_parameters = list(optimization_parameters)    # /!\ changement de type
 
@@ -1221,17 +1242,51 @@ class AlgorithmZeroMinus(WeightAlgorithm):
 
 
 
-class AlgorithmNewUnimodal(WeightAlgorithm):
+class AlgorithmUnimodal(WeightAlgorithm):
 
-    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False):
+    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False, optimization_parameters=(1., 100000., 100., -10.)):
         super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=print_in_terminal)
         
         #paramètres de contrôle des poids
-        self.break_unimodality_weight = 1000000
-        self.start_new_lane_weight = 10000
+        self.alpha, self.break_unimodality_weight, self.start_new_lane_weight, self.distance_to_lane_end_coef = (1., 100., 1., -1.)  #optimization_parameters
+
+        self.optimization_parameters = list(optimization_parameters)    # /!\ changement de type
 
     def weight(self, vehicle, start_position, lane_end, date):
 
+        # détermination de la place cible et simulation éventuelle des arrivées entre temps
+
+        block_id, lane_id, side = lane_end
+        lane = self.parking.blocks[block_id].lanes[lane_id]
+
+        # On simule l'évolution de la lane : il ne faut pas prendre en compte les véhicules qui seront partis quand le notre arrivera (/!\ est-ce bien utile / pas risqué ?)
+        travel_time = self.parking.travel_time(start_position, lane_end)
+        time_of_arrival = date + travel_time
+        try:
+            future_lane = self.parking.future_config(lane, block_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
+            future_lane.push(vehicle.id, side, self.stock)
+            self.parking.future_config(future_lane, block_id, lane_id, self.robots, self.stock, min_time = time_of_arrival, on_place=True)
+        except IndexError:
+            return None
+
+        # overweight : somme des pénalités pour les cas dégénérés
+        overweight = 0
+
+        # détermination du nombre de places restantes dans la lane
+        if side == "top":
+            distance_to_lane_end = future_lane.top_position
+        else:
+            """
+            if self.print_in_terminal:
+                print("ERREUR DE PLACEMENT")
+                print(self.parking)
+                print(self.locked_lanes)
+            raise ValueError("le placement n'a pas pu être effectué")
+            """
+            distance_to_lane_end = future_lane.length - future_lane.bottom_position - 1
+        
+        ### détermination des variables régissant le poids ###
+        
         # détermination de la place cible et simulation éventuelle des arrivées entre temps
 
         block_id, lane_id, side = lane_end
@@ -1246,11 +1301,7 @@ class AlgorithmNewUnimodal(WeightAlgorithm):
             self.parking.future_config(future_lane, block_id, lane_id, self.robots, self.stock, min_time = before_time_of_arrival, on_place=True)
         except IndexError:
             return None
-        ### détermination des variables régissant le poids ###
-
-        # overweight : somme des pénalités pour les cas dégénérés
-        overweight = 0
-        
+      
         # détermination de delta_t (en minutes)
         try:
             delta_t = (vehicle.retrieval - future_lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60
@@ -1262,15 +1313,17 @@ class AlgorithmNewUnimodal(WeightAlgorithm):
             delta_t = 0
             overweight += self.start_new_lane_weight
 
-        # calcul du poids
-        weight = delta_t + overweight
+        # détermination du temps de trajet en minutes
+        travel_time = travel_time.total_seconds()/60
 
+        # calcul du poids
+        weight = self.alpha*delta_t + self.distance_to_lane_end_coef*distance_to_lane_end + overweight + travel_time
 
         return weight
 
     @classmethod
     def __repr__(self):
-        return "New Unimodal"
+        return "Unimodal"
 
 class AlgorithmUnimodalRefined0(WeightAlgorithm):
 
