@@ -34,12 +34,18 @@ class Brain():
         name_zip = name + ".zip"
         name_txt = name + ".txt"
         self.model = PPO2.load(name_zip)
-        liste = ["None", "self.max_stock_visible", "None", "self.number_robots", "None", "self.daily_flow", "None", "self.simulation_length"]
+        liste = ["None", "None", "self.max_stock_visible", "None", "self.number_robots", "None", "self.daily_flow", "None", "self.simulation_length"]
         with open(name_txt, "r") as fichier:
             for i, line in enumerate(fichier):
                 line = line.strip()
-                if line and i%2==1:
-                    eval(liste[i] + " = " + line)
+                if i == 2:
+                    self.max_stock_visible = int(line)
+                elif i == 4:
+                    self.number_robots = int(line)
+                elif i == 6:
+                    self.daily_flow = int(line)
+                elif i == 8:
+                    self.simulation_length = int(line)
         return (self.model, self.max_stock_visible, self.number_robots, self.daily_flow, self.simulation_length)
 
 
