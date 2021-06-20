@@ -11,8 +11,10 @@ class Brain():
     afin de pouvoir les réutiliser.
     Enregistre les modèles dans les fichiers models_RL sous le format timesteps_date-de-l'apprentissage
     """ 
+    def __init__(self):
+        pass
 
-    def __init__(self, model, iterations, max_stock_visible, number_robots, daily_flow, simulation_length):
+    def save(self, model, iterations, max_stock_visible, number_robots, daily_flow, simulation_length):
         self.model = model
         self.max_stock_visible = max_stock_visible
         self.number_robots = number_robots
@@ -28,9 +30,11 @@ class Brain():
 
         model.save(self.name)
 
-    def load(self, name, name_txt):
-        self.model = PPO2.load(name)
-        liste = ["self.max_stock_visible", "None", "self.number_robots", "None", "self.daily_flow", "None", "self.simulation_length"]
+    def load(self, name):
+        name_zip = name + ".zip"
+        name_txt = name + ".txt"
+        self.model = PPO2.load(name_zip)
+        liste = ["None", "self.max_stock_visible", "None", "self.number_robots", "None", "self.daily_flow", "None", "self.simulation_length"]
         with open(name_txt, "r") as fichier:
             for i, line in enumerate(fichier):
                 line = line.strip()
