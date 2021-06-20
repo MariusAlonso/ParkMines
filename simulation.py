@@ -35,9 +35,11 @@ class Simulation():
         # nb_events_tracker : dictionnaire contenant le nombre d'évènements dans la file de priorité à chaque date
         self.nb_events_tracker = {}
 
-        # Création de la file d'événements : ajout des commandes
+        # File d'évènements
         self.events = SortedList()
+        # File des déposits pas encore effectués
         self.deposit_events = SortedList()
+
         self.events.add(Event(None, t0, "start"))
         for v in self.stock.vehicles.values():
             if order:
@@ -49,10 +51,14 @@ class Simulation():
                 self.events.add(Event(v, v.retrieval, "retrieval"))    
                 self.deposit_events.add(deposit_event)
 
+        # File des déposits des clients qui patientent à l'interface
         self.pending_deposits = SortedList()
+        # File des retrievals des clients qui patientent à l'interface
         self.pending_retrievals = SortedList()
+        # File des véhicules dans le parking classés selon leur date de retrieval
+        self.retrievals_in_parking = SortedList()
+        # Ensemble des véhicules qu'il reste à traiter dans la simulation
         self.vehicles_left_to_handle = set(self.stock.vehicles.keys())
-        # print(self.vehicles_left_to_handle)
 
         self.vehicles_to_retrieve = []
     
@@ -124,6 +130,8 @@ class Simulation():
             print("-------------")
             print(self.pending_retrievals)
             print("-------------")
+            print(self.parking.occupation)
+            print("-------------")
             
 
         vehicle = event.vehicle
@@ -183,6 +191,7 @@ class Simulation():
             else:
                 success = True
                 self.deposit_events.pop()
+                self.retrievals_in_parking.add(vehicle)
                 self.parking.blocks[0].lanes[lane_id].push_reserve(vehicle.id, "top")
                 self.parking.blocks[0].lanes[lane_id].push(vehicle.id, "top", self.stock)
                 self.parking.occupation[vehicle.id] = (0, lane_id, 0)
@@ -217,6 +226,11 @@ class Simulation():
 
                     self.vehicles_left_to_handle.remove(vehicle.id)
 
+                    if vehicle in self.retrievals_in_parking:
+                        self.retrievals_in_parking.remove(vehicle)
+                    else:
+                        print("ERROR")
+
                     if nb_jour in self.nb_sortie.keys():
                         self.nb_sortie[nb_jour] += 1
                     else:
@@ -234,12 +248,14 @@ class Simulation():
 
                     del self.parking.occupation[event.vehicle.id]
 
+                    # On vérifie si un client peut déposer son véhicule dans la place libérée de l'interface
                     if self.pending_deposits:
                         self.deposit_events.pop()
                         event_deposit = self.pending_deposits.pop()
                         self.parking.blocks[0].lanes[i_lane].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[i_lane].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, i_lane, 0)
+                        self.retrievals_in_parking.add(event_deposit.vehicle)
 
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.before_deposit_delays.append(self.t - event_deposit.date)
@@ -258,21 +274,6 @@ class Simulation():
                                 self.execute(pdg_retrieval)
                                 self.pending_retrievals.remove(pdg_retrieval)
                                 break
-                    """
-                    if vehicle.id not in self.parking.occupation and block_id == 0:
-
-                        event.robot.start_position = event.robot.goal_position
-                        event.robot.start_time = self.t
-                        event.robot.goal_time = None
-                        event.robot.target = None
-                        event.robot.doing = None
-
-                        
-                        if nb_jour in self.nb_sortie_interface.keys():
-                            self.nb_sortie_interface[nb_jour] += 1
-                        else:
-                            self.nb_sortie_interface[nb_jour] = 1
-                    """
                         
                     if self.print_in_terminal:
                         print(f"Retrieval of {vehicle.id}")
@@ -284,7 +285,9 @@ class Simulation():
             
             else:
                 for pdg_deposit in self.pending_deposits:
+                    # Si un client veut récuperer son véhicule alors qu'il attent pour le déposer
                     if vehicle.id == pdg_deposit.vehicle.id:
+                        self.vehicles_left_to_handle.remove(vehicle.id)
                         self.pending_deposits.remove(pdg_deposit)
                         self.deposit_events.remove(pdg_deposit)
                         self.algorithm.update_deposit(pdg_deposit.vehicle, True, self.t)
@@ -387,10 +390,6 @@ class Simulation():
             self.parking.occupation[vehicle.id] = (block_id, lane_id, lane.end_position(side))
 
             if block_id == 0:
-                """
-                # ajout du retard éventuel à la liste des retards à la sortie
-                self.retrieval_delays.append(self.t - vehicle.retrieval)
-                """
                 for pdg_retrieval in self.pending_retrievals:
                     # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
                     if pdg_retrieval.vehicle.id == vehicle.id:
@@ -421,7 +420,7 @@ class Simulation():
 
         event.robot.start_position = event.robot.goal_position
         event.robot.start_time = self.t
-        event.robot.goal_time = None
+        event.robot.goal_time = None # Pour l'instant ...
         
 
         moved_vehicle = None # Pour l'instant ...
@@ -455,6 +454,7 @@ class Simulation():
                         self.parking.blocks[0].lanes[lane_id].push_reserve(event_deposit.vehicle.id, "top")
                         self.parking.blocks[0].lanes[lane_id].push(event_deposit.vehicle.id, "top", self.stock)
                         self.parking.occupation[event_deposit.vehicle.id] = (0, lane_id, 0)
+                        self.retrievals_in_parking.add(event_deposit.vehicle)
 
                         # ajout du retard éventuel à la liste des retards au dépôt
                         self.before_deposit_delays.append(self.t - event_deposit.date)
@@ -469,14 +469,16 @@ class Simulation():
                         for pdg_retrieval in self.pending_retrievals:
                             # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
                             if pdg_retrieval.vehicle.id == event_deposit.vehicle.id:
-                                print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                                 self.execute(pdg_retrieval)
                                 self.pending_retrievals.remove(pdg_retrieval)
                                 break
 
                 if block_id == 0:
                     # ajout du retard éventuel à la liste des retards au dépôt
-                    self.after_deposit_delays.append(self.t - moved_vehicle.effective_deposit)
+                    try:
+                        self.after_deposit_delays.append(self.t - moved_vehicle.effective_deposit)
+                    except:
+                        self.after_deposit_delays.append(self.t - moved_vehicle.deposit)
                     # la place n'est plus le siège d'un évènement empty_interface
                     self.parking.blocks[0].targeted[lane_id] = False
 
@@ -569,9 +571,9 @@ class Event():
         self.date = date
         self.event_type = event_type
         self.robot = robot
-        self.unassigned_tasks = unassigned_tasks
+        self.unassigned_tasks = unassigned_tasks # No longer used
         self.goal_position = goal_position
-        self.canceled = False
+        self.canceled = False # Not usedd
         self.event_retrieval = event_retrieval
         self.id = self.__class__.next_id
         self.__class__.next_id += 1
@@ -637,11 +639,15 @@ class Algorithm():
 
 
 class BaseAlgorithm(Algorithm):
+    """
+    Un BaseAlgorithm comporte une méthode assign_task qui attribue à un robot une tâche lorsqu'il n'a plus rien à faire
+    """
 
     def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False, optimization_parameters = None):
         super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal)
 
         self.locked_lanes = locked_lanes
+        # Pour chaque véhicule, le côté de sa lane choisi pour le récupérer
         self.side_chosen_to_retrieve = {}
         self.pending_retrievals = pending_retrievals
         self.anticipation_time = anticipation_time
