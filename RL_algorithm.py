@@ -26,7 +26,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
 
             self.reward_stupid_place = 1
             self.bonus_deposit = 1
-            self.penalty_movement = 1
+            self.penalty_movement = 0
         
         def take_decision(self, action, current_time):
             if print_action:
@@ -190,7 +190,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
 
         def update_robot_end_task(self, robot, lane_end, success, current_time):
             if self.model is None:
-                self.reward += self.penalty_movement
+                self.reward += 20
 
             self.update(current_time)
         
