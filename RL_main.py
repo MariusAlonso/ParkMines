@@ -48,13 +48,13 @@ env = MLEnv(parking, 10, 1, 3, 3)
         ############################## apprentissage ############################################
         #########################################################################################
 
-learning = True            #True si on veut procéder à l'apprentissage d'un modèle
-saving = True              #True si on veut sauvegarder le modèle
-timesteps = int(1e6)         #Nombre de timesteps dans l'apprentissage
+learning = False            #True si on veut procéder à l'apprentissage d'un modèle
+saving = False              #True si on veut sauvegarder le modèle
+timesteps = int(3e6)         #Nombre de timesteps dans l'apprentissage
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL12tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL11tensorboard/")
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
     RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
     if saving:
@@ -66,7 +66,7 @@ if learning:
         ############## Résultat du modèle entraîné sur une simulation ###########################
         #########################################################################################
 
-name = "models_RL/1000000_2021-06-20T15-19-19"
+name = "models_RL/3000000_2021-06-20T19-17-26"
 
 brain = RL_save.Brain()
 model, max_stock_visible, number_robots, daily_flow, simulation_length = brain.load(name)

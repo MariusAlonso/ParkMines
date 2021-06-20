@@ -166,7 +166,8 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 robot.doing = event
                 self.events.add(event)   
             else:
-                self.update(current_time)
+                #self.update(current_time)
+                pass
 
             if self.model is None:
 
@@ -181,7 +182,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
             if self.model is None:
                 self.reward += 20
 
-            self.update(current_time)
+            # self.update(current_time)
         
             if self.model is None:
 
