@@ -23,9 +23,9 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
             ############################## Paramètres #################################################
             ###########################################################################################
 
-            self.reward_stupid_place = 5
-            self.bonus_deposit = 100
-            self.penalty_movement = 0
+            self.reward_stupid_place = 1
+            self.bonus_deposit = 1
+            self.penalty_movement = 1
         
         def take_decision(self, action, current_time):
             if print_action:
@@ -166,8 +166,8 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 robot.doing = event
                 self.events.add(event)   
             else:
-                self.update(current_time)
-
+                # self.update(current_time)
+                pass
             if self.model is None:
 
                 # REWARD si le robot arrive dans une lane où il n'y a pas de véhicule il est pénalisé, sinon rien ne se passe
@@ -179,9 +179,9 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
 
         def update_robot_end_task(self, robot, lane_end, success, current_time):
             if self.model is None:
-                self.reward += 20
+                self.reward += 25
 
-            self.update(current_time)
+            # self.update(current_time)
         
             if self.model is None:
 
@@ -197,68 +197,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
     
     return RLAlgorithm
 
-"""
-class Observation():
 
-    def __init__(self, t0, simulation, number_arguments, _dict):
-
-        self.t0 = t0
-        self.data = np.zeros((number_arguments, simulation.parking.nb_max_lanes+2))
-        self.simulation = simulation
-        self._dict = _dict
-
-        for lane_global_id in range(1, self.simulation.parking.number_lanes+1):
-            block_id, lane_id = self.simulation.parking.dict_lanes[lane_global_id]
-            lane = self.simulation.parking.blocks[block_id].lanes[lane_id]
-            if lane.top_position is None:
-                self.data[self._dict("lanes_ends", number=lane_global_id), 0:2] = np.array([lane.length//2 + 1, lane.length//2 - 1])
-            else:
-                self.data[self._dict("lanes_ends", number=lane_global_id), 0:2] = np.array([lane.top_position, lane.bottom_position])
-
-        for i_vehicle, vehicle in enumerate(self.simulation.stock.vehicles.values()):
-            deposit_in_sec = (vehicle.deposit - self.t0).total_seconds()
-            retrieval_in_sec = (vehicle.retrieval - self.t0).total_seconds()
-            self.data[self._dict("stock_dates", number=i_vehicle)] = deposit_in_sec
-            self.data[self._dict("stock_dates", number=i_vehicle, retrieval=True)] = retrieval_in_sec
-            self.data[self._dict("stock_dates")[0]:number_arguments, 2] = 1
-    
-    def update(self):
-
-        self.data[self._dict("current_time")] = (self.simulation.t - self.t0).total_seconds()
-        
-        for i_robot, robot in enumerate(self.simulation.robots):
-            if robot.doing is None:
-                
-                self.data[self._dict("robot_pick_lane", number=i_robot)] = 0
-            else:
-                self.data[self._dict("robot_pick_lane", number=i_robot)] = self.simulation.parking.to_global_id[robot.goal_position[:2]]
-                self.data[self._dict("robot_pick_side", number=i_robot)] = int(robot.goal_position[2] == "bottom")
-                
-            if robot.vehicle is None:
-                self.data[self._dict("robot_actions_is_carrying", number=i_robot)] = 0
-            else:
-                self.data[self._dict("robot_actions_is_carrying", number=i_robot)] = 1
-                self.data[self._dict("robot_actions_vehicles", number=i_robot)] = (robot.vehicle.retrieval-self.t0).total_seconds()
-        
-        for lane_global_id in range(1, self.simulation.parking.number_lanes+1):
-            block_id, lane_id = self.simulation.parking.dict_lanes[lane_global_id]
-            lane = self.simulation.parking.blocks[block_id].lanes[lane_id]
-            if lane.top_position is None:
-                self.data[self._dict("lanes_ends", number=lane_global_id),0:2] = np.array([lane.length//2 + 1, lane.length//2 - 1])
-            else:
-                self.data[self._dict("lanes_ends", number=lane_global_id),0:2] = np.array([lane.top_position, lane.bottom_position])
-            for position, vehicle_id in enumerate(lane.list_vehicles):
-                if vehicle_id:
-                    self.data[self._dict("lanes", number=lane_global_id, place=position)] = (self.simulation.stock.vehicles[vehicle_id].retrieval - self.simulation.t).total_seconds()
-                else:
-                    self.data[self._dict("lanes", number=lane_global_id, place=position)] = 0
-        
-        for i_vehicle, vehicle in enumerate(self.simulation.stock.vehicles.values()):
-            deposit_in_sec = (vehicle.deposit - self.simulation.t).total_seconds()
-            retrieval_in_sec = (vehicle.retrieval - self.simulation.t).total_seconds()
-            self.data[self._dict("stock_dates", number=i_vehicle)] = deposit_in_sec
-            self.data[self._dict("stock_dates", number=i_vehicle, retrieval=True)] = retrieval_in_sec
-"""
 
 class ObservationBis():
 

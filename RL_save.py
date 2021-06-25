@@ -15,6 +15,9 @@ class Brain():
         pass
 
     def save(self, model, iterations, max_stock_visible, number_robots, daily_flow, simulation_length):
+        """
+        Sauvegarde un modèle et les paramètres de l'environnement
+        """
         self.model = model
         self.max_stock_visible = max_stock_visible
         self.number_robots = number_robots
@@ -31,6 +34,9 @@ class Brain():
         model.save(self.name)
 
     def load(self, name):
+        """
+        En rentrant le nom du fichier (sans .zip / .txt) renvoie le model et les paramètres adaptés à ce modèle pour créer le env
+        """
         name_zip = name + ".zip"
         name_txt = name + ".txt"
         self.model = PPO2.load(name_zip)

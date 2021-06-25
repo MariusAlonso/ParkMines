@@ -12,61 +12,105 @@ class MLEnv(gym.Env):
     
 
     def __init__(self, parking, max_stock_visible, number_robots, daily_flow, simulation_length, display = False):
-        # real_parking = Parking([BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]])
-        # parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+
+        ###########################################################################################
+        ########################### Hyperparamètres ###############################################
+        ###########################################################################################
+
         self.parking = parking
+
+        # Nombre de véhicules visibles pour l'algorithme (on ne montre pas la totalité des véhicules en même temps pour de soucis de complexité)
+        self.max_stock_visible = max_stock_visible
+
         self.number_robots = number_robots
+
+        # Duree de la simulation
         self.simulation_length = simulation_length
+
+        # Nombre moyen de véhicules qui arrivent au parking par jour
         self.daily_flow = daily_flow
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
-        self.display = display
-        self.last_step_t = None
-        self.max_stock_visible = max_stock_visible
-        self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
-        self.time_max_waiting = 1*24*3600   #temps maximal de retard admis
+        
+
+        ###########################################################################################
+        ######################## Paramètres et Rewards ############################################
+        ###########################################################################################
+
+        
+        # Temps maximal de retard admis
+        self.time_max_waiting = 1*24*3600   
+
+        # Reward infligée à l'algorithme lors de l'apprentissage lorsqu'il se suicide
         self.max_penalty = 1e7
-        self.penalty_lateness = 20
-        self.table_width = max(self.parking.longest_lane + 2, 7)
+
+        # Penalisation pour chaque client qui attend (deposit et retrieval)
+        self.penalty_lateness = 1
+
+
+        ###########################################################################################
+        ############################## Statistiques ###############################################
+        ###########################################################################################
+
         self.robot_action_avg = 0.
         self.nb_actions = 0
-        
         self.client_unsatisfaction = 0.
 
-        self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
-        self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
-        
 
+        ###########################################################################################
+        ###################### Temps et autres paramètres #########################################
+        ###########################################################################################
+
+        # Date de dernière prise de décision du robot
+        self.last_step_t = None 
+        self.t0 = datetime.datetime(2021,1,1,0,0,0,0)
+
+        # Temps maximal de la simulation, au-delà duquel la simulation s'arrête
+        self.tmax  = self.t0 + datetime.timedelta(days=self.simulation_length+45)
+
+        # Nombre total de variables de décision 
+        self.number_arguments = self.parking.number_lanes + self.number_robots + self.max_stock_visible +1
+
+        # Largeur de l'observation_space
+        self.table_width = max(self.parking.longest_lane + 2, 7)
+
+        # Création de l'algorithme et de la simulation
         RLAlgorithm = rl_algorithm_builder(None, self._dict, self.number_arguments, self.max_stock_visible)
         self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=True)
 
-        if self.display:
-            #self.simulation.start_display(time_interval=1.)
-            pass
-
-        #
-        #  action_space : pour chaque robot un Discrete avec le numéro de lane où il va effectuer la tâche (0 correpond à oisiveté)
-        #               ensuite un Box qui donne le temps d'oisiveté (nombre réel entre 0 et 100)
-        #  self.action_space = MultiDiscrete([10e2] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
         
-        #self.action_space = MultiDiscrete([10e2] + [self.parking.number_lanes + 1 for _ in range(self.number_robots)] + [2 for _ in range(self.number_robots)])
-        """
-        Linf = np.array([0.]+[0.]*self.number_robots+[1.]*self.number_robots + [0.]*self.number_robots + [1.]*self.number_robots + [0.]*self.number_robots)
-        Lsup = np.array([99995.]+[1.]*self.number_robots+[self.parking.number_lanes+1]*self.number_robots + [1.]*self.number_robots+[self.parking.number_lanes+1]*self.number_robots + [1.]*self.number_robots)
-        """
-        Lsup2 = [10]+[2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots
-        self.action_space = MultiDiscrete(Lsup2)
-        
+        ###########################################################################################
+        ################################ Action_space #############################################
+        ###########################################################################################
 
+        # action_space : pour chaque robot un Discrete avec le numéro de lane où il va effectuer la tâche (0 correpond à oisiveté) 
+        #                et 0 ou 1 pour indiquer le côte de la lane (top / bottom). Enfin un paramètre (0/1) pour savoir si le robot va ètre actif
+        #                lors du prochain step
+        #                 
+        # Structure : 
+        #               [1] : n'a aucun rôle
+        #               [2]*self.number_robots + [self.parking.number_lanes]*self.number_robots : side et lane où le robot commence l'action
+        #               [2]*self.number_robots + [self.parking.number_lanes]*self.number_robots : side et lane où le robot finit l'action
+
+        action_space = [1]+[2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots+[self.parking.number_lanes]*self.number_robots + [2]*self.number_robots
+        self.action_space = MultiDiscrete(action_space)
         print(self.action_space)
         print("action_space_created")
         
         
-        
+        ###########################################################################################
+        ########################### Observation_space #############################################
+        ###########################################################################################        
 
+        # observation_space : matrice
+        #
+        # Structure : 
+        #               temps courant
+        #               
+        #
+        #
 
         #[current_time, robot1_lane, robot2_lane..., robot1_side, robot2_side,..., stock_date_deposit_vehicule1, ..., stock_date_retrieval_vehicule1, ....]
         
-        print(self.parking.longest_lane)
         Linf = np.zeros((self.number_arguments, self.table_width))
         Lsup = np.zeros((self.number_arguments, self.table_width))
         Lsup[0,0] = 0

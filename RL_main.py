@@ -40,18 +40,19 @@ class TensorboardCallback(BaseCallback):
 
 
 
-parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
-env = MLEnv(parking, 10, 1, 3, 3)
-
 
         #########################################################################################
-        ############################## apprentissage ############################################
+        ############################## Apprentissage ############################################
         #########################################################################################
 
-learning = True            #True si on veut procéder à l'apprentissage d'un modèle
+learning = True           #True si on veut procéder à l'apprentissage d'un modèle
 saving = True              #True si on veut sauvegarder le modèle
-timesteps = int(1e6)         #Nombre de timesteps dans l'apprentissage
+timesteps = int(8e5)         #Nombre de timesteps dans l'apprentissage
 
+# parking et environnement pour l'apprentissage du modèle
+
+parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 5), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+env = MLEnv(parking, 10, 1, 3, 3)
 
 if learning:
     model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL12tensorboard/")
@@ -66,47 +67,23 @@ if learning:
         ############## Résultat du modèle entraîné sur une simulation ###########################
         #########################################################################################
 
-name = "models_RL/1000000_2021-06-20T15-19-19"
+
+# Le nom du fichier où se trouve le modèle qu'on veut visualiser
+
+name = "models_RL/800000_2021-06-21T17-01-54"  
+
+# Récupération du modèle et création de l'environnement adapté
 
 brain = RL_save.Brain()
 model, max_stock_visible, number_robots, daily_flow, simulation_length = brain.load(name)
 env = MLEnv(parking, max_stock_visible, number_robots, daily_flow, simulation_length)
 RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible)
-
 stock = RandomStock(env.daily_flow, datetime.timedelta(days=env.simulation_length))
+
+# Simulation 
+
 simulation = Simulation(env.t0, stock, [Robot(1)], env.parking, RLAlgorithm, order=False, print_in_terminal = True)
 simulation.start_display(12, 20)
 simulation.display.run()
 
-def evaluate_model(model, repetition, _input=False):
-    statics = []
-    for iteration in range(repetition):
-        obs = env.reset()
-        #input()
-        done = False
-        score = 0
-        i=0
-        last_obs_lane = obs[env._dict("lanes")[0]: env._dict("lanes")[1]]
-        while not done:
-            print(env.observation.data)
-            print(env.simulation.t)
-            input("")
-            action, _states = model.predict(obs)
-            obs, reward, done, info = env.step(action)
-            i+=1
-            obs_lane = obs[env._dict("lanes")[0]: env._dict("lanes")[1]]
-            if i==1000 and not _input:
-                print("score=", score)
-                i=0
-                env.render()
-            score+=reward
-            if _input:
-                if (last_obs_lane != obs_lane).any():
-                    env.render()
-                    input()
-                last_obs_lane = copy.deepcopy(obs_lane)
-        env.render()
-        print(f'score final={score} of iteration {iteration+1}/{repetition}')
-        statics.append(score)
-    return statics
 
