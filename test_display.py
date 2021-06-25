@@ -39,7 +39,7 @@ class TestTest():
 
         assert 0 == 0
 
-    def test_zero_minus_algorithm(self, optimization_parameters=(1., 1000., 100., -10., 0.7, 2)):
+    def test_zero_minus_algorithm(self, optimization_parameters=(1., 1000., 100., -10., 0.5, 1.5)):
         
         Vehicle.next_id = 1
         stock = RandomStock(30, time = datetime.timedelta(days=100))

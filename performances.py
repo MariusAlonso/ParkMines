@@ -19,7 +19,8 @@ class Dashboard():
     def __init__(self, simulation):
         """
         un Dashboard prend en argument une simulation, l'exécute entièrement,
-        puis calcule la performance
+        puis calcule la performance de l'algorithme sur cette simulation 
+        (retards, nombre de déplacement moyen, note...)
         """
         self.completed = True
         try:
@@ -29,12 +30,18 @@ class Dashboard():
         self.simulation = simulation
 
     def averageIntermediateMovesPerVehicle(self):
+        """
+        Calcule le nombre de déplacement intermédaire moyen d'un véhicule au cours de la simulation
+        """
         if len(self.simulation.stock):
             return self.simulation.algorithm.nb_placements/len(self.simulation.stock) - 1
         else:
             return 0
     
     def averageBeforeDepositDelay(self):
+        """
+        Calcule le temps d'attente moyen d'un client avant de déposer son véhicule au cours de la simulation
+        """
         before_deposit_delays = np.array(self.simulation.before_deposit_delays)
         if len(before_deposit_delays[before_deposit_delays < datetime.timedelta()]):
             before_deposit_delays[before_deposit_delays < datetime.timedelta()] = datetime.timedelta()
@@ -44,6 +51,9 @@ class Dashboard():
             return datetime.timedelta()
 
     def averageAfterDepositDelay(self):
+        """
+        Calcule le temps d'attente moyen d'un véhicule dans l'interface avant son placement dans le parking au cours de la simulation
+        """
         after_deposit_delays = np.array(self.simulation.after_deposit_delays)
         if len(after_deposit_delays[after_deposit_delays < datetime.timedelta()]):
             after_deposit_delays[after_deposit_delays < datetime.timedelta()] = datetime.timedelta()
@@ -53,6 +63,9 @@ class Dashboard():
             return datetime.timedelta()
     
     def averageRetrievalDelay(self):
+        """
+        Calcule le temps d'attente moyen d'un client avant de récupérer son véhicule au cours de la simulation
+        """
         retrieval_delays = np.array(self.simulation.retrieval_delays)
         if len(retrieval_delays[retrieval_delays < datetime.timedelta()]):
             retrieval_delays[retrieval_delays < datetime.timedelta()] = datetime.timedelta()
@@ -63,7 +76,7 @@ class Dashboard():
     
     def depositDelaysRates(self, delays=[i for i in range(180)]):
         """
-        renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
+        Renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
         """
         deposit_delays = np.array(self.simulation.before_deposit_delays)
         delays_rates = {}
@@ -75,7 +88,7 @@ class Dashboard():
     
     def retrievalDelaysRates(self, delays=[i for i in range(180)]):
         """
-        renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
+        Renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
         """
         retrieval_delays = np.array(self.simulation.retrieval_delays)
         delays_rates = {}
@@ -87,7 +100,7 @@ class Dashboard():
     
     def mark(self):
         """
-        renvoie la note de la simulation
+        Renvoie la note de la simulation (SOMME(retards_sortie^3/2)/nombre_de_véhicules_placés)
         """
         retrieval_delays = np.array(self.simulation.retrieval_delays)
         mark = 0
@@ -108,25 +121,29 @@ class Performance():
         """
         Dans la classe performance, on se donne une simulation de référence
         et on se donne des méthodes qui étudient la réponse à la variation 
-        d'un seul des paramètres (par rapport à la simulation de référence)
+        d'un ou plusieurs des paramètres (par rapport à la simulation de référence)
 
         stock_args : tuple contenant tous les arguments nécessaires à la génération du stock
         ( on veut pouvoir faire stock = Stock(*stock_args) )
         """
         self.stock_args = stock_args
+        # liste des robots
         self.robots = robots
         # t0 la date d'initial
         self.t = t0
         self.parking = parking
         self.algorithm = AlgorithmType
+        # discrétisation des temps pour lesquels on veut calculer les retards
         self.delays = delays
         self.optimization_parameters = optimization_parameters
     
     def averageDashboard(self, nb_repetitions=10):
         """
-        renvoie les données du Dashboard de la simulation de référence,
-        moyennées sur nb_repetitions répétitions
+        Renvoie les données du Dashboard de la simulation de référence,
+        moyennées sur nb_repetitions répétitions (sous forme de dictionnaire)
         """
+
+        # versions moyennées des inducateurs décrits dans la classe Dashboard
         average_dashboard = {}
         effective_nb_repetitions = 0
         average_intermediate_mpv = 0.
@@ -136,10 +153,10 @@ class Performance():
         average_deposit_delay_rates = {key: 0. for key in self.delays}
         average_retrieval_delay_rates = {key: 0. for key in self.delays}
 
+        # calcul des valeurs moyennées sur les simulations arrivant à leur terme
         for _ in range(nb_repetitions):
             simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=self.optimization_parameters)
             dashboard = Dashboard(simulation)
-            #print(dashboard.simulation.retrieval_delays)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
                 average_intermediate_mpv += dashboard.averageIntermediateMovesPerVehicle()
                 average_before_deposit_delay += dashboard.averageBeforeDepositDelay()
@@ -154,6 +171,7 @@ class Performance():
                 for delay in retrieval_delay_rates:
                     average_retrieval_delay_rates[delay] += retrieval_delay_rates[delay]
 
+                # incrément du nombre de simulations arrivant à leur terme
                 effective_nb_repetitions += 1
         
         for key, value in average_deposit_delay_rates.items():
@@ -167,14 +185,14 @@ class Performance():
         average_dashboard["average_after_deposit_delay"] = average_after_deposit_delay / effective_nb_repetitions
         average_dashboard["average_retrieval_delay"] = average_retrieval_delay / effective_nb_repetitions
         average_dashboard["success_rate"] = effective_nb_repetitions / nb_repetitions
-        average_dashboard["average_deposit_delay_rates"] = average_deposit_delay_rates # attention, c'est un dictionnaire
-        average_dashboard["average_retrieval_delay_rates"] = average_retrieval_delay_rates # attention, c'est un dictionnaire
+        average_dashboard["average_deposit_delay_rates"] = average_deposit_delay_rates # attention, ceci est un dictionnaire
+        average_dashboard["average_retrieval_delay_rates"] = average_retrieval_delay_rates # attention, ceci est un dictionnaire
 
         return average_dashboard
     
     def printAverageDashboard(self, nb_repetitions=10):
         """
-        affiche les résulats de averageDashboard
+        Affiche les résulats de averageDashboard
         """
         means = self.averageDashboard(nb_repetitions=nb_repetitions)
         for key in means:
@@ -224,7 +242,7 @@ class Performance():
 
     def variableStockAndRobots(self, nb_repetitions=10, factors=[1+0.1*i for i in range(-4, 3)], nb_robots_max=3):
         """
-        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
+        Regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
         """
         # curves = {(factor, nb_robots): dictionnaire des performances pour ce facteur et ce nombre de robots}
         curves = {}
@@ -464,7 +482,7 @@ class Performance():
 
     def variableInterfaceAndRobots(self, nb_repetitions=10, interface_delta_sizes=[i for i in range(-2, 4)], nb_robots_max=3):
         """
-        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
+        Regarde l'influence d'une variation de la taille de l'interface et du nombre de robots sur les différents retards, en moyennant sur nb_repetitions répétitions
         """
         # curves = {(interface_size, nb_robots): dictionnaire des performances pour cette taille d'interface et ce nombre de robots}
         curves = {}

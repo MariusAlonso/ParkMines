@@ -149,7 +149,7 @@ class Simulation():
         elif event.event_type == "order_retrieval":
             event_retrieval = Event(vehicle, vehicle.retrieval, "retrieval")
             self.events.add(event_retrieval)
-            time_wake_up = max(self.t, vehicle.retrieval - self.algorithm.anticipation_time)
+            time_wake_up = max(self.t, vehicle.retrieval - self.algorithm.max_anticipation_time)
             self.events.add(Event(vehicle, time_wake_up, "wake_up_robots_retrieval", event_retrieval=event_retrieval))
 
         elif event.event_type == "wake_up_robots_retrieval":
@@ -303,7 +303,6 @@ class Simulation():
             self.algorithm.update_retrieval(vehicle, success, self.t)
 
             self.algorithm.update_anticipation_time()
-            print(self.algorithm.anticipation_time)
 
 
         elif event.event_type == "robot_arrival":
@@ -655,10 +654,8 @@ class BaseAlgorithm(Algorithm):
 
         #paramètres liés à la mesure de la performance de l'algorithme
         self.nb_placements = 0
-        print(optimization_parameters)
         self.min_anticipation_time = datetime.timedelta(hours = self.optimization_parameters[4])
         self.max_anticipation_time = datetime.timedelta(hours = self.optimization_parameters[5])
-        print(self.min_anticipation_time)
 
     def assign_task(self, robot):
 
@@ -930,8 +927,11 @@ class BaseAlgorithm(Algorithm):
 
             if moved_vehicle.order_retrieval <= current_time and moved_vehicle.retrieval - current_time < self.anticipation_time:
                 i_lane = self.parking.blocks[0].empty_lane()
-                side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
-                self.locked_lanes[robot.goal_position[:2] + (side_chosen_initially,)] -= 1
+                if moved_vehicle.id not in self.side_chosen_to_retrieve:
+                    self.side_chosen_to_retrieve[moved_vehicle.id] = robot.start_position[2]
+                else:
+                    side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
+                    self.locked_lanes[robot.goal_position[:2] + (side_chosen_initially,)] -= 1
                 self.parking.blocks[0].lanes[i_lane].push_reserve(moved_vehicle.id, "bottom", mark=False)
                 self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
                 #On place le vehicule a l'interface
