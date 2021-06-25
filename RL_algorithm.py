@@ -23,9 +23,11 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
             ############################## Paramètres #################################################
             ###########################################################################################
 
-            self.reward_stupid_place = 5
+            self.reward_stupid_place = 0
+            self.reward_end_task = 50
             self.bonus_deposit = 100
             self.penalty_movement = 0
+            self.stock_exponent = 0
         
         def take_decision(self, action, current_time):
             if print_action:
@@ -130,15 +132,15 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
  
         def update_retrieval(self, vehicle, success, current_time):
             if self.model is None and success:
-                self.reward += self.bonus_deposit*(10/len(self.stock))
+                self.reward += self.bonus_deposit*(10/len(self.stock))**self.stock_exponent
                 if vehicle.retrieval == current_time:
-                    self.reward += 4*self.bonus_deposit*(10/len(self.stock))
+                    self.reward += 4*self.bonus_deposit*(10/len(self.stock))**self.stock_exponent
        
         def update_deposit(self, vehicle, success, current_time):
             if self.model is None and success:
-                self.reward += self.bonus_deposit*(10/len(self.stock))
+                self.reward += self.bonus_deposit*(10/len(self.stock))**self.stock_exponent
                 if vehicle.deposit == current_time:
-                    self.reward += 4*self.bonus_deposit*(10/len(self.stock))
+                    self.reward += 4*self.bonus_deposit*(10/len(self.stock))**self.stock_exponent
         """
 
         def update_retrieval(self, vehicle, success, current_time):
@@ -174,13 +176,13 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 # REWARD si le robot arrive dans une lane où il n'y a pas de véhicule il est pénalisé, sinon rien ne se passe
 
                 if success:
-                    self.reward += 0   
+                    self.reward += 100   
                 else:
                     self.reward -= self.reward_stupid_place     
 
         def update_robot_end_task(self, robot, lane_end, success, current_time):
             if self.model is None:
-                self.reward += 20
+                self.reward += self.reward_end_task
 
             # self.update(current_time)
         
@@ -189,7 +191,7 @@ def rl_algorithm_builder(model, _dict, number_arguments, max_stock_visible, prin
                 # REWARD si le robot arrive dans une lane où il n'y a pas de place il est pénalisé, sinon rien ne se passe
 
                 if success:
-                    self.reward += 0
+                    self.reward += 100
                 else:
                     self.reward -= self.reward_stupid_place  
 

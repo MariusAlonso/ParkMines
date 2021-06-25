@@ -8,30 +8,35 @@ class Parking():
     def __init__(self, blocks, disposal=[[]], occupation={}):
 
         self.real_parking = [BlockInterface([],10,1), Block([], 15, 7,"leftrigth"), Block([], 14, 7,"leftrigth"), Block([], 13, 6,"leftrigth"), Block([], 8, 7,"leftrigth"), Block([], 18, 7,"leftrigth"), Block([], 10, 11), Block([], 15, 1, "leftrigth")], [['s','s', 'f0:6', 'f0:6', 'e', 4, 6], [7,1,1,2,'f0:3', 4,6], [7,1,1,2,3,'f0:2', 6], [7,1,1,2,3,5,6], [7,'e','e','e',3,5,6], [7,'e','e','e','e',5,6], [7,'f7:0',0,0,0,5,6]]
-        """
-        Attributs variant au cours d'une simulation
-        """
-        self.blocks = blocks
-        self.number_blocks = len(blocks)
+
+        ### Attributs variant au cours d'une simulation
+
         self.occupation = occupation
-        """
-        Attributs ne variant pas au cours d'une simulation
-        """
-        self.place_ratio = 2
+
+        ### Attributs ne variant pas au cours d'une simulation
+
+        self.place_ratio = 2                # ratio longueur/largeur des places pour l'affichage
 
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
         L = []
         for block in self.blocks:
             L.append(len(block.lanes))
-        self.nb_max_lanes = max(L)          #lane la plus longue du parking => NON
+        self.nb_max_lanes = max(L)          # block contenant le plus de lane
 
         L = []
         for block in self.blocks:
             L.append(len(block.lanes[0].list_vehicles))
-        self.longest_lane = max(L)          #lane la plus longue du parking
+        self.longest_lane = max(L)          # lane la plus longue du parking
 
+        self.blocks = blocks
+        self.number_blocks = len(blocks)
 
-        # Calcul des coordonnées du maillage correspondant à la matrice disposal
+        ### Calcul des coordonnées du maillage correspondant à la matrice disposal
+        
+        # disposal est une matrice permettant de placer les blocks l'un par rapport à l'autre
+        # - s => espace vide, de la largeur d'une place
+        # - e => espace vide, dont les dimensions ne sont pas imposées
+        # - f4:5 => espace vide, de largeur 4 et de hauteur 5
         self.disposal = disposal
         max_i_disposal = len(self.disposal)
         max_j_disposal = len(self.disposal[0])
@@ -72,13 +77,18 @@ class Parking():
                     else:
                         self.x_in_pw[j_disposal] = max(self.x_in_pw[j_disposal], self.x_in_pw[k+1] + self.block_height(block_id))
 
+        ### Calcul de la matrice des distances
+        
         distance = dist.Distance(self)
         distance.fill_matrix_time()
         self.matrix_time = distance.matrix_time
+
+        ### Calcul des dictionnaires de correspondance entre les indices globaux de lane et les indices (block_id, lane_id)
+
         self.dict_lanes = dict()
         self.to_global_id = dict()
         self.number_lanes = 0
-        counter_lanes = 1                              #LA NUMEROTAION DES LANES COMMENCE A 1
+        counter_lanes = 1                              # LA NUMEROTAION DES LANES COMMENCE A 1
         for block_id, block in enumerate(self.blocks):
             self.number_lanes += block.nb_lanes
             for lane_id, lane in enumerate(block.lanes):
@@ -115,12 +125,10 @@ class Parking():
     
     def travel_time(self, departure, arrival):
         """
+        Renvoie le temps de trajet entre l'extrémité departure et l'extrémité arrival
+
         departure : (block_id, lane_id, side)
         arrival : (block_id, lane_id, side)
-        """
-        """
-        if True:
-            return datetime.timedelta(minutes=5)
         """
         if departure == arrival:
             return datetime.timedelta(0,30, minutes=1)

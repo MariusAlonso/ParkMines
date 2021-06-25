@@ -88,12 +88,9 @@ class Simulation():
             self.execute(event)
 
     def execute(self, event):
-        """
-        print("----------")
-        print(event)
-        print(self.deposit_events)
-        print(self.pending_deposits)
-        """
+
+        ### AFFICHAGE DANS LE TERMINAL
+
         if self.last_printed_date is None or self.t - self.last_printed_date > datetime.timedelta(days=7):
             print(self.t)
             self.last_printed_date = self.t
@@ -128,8 +125,9 @@ class Simulation():
             print("-------------")
             print(self.parking.occupation)
             print("-------------")
-            
 
+        ### EXECUTION DE L'EVENEMENT
+            
         vehicle = event.vehicle
 
         if event.event_type == "start":
@@ -152,11 +150,6 @@ class Simulation():
             self.algorithm.check_redirections(event, self.t)
             self.algorithm.update(self.t)
 
-            """
-            elif event.event_type == "wake_up_robots_deposit":
-                pass
-                # self.wake_up_robots()
-            """
         
         elif event.event_type == "wake_up_robots":
             if event == self.algorithm.current_wake_up:
@@ -266,7 +259,6 @@ class Simulation():
                         for pdg_retrieval in self.pending_retrievals:
                             # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
                             if pdg_retrieval.vehicle.id == event_deposit.vehicle.id:
-                                print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                                 self.execute(pdg_retrieval)
                                 self.pending_retrievals.remove(pdg_retrieval)
                                 break
@@ -374,9 +366,9 @@ class Simulation():
         if lane.end_position(side) is None or abs(lane.end_position(side) - lane.end_limit(side)) > 0:
 
             success = True
-            """
-            Exécution du dépôt du véhicule
-            """
+            
+            ### Exécution du dépôt du véhicule
+            
             lane.push(vehicle.id, side, self.stock)
             event.robot.vehicle = None
             self.parking.occupation[vehicle.id] = (block_id, lane_id, lane.end_position(side))
@@ -389,9 +381,8 @@ class Simulation():
                         self.pending_retrievals.remove(pdg_retrieval)
                         break
             
-            """
-            Affichage du dépôt du véhicule 
-            """
+            ### Affichage du dépôt du véhicule 
+            
             if vehicle.id in self.parking.occupation and self.display:
                 self.display.draw_vehicle(vehicle)
 
@@ -400,9 +391,8 @@ class Simulation():
                 print(self.parking)
                 print("")
 
-        """
-        Mise à jour des tâches des robots et de la file de priorité
-        """
+        ### Mise à jour des tâches des robots et de la file de priorité
+        
         self.algorithm.update_robot_end_task(event.robot, event.robot.start_position, success, self.t)
 
     def execute_robot_arrival(self, event, vehicle):
@@ -425,9 +415,8 @@ class Simulation():
 
             # On vérifie que l'algorithme souhaite toujours que le robot récupère le véhicule
             if self.algorithm.check_pick(event.robot.start_position, moved_vehicle, self.t):
-                """
-                Exécution du retrait du véhicule
-                """
+                
+                ### Exécution du retrait du véhicule
                                 
                 if self.display:
                     self.display.erase_vehicle(moved_vehicle)
@@ -474,9 +463,7 @@ class Simulation():
                     # la place n'est plus le siège d'un évènement empty_interface
                     self.parking.blocks[0].targeted[lane_id] = False
 
-                """
-                Affichage du retrait du véhicule
-                """
+                ### Affichage du retrait du véhicule
 
                 if self.print_in_terminal:
                     print(f"Robot {event.robot} loads {moved_vehicle.id}")
@@ -491,9 +478,8 @@ class Simulation():
             else:
                 self.nb_sortie_interface[nb_jour] = 1
 
-        """
-        Mise à jour des tâches des robots et de la file de priorité
-        """
+        ### Mise à jour des tâches des robots et de la file de priorité
+        
         event.robot.doing = None
         self.algorithm.update_robot_arrival(event.robot, event.robot.start_position, success, moved_vehicle, self.t)
 
@@ -558,6 +544,8 @@ class Event():
         - 'deposit'
         - 'retrieval'
         - 'robot_arrrival'
+        - 'wake_up_robots_retrieval'
+        - 'wake_up_robots'
         """
         self.vehicle = vehicle
         self.date = date
@@ -573,14 +561,6 @@ class Event():
     def __bool__(self):
         return True
 
-    """
-        def __eq__(self, other):
-            if self is None or other is None:
-                return False
-            if self.vehicle == None or other.vehicle == None:                    #si jamais le event n'a pas de véhicule associé
-                return (not (other is None)) and self.date == other.date
-            return (not (other is None)) and self.date == other.date and self.vehicle.id == other.vehicle.id
-    """
     def __eq__(self, other):
         if self is None or other is None:
             return False
@@ -596,6 +576,7 @@ class Event():
             return f"{self.event_type} ; due to {self.date} ; vehicle {self.vehicle} ; concerning robot {self.robot.id_robot}"
         else: 
             return f"{self.event_type} ; due to {self.date} ; vehicle {self.vehicle}"
+
 
 class Algorithm():
 
@@ -634,7 +615,6 @@ class BaseAlgorithm(Algorithm):
     """
     Un BaseAlgorithm comporte une méthode assign_task qui attribue à un robot une tâche lorsqu'il n'a plus rien à faire
     """
-
     def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=8), print_in_terminal=False):
 
         super().__init__(simulation, t0, stock, robots, parking, events, print_in_terminal)
@@ -795,7 +775,9 @@ class BaseAlgorithm(Algorithm):
         return True
 
     def check_redirections(self, event, current_time):
-
+        """
+        S'exécute lorsque l'algorithme est notifié d'un futur retrieval
+        """
         # Si un robot est en train de transporter un véhicule cible d'un retrieval
         for robot in self.robots:
             if not (robot.vehicle is None) and robot.vehicle.id == event.vehicle.id:
@@ -931,69 +913,6 @@ class BaseAlgorithm(Algorithm):
             return True
         
         return nb_vehicules_interface/interface_size < 0.75
-
-    """
-            block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
-            lane_vehicle = self.parking.blocks[block_id].lanes[lane_id]
-
-            if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
-                side = "bottom"
-            else:
-                side = "top"
-
-            robot.start_position = robot.goal_position
-            robot.goal_position = (block_id, lane_id, side)
-            lane_vehicle.pop_reserve(side)
-
-            robot.start_time = current_time
-            robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
-
-            event.robot = robot
-            event_arrival = Event(event.vehicle, robot.goal_time, "robot_arrival", robot)
-            self.events.add(event_arrival)
-
-            robot.doing = event_arrival
-            robot.target = event
-
-            return event
-        
-    def find_unassigned_events(self, are_available_places_interface, current_time):
-        # On verifie d'abord si des retrievals sont en retard
-        i = 1
-        while i <= len(self.pending_retrievals):
-            event = self.pending_retrievals[-i]
-            if event.vehicle.id in self.parking.occupation:
-                block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
-                if block_id != 0:
-                    vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
-
-                    if vehicle_lane.bottom_access and (not vehicle_lane.future_bottom_position is None) and vehicle_lane.future_bottom_position - position < position - vehicle_lane.future_top_position:
-                        if vehicle_lane.future_bottom_position - position >= 0:
-                            return event
-                    elif not vehicle_lane.future_top_position is None:
-                        if position - vehicle_lane.future_top_position >= 0:
-                            return event
-            i += 1
-
-        # On s'intéresse ensuite aux retrievals qui sont prévus dans moins d'une heure
-        i = 1
-        while i <= len(self.events):
-            event = self.events[-i]
-            if event.date - current_time > datetime.timedelta(hours=1):
-                break
-            if event.event_type == "retrieval" and event.vehicle.id in self.parking.occupation:
-                block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
-                if block_id != 0:
-                    vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
-
-                    if vehicle_lane.bottom_access and (not vehicle_lane.future_bottom_position is None) and vehicle_lane.future_bottom_position - position < position - vehicle_lane.future_top_position:
-                        if vehicle_lane.future_bottom_position - position >= 0:
-                            return event
-                    elif not vehicle_lane.future_top_position is None:
-                        if position - vehicle_lane.future_top_position >= 0:
-                            return event
-            i += 1
-    """
       
     def update(self, current_time):
         for robot in self.robots:
