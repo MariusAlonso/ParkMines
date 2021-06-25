@@ -36,7 +36,13 @@ class TensorboardCallback(BaseCallback):
         summary = tf.Summary(value=[tf.Summary.Value(tag='client_unsatisfaction', simple_value=value)])
         self.locals['writer'].add_summary(summary, self.num_timesteps)
 
+        value = environment.envs[0].sim_duration
+        summary = tf.Summary(value=[tf.Summary.Value(tag='sim_duration', simple_value=value)])
+        self.locals['writer'].add_summary(summary, self.num_timesteps)
+
         return True
+
+
 
 
 
@@ -51,7 +57,7 @@ timesteps = int(8e5)         #Nombre de timesteps dans l'apprentissage
 
 # parking et environnement pour l'apprentissage du modèle
 
-parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 5), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+parking = Parking([BlockInterface([Lane(1, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
 env = MLEnv(parking, 10, 1, 3, 3)
 
 if learning:

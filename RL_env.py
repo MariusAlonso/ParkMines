@@ -257,7 +257,7 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.reward = 0
         self.simulation.algorithm.pending_action = False
         
-        self.robot_action_avg = (self.robot_action_avg + action[1])/(self.nb_actions+1)
+        self.robot_action_avg = (self.robot_action_avg*self.nb_actions + action[1])/(self.nb_actions+1)
         self.nb_actions += 1
         self.simulation.algorithm.take_decision(action, self.simulation.t)
 
@@ -314,33 +314,33 @@ class MLEnv(gym.Env):
         for event_deposit in self.simulation.pending_deposits:
             if self.last_step_t is None:
                 self.simulation.algorithm.reward -= self.penalty_lateness
-                self.client_unsatisfaction += (self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
+                self.total_waiting_time += (self.simulation.t - event_deposit.vehicle.deposit).total_seconds()/3600
             else:
                 self.simulation.algorithm.reward -= self.penalty_lateness
-                self.client_unsatisfaction += (self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
+                self.total_waiting_time += (self.simulation.t - max(self.last_step_t, event_deposit.vehicle.deposit)).total_seconds()/3600
 
                 # SUICIDE la simulation s'arrête lorsqu'un véhicule attend plus que self.time_max_waiting et il est pénalisé
 
                 if (self.simulation.t - event_deposit.vehicle.deposit).total_seconds() > self.time_max_waiting:
-                    self.simulation.algorithm.reward = - self.max_penalty
+                    # self.simulation.algorithm.reward = - self.max_penalty
                     self.done = True
-        
+
         for event_retrieval in self.simulation.pending_retrievals:
             if self.last_step_t is None:
-                self.simulation.algorithm.reward -= self.penalty_lateness*0.5
-                self.client_unsatisfaction += (self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
+                self.simulation.algorithm.reward -= self.penalty_lateness
+                self.total_waiting_time += (self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds()/3600
                 
             else:
-                self.simulation.algorithm.reward -= self.penalty_lateness*0.5
-                self.client_unsatisfaction += (self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
+                self.simulation.algorithm.reward -= self.penalty_lateness
+                self.total_waiting_time += (self.simulation.t - max(self.last_step_t, event_retrieval.vehicle.retrieval)).total_seconds()/3600
 
                 # SUICIDE la simulation s'arrête lorsqu'un véhicule attend plus que self.time_max_waiting et il est pénalisé
 
                 if (self.simulation.t - event_retrieval.vehicle.retrieval).total_seconds() > self.time_max_waiting:
-                    self.simulation.algorithm.reward = - self.max_penalty
+                    # self.simulation.algorithm.reward = - self.max_penalty
                     self.done = True
 
-
+        
                    
         """
         # Pénalisation lorsque le robot commence de nouvelles lanes
@@ -354,6 +354,10 @@ class MLEnv(gym.Env):
         self.done = self.done or not self.simulation.vehicles_left_to_handle
         #print(self.observation.data)
         #print(self.simulation.deposit_events)
+
+        if self.done:
+            self.sim_duration = (self.simulation.t - self.t0).total_seconds()/3600
+            self.client_unsatisfaction = self.total_waiting_time
     
 
         return self.observation.data, self.simulation.algorithm.reward, self.done, {}
@@ -364,8 +368,9 @@ class MLEnv(gym.Env):
         self.stock = RandomStock(self.daily_flow, time = datetime.timedelta(days=self.simulation_length))
         self.last_step_t = None
         self.robot_action_avg = 0.
-        self.client_unsatisfaction = 0.
+        self.total_waiting_time = 0
         self.nb_actions = 0
+        self.nb_services_completed = 0
         if self.display:
             #self.simulation.display.shutdown()
             pass
