@@ -504,8 +504,9 @@ class Simulation():
                     print("THE SIMULATION IS COMPLETED")  
                 break
 
-        if self.display:
+        if self.display and (self.display.speed or event.event_type not in ["wake_up_robots_deposit", "wake_up_robots_retrieval", "order_deposit", "order_retrieval"]) :
             self.display.update()
+            self.display.time_interval = max(self.display.time_interval*0.995, 0.1)
 
         if self.max_t:
             return (bool(self.vehicles_left_to_handle) and self.t <= self.max_t and self.events), event

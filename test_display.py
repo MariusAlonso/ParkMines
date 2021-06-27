@@ -48,7 +48,7 @@ class TestTest():
         #with open("log.txt", "w") as log_file:
         #    sys.stdout = log_file
         simulation = Simulation(datetime.datetime(2000,1,1,0,0,0,0), stock, [Robot(1), Robot(2)], real_parking, AlgorithmZeroMinus, print_in_terminal = False)
-        simulation.start_display(12, 20)
+        simulation.start_display(12, 20, 3)
         simulation.display.run()
         print(simulation.display)      
 

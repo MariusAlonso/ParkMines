@@ -15,6 +15,9 @@ class Parking():
 
         ### Attributs ne variant pas au cours d'une simulation
 
+        self.blocks = blocks
+        self.number_blocks = len(blocks)
+
         self.place_ratio = 2                # ratio longueur/largeur des places pour l'affichage
 
         self.nb_of_places = sum([block.height*block.width for block in self.blocks])
@@ -28,8 +31,6 @@ class Parking():
             L.append(len(block.lanes[0].list_vehicles))
         self.longest_lane = max(L)          # lane la plus longue du parking
 
-        self.blocks = blocks
-        self.number_blocks = len(blocks)
 
         ### Calcul des coordonnées du maillage correspondant à la matrice disposal
         
@@ -173,7 +174,9 @@ class Parking():
             return "top"
 
     def future_config(self, lane, block_id, lane_id, robots, stock, min_time = None, max_time = None, on_place=False):
-
+        """
+        Permet d'exécuter l'ensemble des actions des robots qui vont affecter la lane entre min_time et max_time
+        """
         if on_place:
             lane_copy = lane
         else:
@@ -191,24 +194,15 @@ class Parking():
                                 lane_copy.push(robot.vehicle.id, side, stock)
         
         return lane_copy
-    
-    def reverse_config(self, block_id, lane_id, events_to_reverse, stock):
-
-        input("ATTENTION\nParking.reverse_config NON FONCTIONNEL")
-
-        lane = self.blocks[block_id].lanes[lane_id]
-
-        for event in events_to_reverse[::-1]:
-            if len(event) == 1:
-                lane.pop(event[0])
-            else:
-                lane.push(event[1], event[0], stock)
                  
-
 
 class Block():
     def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
-
+        """
+        Un block s'initialise de deux manières :
+        - soit en donnant en argument la liste des lanes
+        - soit en donnant un nombre de lanes *nb_lanes*, et leur longueur *lane_length*, l'argument *lanes* doit alors valoir [ ]
+        """
         if nb_lanes:
             self.lanes = []
             for i in range(1, nb_lanes+1):
@@ -260,7 +254,9 @@ class Block():
 
 
 class BlockInterface(Block):
-
+    """
+    Sous-classe correspondant au bloc des lanes de l'interface
+    """
     def __init__(self, lanes, nb_lanes=None, lane_length=None, direction="topbottom"):
         super().__init__(lanes, nb_lanes, lane_length, direction)
         self.nb_places_available = self.height
@@ -287,12 +283,19 @@ class Lane() :
         self.length = length
         self.id = id_lane
         self.list_vehicles = [0]*self.length
+
         self.top_position = None                # indice de la premiere voiture occupée dans la lane (None si pas de voiture)
         self.bottom_position = None             # indice de la derniere voiture occupée dans la lane (None si pas de voiture)
+        
+        # Obsolète
         self.future_top_position = None  
-        self.future_bottom_position = None      
+        self.future_bottom_position = None
+
+        # Accessibilité des différents côtés de la lane - NON FONCTIONNEL
         self.top_access = top_access
         self.bottom_access = bottom_access
+
+        # Paramètre utilisé lordque les lanes sont unimodales : position du max /\
         self.argmax_retrieval = None
     
     def _empty_copy(self):

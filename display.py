@@ -58,10 +58,6 @@ class Display():
                     else:
                         y0[i_disposal] = max(y0[i_disposal], y0[k+1] + self.block_width(block_id))
 
-                print("y0",y0)
-
-        print(self.parking.disposal)
-
         for j_disposal in range(1, max_j_disposal):   
 
             for i_disposal in range(max_i_disposal):
@@ -78,8 +74,6 @@ class Display():
                         x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_width(block_id))
                     else:
                         x0[j_disposal] = max(x0[j_disposal], x0[k+1] + self.block_height(block_id))
-                
-                print("x0",x0)
         
         for i_disposal, list_block_id in enumerate(self.parking.disposal):
             
@@ -89,11 +83,9 @@ class Display():
                     continue
 
                 if j_disposal and block_id == self.parking.disposal[i_disposal][j_disposal-1]:
-                    print(i_disposal, j_disposal)
                     continue
 
                 if i_disposal and block_id == self.parking.disposal[i_disposal-1][j_disposal]:
-                    print("i", i_disposal, j_disposal)
                     continue
 
                 self.parking.blocks[block_id].x_pos = x0[j_disposal]
@@ -193,6 +185,7 @@ class Display():
                         complete = self.simulation.next_event(self.simulation.t.replace(minute=0, second=0) + datetime.timedelta(hours=1), None)[0]
                     if self.speed == 3:
                         complete = self.simulation.next_event(self.simulation.t.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1), None)[0]
+
 
         # Enfin on rajoute un appel à pg.quit()
         # Cet appel va permettre à pg de "bien s'éteindre" et éviter des bugs sous Windows
