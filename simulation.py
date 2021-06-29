@@ -1,5 +1,6 @@
-import random
+# Imports
 
+import random
 from numpy.lib.utils import deprecate
 from vehicle import Vehicle, Stock, RandomStock
 import datetime
@@ -13,8 +14,22 @@ class Simulation():
 
     def __init__(self, t0, stock, robots, parking, AlgorithmType, order=True, print_in_terminal=False, display=None, max_t=None, optimization_parameters=None):
         """
-        t0 : date d'initialisation
+        Exécute une simulation du fonctionnement du parking soumis à un stock de véhicule donné
+
+        Paramètres :
+        - t0 : date d'initialisation
+        - stock : la liste des véhicules qui vont arriver dans le parking (avec leurs dates d'entrées, de sortie, et les dates de commande associées)
+        - robots : la liste des robots s'occupant des voitures
+        - parking : parking sur lequel est réalisé la simulation
+        - AlgorithmType : algorithme régissant le placement des véhicules
+        - order :
+        - print_in_terminal : verbosité de l'écriture dans le terminal
+        - display : affichage du parking on cours de la simulation ou non
+        - max_t : 
+        - optimization_parameters : paramètres utilisés par les algorithmes de placement et de sélection des tâches
         """
+
+        # récupération des paramètres
         self.stock = stock
         self.robots = robots
         self.t = t0
@@ -24,22 +39,23 @@ class Simulation():
         self.optimization_parameters = optimization_parameters
         print(f"paramètre : {self.optimization_parameters}")
         self.last_printed_date = None
+        self.display = display
+        self.time_execution = 0
 
+        # collecte de données pour le calcul des performances
         self.before_deposit_delays = []
         self.after_deposit_delays = []
         self.retrieval_delays = []
 
-        self.display = display
-        self.time_execution = 0
-
         # nb_events_tracker : dictionnaire contenant le nombre d'évènements dans la file de priorité à chaque date
         self.nb_events_tracker = {}
 
-        # File d'évènements
+        # création de la file d'évènements
         self.events = SortedList()
-        # File des déposits pas encore effectués
+        # création de la file des dépôts pas encore effectués
         self.deposit_events = SortedList()
 
+        # remplissage de la file d'évènements avec les dates de commande d'entrées et de sorties de véhicules
         self.events.add(Event(None, t0, "start"))
         for v in self.stock.vehicles.values():
             if order:
@@ -51,6 +67,8 @@ class Simulation():
                 self.events.add(Event(v, v.retrieval, "retrieval"))    
                 self.deposit_events.add(deposit_event)
 
+        ### Création de files d'évènements pour certains types d'évènements particuliers
+
         # File des déposits des clients qui patientent à l'interface
         self.pending_deposits = SortedList()
         # File des retrievals des clients qui patientent à l'interface
@@ -60,6 +78,7 @@ class Simulation():
         # Ensemble des véhicules qu'il reste à traiter dans la simulation
         self.vehicles_left_to_handle = set(self.stock.vehicles.keys())
 
+        # liste de véhicules à sortir
         self.vehicles_to_retrieve = []
     
         # Dictionnaire des extrémités de lanes
@@ -69,6 +88,7 @@ class Simulation():
                 self.locked_lanes[(block_id, lane_id, "top")] = int(not lane.top_access)
                 self.locked_lanes[(block_id, lane_id, "bottom")] = int(not lane.bottom_access)
         
+        # Génération de l'algorithme de placement
         args = (self, self.t, self.stock, self.robots, self.parking, self.events, self.locked_lanes, self.pending_retrievals)
         self.algorithm = AlgorithmType(*args, print_in_terminal=self.print_in_terminal, optimization_parameters=self.optimization_parameters)
 
@@ -90,10 +110,7 @@ class Simulation():
 
     def execute(self, event):
         """
-        print("----------")
-        print(event)
-        print(self.deposit_events)
-        print(self.pending_deposits)
+        Méthode lançant le parcours de la file d'évènements
         """
 
         if self.display:
@@ -105,12 +122,12 @@ class Simulation():
             print(f"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nEXECUTION at time {self.t}")
             print("event :", event)
             print(self.parking.blocks[0].targeted)
-            c = 0
-            for x in self.parking.blocks[0].targeted:
-                if x:
-                    c += 1
-                    if c > 2:
-                        raise Error
+            # c = 0
+            # for x in self.parking.blocks[0].targeted:
+            #     if x:
+            #         c += 1
+            #         if c > 2:
+            #             raise Error
             print("-------------")
             for robot in self.robots:
                 print(f" - {robot}")
@@ -132,8 +149,9 @@ class Simulation():
             print("-------------")
             print(self.parking.occupation)
             print("-------------")
-            
 
+        ### EXECUTION DE L'EVENEMENT
+            
         vehicle = event.vehicle
 
         if event.event_type == "start":
@@ -156,11 +174,6 @@ class Simulation():
             self.algorithm.check_redirections(event, self.t)
             self.algorithm.update(self.t)
 
-            """
-            elif event.event_type == "wake_up_robots_deposit":
-                pass
-                # self.wake_up_robots()
-            """
         
         elif event.event_type == "wake_up_robots":
             if event == self.algorithm.current_wake_up:
@@ -270,7 +283,6 @@ class Simulation():
                         for pdg_retrieval in self.pending_retrievals:
                             # Dans le cas où l'on a mis dans l'interface un véhicule qui était attendu par son client
                             if pdg_retrieval.vehicle.id == event_deposit.vehicle.id:
-                                print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                                 self.execute(pdg_retrieval)
                                 self.pending_retrievals.remove(pdg_retrieval)
                                 break
@@ -322,47 +334,6 @@ class Simulation():
             if event == event.robot.doing:
                 self.execute_robot_end_task(event, vehicle)
 
-    """
-                self.wake_up_robots()
-        
-        event.robot.start_position = event.robot.goal_position
-        event.robot.start_time = self.t
-
-        if moved_vehicle.order_retrieval <= self.t and moved_vehicle.retrieval - self.t < self.algorithm.anticipation_time:
-            i_lane = self.parking.blocks[0].empty_lane()
-            side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
-            self.locked_lanes[event.robot.goal_position[:2] + (side_chosen_initially,)] -= 1
-            self.parking.blocks[0].lanes[i_lane].push_reserve(moved_vehicle.id, "bottom", mark=False)
-            self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
-            #On place le vehicule a l'interface
-            event.robot.goal_position = (0, i_lane, "bottom")
-            self.parking.blocks[0].nb_places_available -= 1
-            
-            self.nb_interface += 1 #Un véhicle arrive dans l'interface avant de sortir
-            if nb_jour in self.nb_vehicles_interface.keys():
-                if self.nb_interface > self.max_interface: 
-                    self.nb_vehicles_interface[nb_jour] = self.nb_interface
-                    self.max_interface = self.nb_interface
-            else: #Si c'est un nouveau jour, on ajoute le nb d'interface au 1er instant
-                self.nb_vehicles_interface[nb_jour] = self.nb_interface
-            
-            event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
-            event_end_task = Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot)
-            self.events.add(Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot))
-            event.robot.doing = event_end_task
-
-        else:
-            # Effet de bord de l'appel : bloque le side de la lane si avec l'ajout du moved_vehicle il est rempli
-            event.robot.goal_position = self.algorithm.place(moved_vehicle, event.robot.goal_position, self.t)
-            
-            event.robot.goal_time = self.t + self.parking.travel_time(event.robot.start_position, event.robot.goal_position)
-            event_end_task = Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot)
-            self.events.add(Event(moved_vehicle, event.robot.goal_time, "robot_end_task", event.robot))
-            event.robot.doing = event_end_task
-    
-    """
-
-
 
     def execute_robot_end_task(self, event, vehicle):
 
@@ -381,9 +352,9 @@ class Simulation():
         if lane.end_position(side) is None or abs(lane.end_position(side) - lane.end_limit(side)) > 0:
 
             success = True
-            """
-            Exécution du dépôt du véhicule
-            """
+            
+            ### Exécution du dépôt du véhicule
+            
             lane.push(vehicle.id, side, self.stock)
             event.robot.vehicle = None
             self.parking.occupation[vehicle.id] = (block_id, lane_id, lane.end_position(side))
@@ -396,9 +367,8 @@ class Simulation():
                         self.pending_retrievals.remove(pdg_retrieval)
                         break
             
-            """
-            Affichage du dépôt du véhicule 
-            """
+            ### Affichage du dépôt du véhicule 
+            
             if vehicle.id in self.parking.occupation and self.display:
                 self.display.draw_vehicle(vehicle)
 
@@ -407,9 +377,8 @@ class Simulation():
                 print(self.parking)
                 print("")
 
-        """
-        Mise à jour des tâches des robots et de la file de priorité
-        """
+        ### Mise à jour des tâches des robots et de la file de priorité
+        
         self.algorithm.update_robot_end_task(event.robot, event.robot.start_position, success, self.t)
 
     def execute_robot_arrival(self, event, vehicle):
@@ -432,9 +401,8 @@ class Simulation():
 
             # On vérifie que l'algorithme souhaite toujours que le robot récupère le véhicule
             if self.algorithm.check_pick(event.robot.start_position, moved_vehicle, self.t):
-                """
-                Exécution du retrait du véhicule
-                """
+                
+                ### Exécution du retrait du véhicule
                                 
                 if self.display:
                     self.display.erase_vehicle(moved_vehicle)
@@ -481,9 +449,7 @@ class Simulation():
                     # la place n'est plus le siège d'un évènement empty_interface
                     self.parking.blocks[0].targeted[lane_id] = False
 
-                """
-                Affichage du retrait du véhicule
-                """
+                ### Affichage du retrait du véhicule
 
                 if self.print_in_terminal:
                     print(f"Robot {event.robot} loads {moved_vehicle.id}")
@@ -498,9 +464,8 @@ class Simulation():
             else:
                 self.nb_sortie_interface[nb_jour] = 1
 
-        """
-        Mise à jour des tâches des robots et de la file de priorité
-        """
+        ### Mise à jour des tâches des robots et de la file de priorité
+        
         event.robot.doing = None
         self.algorithm.update_robot_arrival(event.robot, event.robot.start_position, success, moved_vehicle, self.t)
 
@@ -565,6 +530,8 @@ class Event():
         - 'deposit'
         - 'retrieval'
         - 'robot_arrrival'
+        - 'wake_up_robots_retrieval'
+        - 'wake_up_robots'
         """
         self.vehicle = vehicle
         self.date = date
@@ -580,14 +547,6 @@ class Event():
     def __bool__(self):
         return True
 
-    """
-        def __eq__(self, other):
-            if self is None or other is None:
-                return False
-            if self.vehicle == None or other.vehicle == None:                    #si jamais le event n'a pas de véhicule associé
-                return (not (other is None)) and self.date == other.date
-            return (not (other is None)) and self.date == other.date and self.vehicle.id == other.vehicle.id
-    """
     def __eq__(self, other):
         if self is None or other is None:
             return False
@@ -603,6 +562,7 @@ class Event():
             return f"{self.event_type} ; due to {self.date} ; vehicle {self.vehicle} ; concerning robot {self.robot.id_robot}"
         else: 
             return f"{self.event_type} ; due to {self.date} ; vehicle {self.vehicle}"
+
 
 class Algorithm():
 
@@ -813,7 +773,9 @@ class BaseAlgorithm(Algorithm):
         return True
 
     def check_redirections(self, event, current_time):
-
+        """
+        S'exécute lorsque l'algorithme est notifié d'un futur retrieval
+        """
         # Si un robot est en train de transporter un véhicule cible d'un retrieval
         for robot in self.robots:
             if not (robot.vehicle is None) and robot.vehicle.id == event.vehicle.id:
@@ -931,10 +893,11 @@ class BaseAlgorithm(Algorithm):
                     self.side_chosen_to_retrieve[moved_vehicle.id] = robot.start_position[2]
                 else:
                     side_chosen_initially = self.side_chosen_to_retrieve[moved_vehicle.id]
-                    self.locked_lanes[robot.goal_position[:2] + (side_chosen_initially,)] -= 1
+                    if self.locked_lanes[robot.goal_position[:2] + (side_chosen_initially,)] > 0:
+                        self.locked_lanes[robot.goal_position[:2] + (side_chosen_initially,)] -= 1
                 self.parking.blocks[0].lanes[i_lane].push_reserve(moved_vehicle.id, "bottom", mark=False)
                 self.parking.blocks[0].lanes[i_lane].list_vehicles[0] = "Lock"
-                #On place le vehicule a l'interface
+                # On place le vehicule a l'interface
                 robot.goal_position = (0, i_lane, "bottom")
                 self.parking.blocks[0].nb_places_available -= 1
                 
@@ -956,99 +919,36 @@ class BaseAlgorithm(Algorithm):
     def update_robot_end_task(self, robot, lane_end, success, current_time):
         self.update(current_time)
    
-    def isRetrievalBetterThanDeposit(self, retrieval_event, deposit_event):
-        # calcul nombre véhicules dans l'interface
-        nb_vehicules_interface = 0
-        interface_size = 0
-        for place_lane in self.parking.blocks[0].lanes:
-            interface_size += 1
-            if place_lane.list_vehicles[0] != 0:
-                nb_vehicules_interface += 1
+    # def isRetrievalBetterThanDeposit(self, retrieval_event, deposit_event):
+    #     # calcul nombre véhicules dans l'interface
+    #     nb_vehicules_interface = 0
+    #     interface_size = 0
+    #     for place_lane in self.parking.blocks[0].lanes:
+    #         interface_size += 1
+    #         if place_lane.list_vehicles[0] != 0:
+    #             nb_vehicules_interface += 1
 
-        # calcul du nombre de dépôts à venir dans d'ici anticipation_time : parcours de self.deposit_events
-        queue = self.simulation.deposit_events[:]
-        nb_incoming_deposit = 0
-        while True:
-            if len(queue) == 0:
-                break
-            else:
-                next_event = queue[-1]
-                queue = queue[:-1]
-                if next_event.date - self.simulation.t > self.anticipation_time:
-                    nb_incoming_deposit += 1
-                else:
-                    break
+    #     # calcul du nombre de dépôts à venir dans d'ici anticipation_time : parcours de self.deposit_events
+    #     queue = self.simulation.deposit_events[:]
+    #     nb_incoming_deposit = 0
+    #     while True:
+    #         if len(queue) == 0:
+    #             break
+    #         else:
+    #             next_event = queue[-1]
+    #             queue = queue[:-1]
+    #             if next_event.date - self.simulation.t > self.anticipation_time:
+    #                 nb_incoming_deposit += 1
+    #             else:
+    #                 break
 
-        if retrieval_event is None:
-            return False
-        if deposit_event is None:
-            return True
+    #     if retrieval_event is None:
+    #         return False
+    #     if deposit_event is None:
+    #         return True
         
-        return nb_vehicules_interface + nb_incoming_deposit < interface_size
+    #     return nb_vehicules_interface + nb_incoming_deposit < interface_size
 
-    """
-            block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
-            lane_vehicle = self.parking.blocks[block_id].lanes[lane_id]
-
-            if lane_vehicle.bottom_access and lane_vehicle.bottom_position - position < position - lane_vehicle.top_position:
-                side = "bottom"
-            else:
-                side = "top"
-
-            robot.start_position = robot.goal_position
-            robot.goal_position = (block_id, lane_id, side)
-            lane_vehicle.pop_reserve(side)
-
-            robot.start_time = current_time
-            robot.goal_time = current_time + self.parking.travel_time(robot.start_position, robot.goal_position)
-
-            event.robot = robot
-            event_arrival = Event(event.vehicle, robot.goal_time, "robot_arrival", robot)
-            self.events.add(event_arrival)
-
-            robot.doing = event_arrival
-            robot.target = event
-
-            return event
-        
-    def find_unassigned_events(self, are_available_places_interface, current_time):
-        # On verifie d'abord si des retrievals sont en retard
-        i = 1
-        while i <= len(self.pending_retrievals):
-            event = self.pending_retrievals[-i]
-            if event.vehicle.id in self.parking.occupation:
-                block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
-                if block_id != 0:
-                    vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
-
-                    if vehicle_lane.bottom_access and (not vehicle_lane.future_bottom_position is None) and vehicle_lane.future_bottom_position - position < position - vehicle_lane.future_top_position:
-                        if vehicle_lane.future_bottom_position - position >= 0:
-                            return event
-                    elif not vehicle_lane.future_top_position is None:
-                        if position - vehicle_lane.future_top_position >= 0:
-                            return event
-            i += 1
-
-        # On s'intéresse ensuite aux retrievals qui sont prévus dans moins d'une heure
-        i = 1
-        while i <= len(self.events):
-            event = self.events[-i]
-            if event.date - current_time > datetime.timedelta(hours=1):
-                break
-            if event.event_type == "retrieval" and event.vehicle.id in self.parking.occupation:
-                block_id, lane_id, position = self.parking.occupation[event.vehicle.id]
-                if block_id != 0:
-                    vehicle_lane = self.parking.blocks[block_id].lanes[lane_id]
-
-                    if vehicle_lane.bottom_access and (not vehicle_lane.future_bottom_position is None) and vehicle_lane.future_bottom_position - position < position - vehicle_lane.future_top_position:
-                        if vehicle_lane.future_bottom_position - position >= 0:
-                            return event
-                    elif not vehicle_lane.future_top_position is None:
-                        if position - vehicle_lane.future_top_position >= 0:
-                            return event
-            i += 1
-    """
-      
     def update(self, current_time):
         for robot in self.robots:
             if robot.doing is None:
@@ -1057,9 +957,8 @@ class BaseAlgorithm(Algorithm):
 class AlgorithmRandom(BaseAlgorithm):
 
     def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time=datetime.timedelta(hours=1), print_in_terminal=False, optimization_parameters=None):
-        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time, print_in_terminal)
+        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, anticipation_time, print_in_terminal, optimization_parameters)
 
-    
     def place(self, vehicle, start_position, time, max_iter=1000):
         self.nb_placements += 1
         nb_iter = 0
@@ -1084,7 +983,13 @@ class AlgorithmRandom(BaseAlgorithm):
                     print(self.parking)
                     print(self.locked_lanes)
                 raise ValueError("le placement n'a pas pu être effectué")
-    
+
+    def isRetrievalBetterThanDeposit(self, retrieval_event, deposit_event):
+        if not deposit_event is None:
+            return False
+        elif not retrieval_event is None:
+            return True
+
     @classmethod
     def __repr__(self):
         return "Random"
@@ -1103,7 +1008,6 @@ class WeightAlgorithm(BaseAlgorithm):
         
         #Algorithme de placement avec fonction de coût/pondération externalisée, cette fonction n'a pas à changer quel que soit l'algorithme de placement
         
-
         # paramètre utilisé dans performances (mesure)
         self.nb_placements += 1
         
@@ -1113,7 +1017,6 @@ class WeightAlgorithm(BaseAlgorithm):
 
         # self.locked_lanes = {extrémité de lane: bloquée ou non}
         # On parcourt l'ensemble de ces extrémités et on cherche celle de poids minimal
-
         for lane_end, is_locked in self.locked_lanes.items():
             # on s'assure que la lane n'est pas bloquée (qu'il n'y a pas de véhicule à sortir par cette extrémité) 
             # et qu'on ne replace pas le véhicule là où il est déjà
@@ -1150,56 +1053,6 @@ class WeightAlgorithm(BaseAlgorithm):
 
 
 class AlgorithmZeroMinus(WeightAlgorithm):
-
-    """
-                        # On simule l'évolution de la lane
-                        time_of_arrival = time + self.parking.travel_time(start_position, lane_end)
-                        events_to_reverse = self.parking.future_config(block block_id, lane_id,_id, lane_id, self.robots, self.stock, max_time = time_of_arrival)
-                        lane.push(vehicle.id, side, self.stock)
-                        # x : position du véhicule dans la lane       
-                        x = lane.end_position(side)          
-                        events_to_reverse.append((side,))
-                        events_to_reverse.extend(self.parking.future_config(block block_id, lane_id,_id, lane_id, self.robots, self.stock, min_time = time_of_arrival))
-    def __init__(self, t0, stock, robots, parking, events, locked_lanes, print_in_terminal=False, anticipation_time=datetime.timedelta(hours=8), optimization_parameters = None):
-        super().__init__(t0, stock, robots, parking, events, locked_lanes, print_in_terminal, anticipation_time, optimization_parameters = optimization_parameters)
-
-                        if side == "top":
-                            distance_to_lane_end = lane.top_position
-                        else:
-                            distance_to_lane_end = lane.length - lane.bottom_position - 1
-    
-                        # Poids de l'extrémité si on ne peut pas conserver l'unimodalité (apparente)
-                        weight = 1000000
-                        if lane.top_position == x and lane.bottom_position == x:
-                            # Poids de l'extrémité si le véhicule est seul dans sa lane
-                            weight = 10000
-                        elif lane.top_position <= x and lane.bottom_position >= x:
-                            if x == lane.argmax_retrieval:
-                                # Le véhicule est le nouveau "maximum" de la lane
-                                if lane.top_position < x:
-                                    weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x-1]].retrieval).total_seconds()//60
-                                    if lane.bottom_position > x:
-                                        weight = min(weight, (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60)
-                                else:
-                                     weight = (vehicle.retrieval - self.stock.vehicles[lane.list_vehicles[x+1]].retrieval).total_seconds()//60
-                            elif x > lane.argmax_retrieval:
-                                # Le véhicule est à droite du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x-1]].retrieval >= vehicle.retrieval:
-                                    if lane.bottom_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x+1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x-1]].retrieval - vehicle.retrieval).total_seconds()//60
-                            elif x < lane.argmax_retrieval:
-                                # Le véhicule est à gauche du "maximum" de la lane
-                                if self.stock.vehicles[lane.list_vehicles[x+1]].retrieval >= vehicle.retrieval:
-                                    if lane.top_position == x or vehicle.retrieval >= self.stock.vehicles[lane.list_vehicles[x-1]].retrieval:
-                                        weight = (self.stock.vehicles[lane.list_vehicles[x+1]].retrieval - vehicle.retrieval).total_seconds()//60
-
-                        # On nettoie
-                        self.parking.reverse_config(block_id, lane_id, events_to_reverse, self.stock)
-                        
-                        if min_weight is None or min_weight > weight:
-                            min_weight = weight
-                            min_lane_end = lane_end
-    """
 
     def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False, optimization_parameters=None):
         super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=print_in_terminal, optimization_parameters=optimization_parameters)
@@ -1241,13 +1094,6 @@ class AlgorithmZeroMinus(WeightAlgorithm):
         if side == "top":
             distance_to_lane_end = future_lane.top_position
         else:
-            """
-            if self.print_in_terminal:
-                print("ERREUR DE PLACEMENT")
-                print(self.parking)
-                print(self.locked_lanes)
-            raise ValueError("le placement n'a pas pu être effectué")
-            """
             distance_to_lane_end = future_lane.length - future_lane.bottom_position - 1
         
         # détermination de delta_t (en minutes)
@@ -1264,6 +1110,36 @@ class AlgorithmZeroMinus(WeightAlgorithm):
         weight = self.alpha*delta_t + self.beta*abs(delta_t) + self.distance_to_lane_end_coef*distance_to_lane_end + overweight + travel_time
 
         return weight
+
+    def isRetrievalBetterThanDeposit(self, retrieval_event, deposit_event):
+        # calcul nombre véhicules dans l'interface
+        nb_vehicules_interface = 0
+        interface_size = 0
+        for place_lane in self.parking.blocks[0].lanes:
+            interface_size += 1
+            if place_lane.list_vehicles[0] != 0:
+                nb_vehicules_interface += 1
+
+        # calcul du nombre de dépôts à venir dans d'ici anticipation_time : parcours de self.deposit_events
+        queue = self.simulation.deposit_events[:]
+        nb_incoming_deposit = 0
+        while True:
+            if len(queue) == 0:
+                break
+            else:
+                next_event = queue[-1]
+                queue = queue[:-1]
+                if next_event.date - self.simulation.t > self.anticipation_time:
+                    nb_incoming_deposit += 1
+                else:
+                    break
+
+        if retrieval_event is None:
+            return False
+        if deposit_event is None:
+            return True
+        
+        return nb_vehicules_interface + nb_incoming_deposit < interface_size
 
     @classmethod
     def __repr__(self):
@@ -1305,13 +1181,6 @@ class AlgorithmUnimodal(WeightAlgorithm):
         if side == "top":
             distance_to_lane_end = future_lane.top_position
         else:
-            """
-            if self.print_in_terminal:
-                print("ERREUR DE PLACEMENT")
-                print(self.parking)
-                print(self.locked_lanes)
-            raise ValueError("le placement n'a pas pu être effectué")
-            """
             distance_to_lane_end = future_lane.length - future_lane.bottom_position - 1
         
         ### détermination des variables régissant le poids ###
@@ -1353,61 +1222,3 @@ class AlgorithmUnimodal(WeightAlgorithm):
     @classmethod
     def __repr__(self):
         return "Unimodal"
-
-class AlgorithmUnimodalRefined0(WeightAlgorithm):
-
-    def __init__(self, simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=False):
-        super().__init__(simulation, t0, stock, robots, parking, events, locked_lanes, pending_retrievals, print_in_terminal=print_in_terminal)
-        
-        #paramètres de contrôle des poids
-        self.break_unimodality_weight = 100000
-        self.start_new_lane_weight = 1000
-        self.distance_to_lane_end_coef = 100.
-
-    def weight(self, vehicle, start_position, lane_end, date):
-
-        # détermination de la place cible et simulation éventuelle des arrivées entre temps
-
-        block_id, lane_id, side = lane_end
-        lane = self.parking.blocks[block_id].lanes[lane_id]
-
-        # On simule l'évolution de la lane : il ne faut pas prendre en compte les véhicules qui seront partis quand le notre arrivera (/!\ est-ce bien utile / pas risqué ?)
-        time_of_arrival = date + self.parking.travel_time(start_position, lane_end)
-        before_time_of_arrival = time_of_arrival - datetime.timedelta(minutes=1)
-        try:
-            future_lane = self.parking.future_config(lane, block_id, lane_id, self.robots, self.stock, max_time = before_time_of_arrival)
-            future_lane.push(vehicle.id, side, self.stock)
-            self.parking.future_config(future_lane, block_id, lane_id, self.robots, self.stock, min_time = before_time_of_arrival, on_place=True)
-        except IndexError:
-            return None
-
-        ### détermination des variables régissant le poids ###
-
-        # overweight : somme des pénalités pour les cas dégénérés
-        overweight = 0
-
-        # détermination du nombre de places restantes dans la lane
-        if side == "top":
-            distance_to_lane_end = future_lane.top_position
-        else:
-            distance_to_lane_end = future_lane.length - future_lane.bottom_position - 1
-        
-        # détermination de delta_t (en minutes)
-        try:
-            delta_t = (vehicle.retrieval - future_lane.next_retrieval(side, self.stock, exception=vehicle.retrieval)).total_seconds()/60     # l'espoir fait vivre
-            # on regarde si l'on viole l'unimodalité
-            if delta_t > 0:
-                overweight += self.break_unimodality_weight
-
-        except TypeError:   # cas où la lane ne contient pas d'autre véhicule
-            delta_t = 0
-            overweight += self.start_new_lane_weight
-
-        # calcul du poids
-        weight = delta_t + self.distance_to_lane_end_coef*distance_to_lane_end + overweight
-
-        return weight
-
-    @classmethod
-    def __repr__(self):
-        return "UR0"

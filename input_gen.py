@@ -47,8 +47,11 @@ def random_hour(typ):
     
     return datetime.timedelta(hours=hour)
 
-def generate(vehicles_per_day=5, time=datetime.timedelta(days=100), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0), path="inputs\\mvmts.csv"):
-
+def generate(vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0), path="inputs\\mvmts.csv"):
+    """
+    Génère un stock de véhicules sous un format csv, enregistré dans *path*.
+    Dans le stock, un nombre *vehicles_per_day* de véhicules est déposé en moyenne à partir de *start_date*, sur une durée de *time*.
+    """
     vehicle_id = 1
     mvmts = pd.DataFrame(columns = ["DEPOSIT", "RETRIEVAL", "ID", "ORDER_DEPOSIT", "ORDER_RETRIEVAL"])
     date = start_date
@@ -100,7 +103,10 @@ def generate(vehicles_per_day=5, time=datetime.timedelta(days=100), start_date=d
 
 
 def generateStock(Vehicle, vehicles_per_day=5, time=datetime.timedelta(days=31), start_date=datetime.datetime(2021, 1, 1, 0, 0, 0, 0)):
-
+    """
+    Génère un stock de véhicules, et renvoie une classe Stock.
+    Dans le stock, un nombre *vehicles_per_day* de véhicules est déposé en moyenne à partir de *start_date*, sur une durée de *time*.
+    """
     date = start_date
     dict_vehicles = {}
 

@@ -402,24 +402,4 @@ class TestTest():
 
 test = TestTest()
 
-#test.testAverageDashboard(stock_args=(5, ), display=True)
-#test.testVariableStockAndRobots(nb_repetitions=20)
-#test.testVariableInterfaceAndRobots(nb_repetitions=10)
-#test.testVariableStockAndRobotsRealParking(stock_args=(30, ), nb_repetitions=10)
-
-#test.testVariableAlgorithmsAndFlowRealParking(nb_repetitions=30, algorithms=[AlgorithmRandom, AlgorithmNewUnimodal, AlgorithmUnimodalRefined0, AlgorithmZeroMinus])
-
-#test.testMarkOnPool(AlgorithmRandom)
-#test.testMark(AlgorithmNewUnimodal)
-#test.testMark(AlgorithmZeroMinus)
-
-#test.testRefineAlgorithmOnPool(variation_coef=0.75, nb_steps=5, initial_parameters=[0.5, 3., 200., -5.])
-
-#test.testMarkOnPool(AlgorithmZeroMinus, optimization_parameters=(1., 3., 100., -10., 0.75))
-
-#test.testRefineAlgorithmOnPool(nb_steps=10, variation_coef=0.5, Algorithm=AlgorithmUnimodal, initial_parameters=[1., 100., 1., -1.])
-
-#test.testCutViewAlgorithmOnPool(start=1, stop=11, step=1, other_parameters=[100., -10.])
-#test.testLogCutViewAlgorithmOnPool(start=-10, stop=10, step=1, other_parameters=[100., -10.])
-
-test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=10, stock_args=(30, ), algorithms=[AlgorithmZeroMinus], anticipation_times=[datetime.timedelta(hours=1)], optimization_parameters = (1, 3, 100, -10, 0.5, 1.5))
+test.testVariableAlgorithmsAnticipationTimeAndFlowRealParking(nb_repetitions=100, stock_args=(50, ), algorithms=[AlgorithmRandom, AlgorithmZeroMinus], anticipation_times=[datetime.timedelta(hours=1)], optimization_parameters = (1, 3, 100, -10, 1., 1.))

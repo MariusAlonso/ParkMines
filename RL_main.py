@@ -36,11 +36,15 @@ class TensorboardCallback(BaseCallback):
         summary = tf.Summary(value=[tf.Summary.Value(tag='client_unsatisfaction', simple_value=value)])
         self.locals['writer'].add_summary(summary, self.num_timesteps)
 
+        value = environment.envs[0].sim_duration
+        summary = tf.Summary(value=[tf.Summary.Value(tag='sim_duration', simple_value=value)])
+        self.locals['writer'].add_summary(summary, self.num_timesteps)
+
         return True
 
 
 
-parking = Parking([BlockInterface([Lane(1, 1), Lane(2, 1), Lane(3, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
+parking = Parking([BlockInterface([Lane(1, 1)]), Block([], 1, 2), Block([Lane(1, 2), Lane(2, 2)]), Block([],1,4)], [[0,0,0,0],["s",1,1,1],[2,2,3,"e"]])
 env = MLEnv(parking, 10, 1, 3, 3)
 
 
@@ -48,13 +52,13 @@ env = MLEnv(parking, 10, 1, 3, 3)
         ############################## apprentissage ############################################
         #########################################################################################
 
-learning = False            #True si on veut procéder à l'apprentissage d'un modèle
-saving = False              #True si on veut sauvegarder le modèle
-timesteps = int(3e6)         #Nombre de timesteps dans l'apprentissage
+learning = True            #True si on veut procéder à l'apprentissage d'un modèle
+saving = True              #True si on veut sauvegarder le modèle
+timesteps = 3000000         #Nombre de timesteps dans l'apprentissage
 
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL11tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL12tensorboard/")
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
     RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
     if saving:
