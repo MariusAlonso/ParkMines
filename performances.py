@@ -13,12 +13,12 @@ import matplotlib.dates as mdates
 from itertools import product
 
 class Dashboard():
-
+    """
+    un Dashboard prend en argument une simulation, l'exécute entièrement,
+    puis calcule la performance
+    """
     def __init__(self, simulation):
-        """
-        un Dashboard prend en argument une simulation, l'exécute entièrement,
-        puis calcule la performance
-        """
+
         self.completed = True
         try:
             simulation.complete()
@@ -101,16 +101,16 @@ class Dashboard():
 
 
 class Performance():
+    """
+    Dans la classe performance, on se donne une simulation de référence
+    et on se donne des méthodes qui étudient la réponse à la variation 
+    d'un seul des paramètres (par rapport à la simulation de référence)
 
+    stock_args : tuple contenant tous les arguments nécessaires à la génération du stock
+    ( on veut pouvoir faire stock = Stock(*stock_args) )
+    """
     def __init__(self, t0, stock_args, robots, parking, AlgorithmType, delays=[i for i in range(180)]):
-        """
-        Dans la classe performance, on se donne une simulation de référence
-        et on se donne des méthodes qui étudient la réponse à la variation 
-        d'un seul des paramètres (par rapport à la simulation de référence)
 
-        stock_args : tuple contenant tous les arguments nécessaires à la génération du stock
-        ( on veut pouvoir faire stock = Stock(*stock_args) )
-        """
         self.stock_args = stock_args
         self.robots = robots
         # t0 la date d'initial

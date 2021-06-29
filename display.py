@@ -318,7 +318,7 @@ class Display():
             
                 if x.start_time :
                     if x.goal_time > x.start_time:
-                        pourc = 10# (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
+                        pourc = (self.simulation.t - x.start_time)/(x.goal_time - x.start_time)
                         rect2 = pg.Rect(900, i*70 + 60, pourc*(L*30000+100), 30)
                         pg.draw.rect(self.screen, (255, 0, 0), rect2) #tracer de la jauge
                     

@@ -278,7 +278,9 @@ class BlockInterface(Block):
 
 
 
-class Lane() :
+class Lane():
+    """Une lane est un alignement d'au plus self.length véhicules, dont les ids sont stockés dans la liste self.list_vehicles
+    """
     def __init__(self, id_lane, length, top_access = True, bottom_access = True):
         self.length = length
         self.id = id_lane
@@ -348,6 +350,15 @@ class Lane() :
 
 
     def push(self, id_vehicle, side, stock):
+        """Ajoute un véhicule à l'extrémité side de la lane, lève une exception si il n'y a plus de place
+
+        :param id_vehicle: l'id du véhicule ajouté
+        :type id_vehicle: int
+        :param side: côté où l'on rajoute le véhicule
+        :type side: "bottom" ou "top"
+        :param stock: permet d'accéder à la date de retrieval du véhicule
+        :type stock: Stock
+        """
         if side == "top":
             if self.top_position == None:
                 if not self.bottom_access:
@@ -433,6 +444,11 @@ class Lane() :
         self.push_reserve(0, side)
 
     def pop(self, side):
+        """Retire un véhicule de l'extrémité side de la lane, lève une exception si il n'y a pas de véhicule.
+
+        :param side: côté où l'on rajoute le véhicule
+        :type side: "bottom" ou "top"
+        """
         if side == "top":
             if self.top_position != None:
                 vehicle_id = self.list_vehicles[self.top_position]

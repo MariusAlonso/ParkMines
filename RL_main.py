@@ -53,7 +53,7 @@ class TensorboardCallback(BaseCallback):
 
 learning = True           #True si on veut procéder à l'apprentissage d'un modèle
 saving = True              #True si on veut sauvegarder le modèle
-timesteps = int(8e5)         #Nombre de timesteps dans l'apprentissage
+timesteps = int(3e6)         #Nombre de timesteps dans l'apprentissage
 
 # parking et environnement pour l'apprentissage du modèle
 
@@ -61,7 +61,7 @@ parking = Parking([BlockInterface([Lane(1, 1)]), Block([], 1, 2), Block([Lane(1,
 env = MLEnv(parking, 10, 1, 3, 3)
 
 if learning:
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL12tensorboard/")
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log="./RL13tensorboard/")
     model.learn(total_timesteps=timesteps, callback=TensorboardCallback())
     RLAlgorithm = rl_algorithm_builder(model, env._dict, env.number_arguments, env.max_stock_visible, True)
     if saving:

@@ -44,16 +44,24 @@ class MLEnv(gym.Env):
         self.max_penalty = 1e7
 
         # Penalisation pour chaque client qui attend (deposit et retrieval)
-        self.penalty_lateness = 1
+        self.penalty_lateness = 0
 
 
         ###########################################################################################
         ############################## Statistiques ###############################################
         ###########################################################################################
 
+        # Proportion des réveils où l'algorithme donne quelquechose à faire au robot, par rapport au nombre de réveil total dans la simulation
         self.robot_action_avg = 0.
+        
+        # Nombre d'appels à l'algorithme de RL
         self.nb_actions = 0
+
+        # Nombre d'heures cumulées d'attente client pour une simulation
         self.client_unsatisfaction = 0.
+
+        # Durée d'une simulation
+        self.sim_duration = 0.
 
 
         ###########################################################################################
@@ -352,8 +360,6 @@ class MLEnv(gym.Env):
         self.simulation.algorithm.reward -= 10*self.lanes_occupated
         """
         self.done = self.done or not self.simulation.vehicles_left_to_handle
-        #print(self.observation.data)
-        #print(self.simulation.deposit_events)
 
         if self.done:
             self.sim_duration = (self.simulation.t - self.t0).total_seconds()/3600
@@ -371,14 +377,8 @@ class MLEnv(gym.Env):
         self.total_waiting_time = 0
         self.nb_actions = 0
         self.nb_services_completed = 0
-        if self.display:
-            #self.simulation.display.shutdown()
-            pass
         RLAlgorithm = rl_algorithm_builder(None, self._dict, self.number_arguments, self.max_stock_visible)
         self.simulation = Simulation(self.t0, self.stock, [Robot(k) for k in range(self.number_robots)], self.parking, RLAlgorithm, order=False, print_in_terminal=False)
-        if self.display:
-            #self.simulation.start_display(time_interval=1.)
-            pass
         self.observation = self.simulation.algorithm.observation
         
         self.done = False
@@ -388,24 +388,11 @@ class MLEnv(gym.Env):
         
 
     def render(self, mode='human', close=False):
+
         print(self.simulation.t)
-        #display = Display(self.simulation.t, self.stock, [Robot(1), Robot(2)], real_parking, AlgorithmUnimodal, 12, 20, print_in_terminal = False)
-        #print("stock_dates=", self.observation.data[self._dict("stock_dates")[0]:self._dict("stock_dates")[0]+7, 0:2])
-        print("lanes=", self.observation.data[self._dict("lanes")[0]: self._dict("lanes")[1]])
-        print("robot_actions_lanes=", self.observation.data[self._dict("robot_actions_lanes")[0]:self._dict("robot_actions_lanes")[1], 0])
         print(self.simulation.pending_deposits)
         print(self.simulation.pending_retrievals)
         print(self.simulation.parking)
-        #print(self.observation)
-
-
-        if self.display:
-            """
-            self.simulation.start_display()       
-            self.simulation.display.update()
-            self.simulation.display.shutdown()
-            """
-            pass
 
 if __name__ == "__main__":
     """
@@ -426,13 +413,9 @@ if __name__ == "__main__":
             action = env.action_space.sample()
             
             n_state, reward, done, info = env.step(action)
-            """
-            if reward !=0:
-                print(n_state[env._dict("stock_dates")[0]:,0], reward, done, info)
-            """
-            #input()
             score+=reward
             print(score)
+
         print('Episode:{} Score:{}'.format(episode, score))
     env.close()
 
