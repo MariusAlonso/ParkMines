@@ -1,0 +1,282 @@
+
+<!DOCTYPE html>
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>input_gen &#8212; Documentation ParkMines 2021</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/translations.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Recherche" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Code source de input_gen</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">comptime</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.mixture</span> <span class="kn">import</span> <span class="n">GaussianMixture</span>
+<span class="c1"># import matplotlib.pyplot as plt</span>
+
+<span class="c1"># En jours</span>
+<span class="n">mu_deposit_order</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">sigma_deposit_order</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">mu_retrieval_order</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">sigma_retrieval_order</span> <span class="o">=</span> <span class="mi">6</span>
+
+<span class="n">mu_stay_duration</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">sigma_stay_duration</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># En nb de véhicules quotidiens</span>
+<span class="n">mu_entrances</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]</span>
+<span class="n">sigma_entrances</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+
+<span class="n">entrances_dist_per_hour</span> <span class="o">=</span>   <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> 
+                            <span class="mf">0.08</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.09</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span>
+                            <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.05</span> <span class="p">,</span><span class="mf">0.07</span> <span class="p">,</span><span class="mf">0.09</span><span class="p">,</span>
+                            <span class="mf">0.10</span><span class="p">,</span> <span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">]</span>
+
+<span class="n">exits_dist_per_hour</span> <span class="o">=</span>   <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> 
+                        <span class="mf">0.10</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span>
+                        <span class="mf">0.08</span><span class="p">,</span> <span class="mf">0.11</span><span class="p">,</span> <span class="mf">0.09</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.04</span><span class="p">,</span>
+                        <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.07</span> <span class="p">,</span><span class="mf">0.07</span> <span class="p">,</span><span class="mf">0.02</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">random_hour</span><span class="p">(</span><span class="n">typ</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">typ</span> <span class="o">==</span> <span class="s2">&quot;entrance&quot;</span><span class="p">:</span>
+        <span class="n">distribution</span> <span class="o">=</span> <span class="n">entrances_dist_per_hour</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">distribution</span> <span class="o">=</span> <span class="n">exits_dist_per_hour</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">hour</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">distribution</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="n">weight</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">s</span><span class="p">:</span>
+            <span class="k">break</span>
+    
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">hour</span><span class="p">)</span>
+
+<div class="viewcode-block" id="generate"><a class="viewcode-back" href="../index.html#input_gen.generate">[docs]</a><span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="n">vehicles_per_day</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">31</span><span class="p">),</span> <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2021</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;inputs</span><span class="se">\\</span><span class="s2">mvmts.csv&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Génère un stock de véhicules sous un format csv, enregistré dans *path*.</span>
+<span class="sd">    Dans le stock, un nombre *vehicles_per_day* de véhicules est déposé en moyenne à partir de *start_date*, sur une durée de *time*.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vehicle_id</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">mvmts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DEPOSIT&quot;</span><span class="p">,</span> <span class="s2">&quot;RETRIEVAL&quot;</span><span class="p">,</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="s2">&quot;ORDER_DEPOSIT&quot;</span><span class="p">,</span> <span class="s2">&quot;ORDER_RETRIEVAL&quot;</span><span class="p">])</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">start_date</span>
+
+    <span class="n">gm</span> <span class="o">=</span> <span class="n">GaussianMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">covariance_type</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">)</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">weights_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.32</span><span class="p">,</span><span class="mf">0.125</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.02</span><span class="p">,</span><span class="mf">0.005</span><span class="p">,</span><span class="mf">0.36</span><span class="p">])</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">means_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">3.</span><span class="p">],[</span><span class="mf">7.</span><span class="p">],[</span><span class="mf">14.</span><span class="p">],[</span><span class="mf">21.</span><span class="p">],[</span><span class="mf">28.</span><span class="p">],[</span><span class="mf">35.</span><span class="p">],[</span><span class="mf">12.</span><span class="p">]])</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">covariances_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">30.</span><span class="p">])</span>
+
+    <span class="k">while</span> <span class="n">date</span> <span class="o">-</span> <span class="n">start_date</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">:</span>
+
+        <span class="n">weekday</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span>
+        <span class="n">nb_entrances</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">vehicles_per_day</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="n">mu_entrances</span><span class="p">[</span><span class="n">weekday</span><span class="p">],</span> <span class="n">sigma_entrances</span><span class="p">[</span><span class="n">weekday</span><span class="p">]))))</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_entrances</span><span class="p">):</span>
+    
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">days_to_retrieval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">sample</span><span class="p">()[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">days_to_retrieval</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">hour_deposit</span> <span class="o">=</span> <span class="n">random_hour</span><span class="p">(</span><span class="s2">&quot;entrance&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">3600</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()))</span>
+                <span class="n">hour_retrieval</span> <span class="o">=</span> <span class="n">random_hour</span><span class="p">(</span><span class="s2">&quot;exit&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">3600</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()))</span>
+                
+                <span class="n">date_deposit</span> <span class="o">=</span> <span class="n">date</span> <span class="o">+</span> <span class="n">hour_deposit</span>
+                <span class="n">date_retrieval</span> <span class="o">=</span> <span class="n">date</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_to_retrieval</span><span class="p">)</span> <span class="o">+</span> <span class="n">hour_retrieval</span>
+               
+                <span class="k">if</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">date_retrieval</span> <span class="o">-</span> <span class="n">date_deposit</span><span class="p">:</span>
+                    <span class="k">break</span>
+            
+            <span class="n">seconds_from_order_deposit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">86400</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="n">mu_deposit_order</span><span class="p">,</span> <span class="n">sigma_deposit_order</span><span class="p">)))</span>
+            <span class="n">date_order_deposit</span> <span class="o">=</span> <span class="n">date_deposit</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">seconds_from_order_deposit</span><span class="p">)</span>
+
+            <span class="n">seconds_from_order_retrieval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">86400</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="n">mu_retrieval_order</span><span class="p">,</span> <span class="n">sigma_retrieval_order</span><span class="p">))),</span> <span class="p">(</span><span class="n">date_retrieval</span> <span class="o">-</span> <span class="n">date_order_deposit</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span>
+            <span class="n">date_order_retrieval</span> <span class="o">=</span> <span class="n">date_retrieval</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">seconds_from_order_retrieval</span><span class="p">)</span>
+
+            
+            <span class="n">mvmts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vehicle_id</span><span class="p">,</span> <span class="s2">&quot;ORDER_DEPOSIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_order_deposit</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span><span class="o">+</span><span class="s2">&quot;Z&quot;</span>
+            <span class="n">mvmts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vehicle_id</span><span class="p">,</span> <span class="s2">&quot;DEPOSIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_deposit</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span><span class="o">+</span><span class="s2">&quot;Z&quot;</span>
+            <span class="n">mvmts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vehicle_id</span><span class="p">,</span> <span class="s2">&quot;ORDER_RETRIEVAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_order_retrieval</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span><span class="o">+</span><span class="s2">&quot;Z&quot;</span>
+            <span class="n">mvmts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vehicle_id</span><span class="p">,</span> <span class="s2">&quot;RETRIEVAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_retrieval</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span><span class="o">+</span><span class="s2">&quot;Z&quot;</span>
+            <span class="n">mvmts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">vehicle_id</span><span class="p">,</span> <span class="s2">&quot;ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vehicle_id</span>
+            
+            <span class="n">vehicle_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="n">date</span> <span class="o">+=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">mvmts</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generateStock"><a class="viewcode-back" href="../index.html#input_gen.generateStock">[docs]</a><span class="k">def</span> <span class="nf">generateStock</span><span class="p">(</span><span class="n">Vehicle</span><span class="p">,</span> <span class="n">vehicles_per_day</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">31</span><span class="p">),</span> <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2021</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Génère un stock de véhicules, et renvoie une classe Stock.</span>
+<span class="sd">    Dans le stock, un nombre *vehicles_per_day* de véhicules est déposé en moyenne à partir de *start_date*, sur une durée de *time*.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">start_date</span>
+    <span class="n">dict_vehicles</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">gm</span> <span class="o">=</span> <span class="n">GaussianMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">covariance_type</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">)</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">weights_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.32</span><span class="p">,</span><span class="mf">0.125</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.02</span><span class="p">,</span><span class="mf">0.005</span><span class="p">,</span><span class="mf">0.36</span><span class="p">])</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">means_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">3.</span><span class="p">],[</span><span class="mf">7.</span><span class="p">],[</span><span class="mf">14.</span><span class="p">],[</span><span class="mf">21.</span><span class="p">],[</span><span class="mf">28.</span><span class="p">],[</span><span class="mf">35.</span><span class="p">],[</span><span class="mf">12.</span><span class="p">]])</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">covariances_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">30.</span><span class="p">])</span>
+
+    <span class="k">while</span> <span class="n">date</span> <span class="o">-</span> <span class="n">start_date</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">:</span>
+
+        <span class="n">weekday</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span>
+        <span class="n">nb_entrances</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">vehicles_per_day</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="n">mu_entrances</span><span class="p">[</span><span class="n">weekday</span><span class="p">],</span> <span class="n">sigma_entrances</span><span class="p">[</span><span class="n">weekday</span><span class="p">]))))</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_entrances</span><span class="p">):</span>
+    
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">days_to_retrieval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">sample</span><span class="p">()[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">days_to_retrieval</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">hour_deposit</span> <span class="o">=</span> <span class="n">random_hour</span><span class="p">(</span><span class="s2">&quot;entrance&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">3600</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()))</span>
+                <span class="n">hour_retrieval</span> <span class="o">=</span> <span class="n">random_hour</span><span class="p">(</span><span class="s2">&quot;exit&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">3600</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()))</span>
+                
+                <span class="n">date_deposit</span> <span class="o">=</span> <span class="n">date</span> <span class="o">+</span> <span class="n">hour_deposit</span>
+                <span class="n">date_retrieval</span> <span class="o">=</span> <span class="n">date</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_to_retrieval</span><span class="p">)</span> <span class="o">+</span> <span class="n">hour_retrieval</span>
+               
+                <span class="k">if</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">date_retrieval</span> <span class="o">-</span> <span class="n">date_deposit</span><span class="p">:</span>
+                    <span class="k">break</span>
+            
+            <span class="n">seconds_from_order_deposit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">86400</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="n">mu_deposit_order</span><span class="p">,</span> <span class="n">sigma_deposit_order</span><span class="p">)))</span>
+            <span class="n">date_order_deposit</span> <span class="o">=</span> <span class="n">date_deposit</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">seconds_from_order_deposit</span><span class="p">)</span>
+
+            <span class="n">seconds_from_order_retrieval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">86400</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="n">mu_retrieval_order</span><span class="p">,</span> <span class="n">sigma_retrieval_order</span><span class="p">))),</span> <span class="p">(</span><span class="n">date_retrieval</span> <span class="o">-</span> <span class="n">date_order_deposit</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span>
+            <span class="n">date_order_retrieval</span> <span class="o">=</span> <span class="n">date_retrieval</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">seconds_from_order_retrieval</span><span class="p">)</span>
+            
+            <span class="n">vehicle</span> <span class="o">=</span> <span class="n">Vehicle</span><span class="p">(</span><span class="n">date_deposit</span><span class="p">,</span> <span class="n">date_retrieval</span><span class="p">,</span> <span class="n">date_order_deposit</span><span class="p">,</span> <span class="n">date_order_retrieval</span><span class="p">)</span>
+            <span class="n">dict_vehicles</span><span class="p">[</span><span class="n">vehicle</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">vehicle</span>
+        
+        <span class="n">date</span> <span class="o">+=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">dict_vehicles</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dict_vehicles</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">generateStock</span><span class="p">(</span><span class="n">Vehicle</span><span class="p">,</span> <span class="n">vehicles_per_day</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">start_date</span><span class="p">)</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    t00 = comptime.time()</span>
+<span class="sd">    for _ in range(100):</span>
+<span class="sd">        generate(5)</span>
+<span class="sd">    print(&quot;time to generate 100 csv:&quot;, comptime.time()-t00)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gm</span> <span class="o">=</span> <span class="n">GaussianMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">covariance_type</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">)</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">weights_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.12</span><span class="p">,</span><span class="mf">0.32</span><span class="p">,</span><span class="mf">0.125</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.02</span><span class="p">,</span><span class="mf">0.005</span><span class="p">,</span><span class="mf">0.36</span><span class="p">])</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">means_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">3.</span><span class="p">],[</span><span class="mf">7.</span><span class="p">],[</span><span class="mf">14.</span><span class="p">],[</span><span class="mf">21.</span><span class="p">],[</span><span class="mf">28.</span><span class="p">],[</span><span class="mf">35.</span><span class="p">],[</span><span class="mf">12.</span><span class="p">]])</span>
+    <span class="n">gm</span><span class="o">.</span><span class="n">covariances_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">30.</span><span class="p">])</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100000</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">days_to_retrieval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">sample</span><span class="p">()[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">days_to_retrieval</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">days_to_retrieval</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    plt.hist(res, bins = range(40), density = True)</span>
+<span class="sd">    plt.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ParkMines</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Code du module</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Recherche rapide</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Marius ALONSO, Enol ALVAREZ, Laure BOURGUELLE, Pierre LOUISOT.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

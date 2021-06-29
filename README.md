@@ -21,7 +21,12 @@ Pour lancer cet affichage, il suffit d'exécuter les méthodes .start_display() 
 performances.py affiche des statistiques sur une ou plusieurs simulations, en faisant varier éventuellement les paramètres de l'algorithme de décision.
 
 ---------
+
 Pour entraîner un modèle de Reinforcement Learning, il suffit d'exécuter le fichier RL_main.py, après avoir chargé l'environnement conda à partir du fichier environement.yml
 
 L'accès aux statistiques au cours de l'entraînement se fait à l'aide de tensorboard, en exécutant la commande
 "tensorboard --logdir dossierchoisipourstockerlesstatistiques" dans un invite de commande séparé. Là aussi, il faut charger l'environnement conda.
+
+---------
+
+Une documentation synthétique des classes et méthodes est accessible en exécutant le fichier index.html du dossier build

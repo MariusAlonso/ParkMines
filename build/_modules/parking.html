@@ -1,0 +1,613 @@
+
+<!DOCTYPE html>
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>parking &#8212; Documentation ParkMines 2021</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/translations.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Recherche" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Code source de parking</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">simulation</span> <span class="kn">import</span> <span class="n">Vehicle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">distance</span> <span class="k">as</span> <span class="nn">dist</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+
+<span class="k">class</span> <span class="nc">Parking</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">disposal</span><span class="o">=</span><span class="p">[[]],</span> <span class="n">occupation</span><span class="o">=</span><span class="p">{}):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_parking</span> <span class="o">=</span> <span class="p">[</span><span class="n">BlockInterface</span><span class="p">([],</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">Block</span><span class="p">([],</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span><span class="s2">&quot;leftrigth&quot;</span><span class="p">),</span> <span class="n">Block</span><span class="p">([],</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span><span class="s2">&quot;leftrigth&quot;</span><span class="p">),</span> <span class="n">Block</span><span class="p">([],</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span><span class="s2">&quot;leftrigth&quot;</span><span class="p">),</span> <span class="n">Block</span><span class="p">([],</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span><span class="s2">&quot;leftrigth&quot;</span><span class="p">),</span> <span class="n">Block</span><span class="p">([],</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span><span class="s2">&quot;leftrigth&quot;</span><span class="p">),</span> <span class="n">Block</span><span class="p">([],</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="n">Block</span><span class="p">([],</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;leftrigth&quot;</span><span class="p">)],</span> <span class="p">[[</span><span class="s1">&#39;s&#39;</span><span class="p">,</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;f0:6&#39;</span><span class="p">,</span> <span class="s1">&#39;f0:6&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="s1">&#39;f0:3&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;f0:2&#39;</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="s1">&#39;f7:0&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]]</span>
+
+        <span class="c1">### Attributs variant au cours d&#39;une simulation</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">occupation</span> <span class="o">=</span> <span class="n">occupation</span>
+
+        <span class="c1">### Attributs ne variant pas au cours d&#39;une simulation</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="n">blocks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_blocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">place_ratio</span> <span class="o">=</span> <span class="mi">2</span>                <span class="c1"># ratio longueur/largeur des places pour l&#39;affichage</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_of_places</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">height</span><span class="o">*</span><span class="n">block</span><span class="o">.</span><span class="n">width</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">])</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+            <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">lanes</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_max_lanes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>          <span class="c1"># block contenant le plus de lane</span>
+
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+            <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">lanes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">longest_lane</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>          <span class="c1"># lane la plus longue du parking</span>
+
+
+        <span class="c1">### Calcul des coordonnées du maillage correspondant à la matrice disposal</span>
+        
+        <span class="c1"># disposal est une matrice permettant de placer les blocks l&#39;un par rapport à l&#39;autre</span>
+        <span class="c1"># - s =&gt; espace vide, de la largeur d&#39;une place</span>
+        <span class="c1"># - e =&gt; espace vide, dont les dimensions ne sont pas imposées</span>
+        <span class="c1"># - f4:5 =&gt; espace vide, de largeur 4 et de hauteur 5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span> <span class="o">=</span> <span class="n">disposal</span>
+        <span class="n">max_i_disposal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">)</span>
+        <span class="n">max_j_disposal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_in_pw</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">max_j_disposal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_in_pw</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">max_i_disposal</span>
+
+        <span class="k">for</span> <span class="n">i_disposal</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_i_disposal</span><span class="p">):</span>   
+
+            <span class="k">for</span> <span class="n">j_disposal</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_j_disposal</span><span class="p">):</span>
+
+                <span class="n">block_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">][</span><span class="n">j_disposal</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j_disposal</span><span class="p">]</span> <span class="o">!=</span> <span class="n">block_id</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">i_disposal</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="k">while</span> <span class="n">k</span> <span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j_disposal</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j_disposal</span><span class="p">]:</span>
+                        <span class="n">k</span> <span class="o">-=</span> <span class="mi">1</span>
+
+                    <span class="n">block_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j_disposal</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">block_id</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">block_id</span><span class="p">]</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;topbottom&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">y_in_pw</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_in_pw</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_in_pw</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_height</span><span class="p">(</span><span class="n">block_id</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">y_in_pw</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_in_pw</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_in_pw</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_width</span><span class="p">(</span><span class="n">block_id</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">j_disposal</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_j_disposal</span><span class="p">):</span>   
+
+            <span class="k">for</span> <span class="n">i_disposal</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_i_disposal</span><span class="p">):</span>
+
+                <span class="n">block_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">][</span><span class="n">j_disposal</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">][</span><span class="n">j_disposal</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">block_id</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">j_disposal</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="k">while</span> <span class="n">k</span> <span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">][</span><span class="n">j_disposal</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="n">k</span> <span class="o">-=</span> <span class="mi">1</span>
+
+                    <span class="n">block_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">disposal</span><span class="p">[</span><span class="n">i_disposal</span><span class="p">][</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">block_id</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">block_id</span><span class="p">]</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;topbottom&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">x_in_pw</span><span class="p">[</span><span class="n">j_disposal</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_in_pw</span><span class="p">[</span><span class="n">j_disposal</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_in_pw</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_width</span><span class="p">(</span><span class="n">block_id</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">x_in_pw</span><span class="p">[</span><span class="n">j_disposal</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_in_pw</span><span class="p">[</span><span class="n">j_disposal</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_in_pw</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_height</span><span class="p">(</span><span class="n">block_id</span><span class="p">))</span>
+
+        <span class="c1">### Calcul de la matrice des distances</span>
+        
+        <span class="n">distance</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">Distance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">distance</span><span class="o">.</span><span class="n">fill_matrix_time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix_time</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">matrix_time</span>
+
+        <span class="c1">### Calcul des dictionnaires de correspondance entre les indices globaux de lane et les indices (block_id, lane_id)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_lanes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_global_id</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_lanes</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">counter_lanes</span> <span class="o">=</span> <span class="mi">1</span>                              <span class="c1"># LA NUMEROTAION DES LANES COMMENCE A 1</span>
+        <span class="k">for</span> <span class="n">block_id</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_lanes</span> <span class="o">+=</span> <span class="n">block</span><span class="o">.</span><span class="n">nb_lanes</span>
+            <span class="k">for</span> <span class="n">lane_id</span><span class="p">,</span> <span class="n">lane</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">lanes</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dict_lanes</span><span class="p">[</span><span class="n">counter_lanes</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">block_id</span><span class="p">,</span> <span class="n">lane_id</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">to_global_id</span><span class="p">[(</span><span class="n">block_id</span><span class="p">,</span> <span class="n">lane_id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">counter_lanes</span>
+                <span class="n">counter_lanes</span> <span class="o">+=</span> <span class="mi">1</span>
+         
+
+    
+    <span class="k">def</span> <span class="nf">_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Crée une copie profonde d&#39;un parking en conservant son état d&#39;occupation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parking_copied</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">parking_copied</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">_copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">]</span>
+        <span class="n">parking_copied</span><span class="o">.</span><span class="n">occupation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">occupation</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">parking_copied</span>
+    
+    <span class="k">def</span> <span class="nf">_empty_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Crée une copie profonde d&#39;un parking en réinitialisant son état d&#39;occupation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parking_copied</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">parking_copied</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">_empty_copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">]</span>
+        <span class="n">parking_copied</span><span class="o">.</span><span class="n">occupation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">occupation</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">parking_copied</span>               
+    
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">block</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="s2">&quot; - Interface :</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> - Parking :&quot;</span><span class="o">+</span><span class="n">s</span>
+    
+    <span class="k">def</span> <span class="nf">travel_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">departure</span><span class="p">,</span> <span class="n">arrival</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Renvoie le temps de trajet entre l&#39;extrémité departure et l&#39;extrémité arrival</span>
+
+<span class="sd">        departure : (block_id, lane_id, side)</span>
+<span class="sd">        arrival : (block_id, lane_id, side)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">departure</span> <span class="o">==</span> <span class="n">arrival</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">departure</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;top&#39;</span><span class="p">:</span>
+                <span class="n">place1</span> <span class="o">=</span> <span class="p">(</span><span class="n">departure</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">departure</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">place1</span> <span class="o">=</span> <span class="p">(</span><span class="n">departure</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">departure</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">arrival</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;top&#39;</span><span class="p">:</span>
+                <span class="n">place2</span> <span class="o">=</span> <span class="p">(</span><span class="n">arrival</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arrival</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">place2</span> <span class="o">=</span> <span class="p">(</span><span class="n">arrival</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arrival</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">duree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix_time</span><span class="p">[</span><span class="n">place1</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">place1</span><span class="p">[</span><span class="mi">1</span><span class="p">]][</span><span class="n">place1</span><span class="p">[</span><span class="mi">2</span><span class="p">]][</span><span class="n">place2</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">place2</span><span class="p">[</span><span class="mi">1</span><span class="p">]][</span><span class="n">place2</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">duree</span><span class="p">))</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">block_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">block_id</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">block_id</span> <span class="o">==</span> <span class="s2">&quot;l&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">9</span>
+        <span class="k">elif</span> <span class="n">block_id</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">block_id</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span> <span class="ow">and</span> <span class="n">block_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;f&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">block_id</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">block_id</span><span class="p">]</span><span class="o">.</span><span class="n">lanes</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">block_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">block_id</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">block_id</span> <span class="o">==</span> <span class="s2">&quot;l&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">7</span>
+        <span class="k">elif</span> <span class="n">block_id</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">block_id</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span> <span class="ow">and</span> <span class="n">block_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;f&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">block_id</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">block_id</span><span class="p">]</span><span class="o">.</span><span class="n">lanes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">length</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">place_ratio</span> <span class="o">+</span> <span class="mi">1</span>
+    
+    <span class="k">def</span> <span class="nf">opposite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;bottom&quot;</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;top&quot;</span>
+
+    <span class="k">def</span> <span class="nf">future_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lane</span><span class="p">,</span> <span class="n">block_id</span><span class="p">,</span> <span class="n">lane_id</span><span class="p">,</span> <span class="n">robots</span><span class="p">,</span> <span class="n">stock</span><span class="p">,</span> <span class="n">min_time</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_time</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">on_place</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Permet d&#39;exécuter l&#39;ensemble des actions des robots qui vont affecter la lane entre min_time et max_time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">on_place</span><span class="p">:</span>
+            <span class="n">lane_copy</span> <span class="o">=</span> <span class="n">lane</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lane_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">lane</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">robot</span> <span class="ow">in</span> <span class="n">robots</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">robot</span><span class="o">.</span><span class="n">doing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">max_time</span> <span class="ow">or</span> <span class="n">robot</span><span class="o">.</span><span class="n">goal_time</span> <span class="ow">and</span> <span class="n">robot</span><span class="o">.</span><span class="n">goal_time</span> <span class="o">&lt;=</span> <span class="n">max_time</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">min_time</span> <span class="ow">or</span> <span class="n">robot</span><span class="o">.</span><span class="n">goal_time</span> <span class="ow">and</span> <span class="n">robot</span><span class="o">.</span><span class="n">goal_time</span> <span class="o">&gt;</span> <span class="n">min_time</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">robot</span><span class="o">.</span><span class="n">goal_position</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">block_id</span><span class="p">,</span> <span class="n">lane_id</span><span class="p">):</span>
+                            <span class="n">side</span> <span class="o">=</span> <span class="n">robot</span><span class="o">.</span><span class="n">goal_position</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="n">robot</span><span class="o">.</span><span class="n">vehicle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">lane_copy</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">side</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">lane_copy</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">stock</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">lane_copy</span>
+                 
+
+<span class="k">class</span> <span class="nc">Block</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lanes</span><span class="p">,</span> <span class="n">nb_lanes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lane_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;topbottom&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Un block s&#39;initialise de deux manières :</span>
+<span class="sd">        - soit en donnant en argument la liste des lanes</span>
+<span class="sd">        - soit en donnant un nombre de lanes *nb_lanes*, et leur longueur *lane_length*, l&#39;argument *lanes* doit alors valoir [ ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">nb_lanes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lanes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nb_lanes</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Lane</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lane_length</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nb_lanes</span> <span class="o">=</span> <span class="n">nb_lanes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lane_length</span> <span class="o">=</span> <span class="n">lane_length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lanes</span> <span class="o">=</span> <span class="n">lanes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nb_lanes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lane_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">length</span>
+
+        <span class="c1"># dimensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">)</span> <span class="c1"># en nombre de voitures</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">length</span> <span class="c1"># en nombre de voitures</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_pos</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_pos</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span>
+
+    <span class="k">def</span> <span class="nf">_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">block_copied</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">block_copied</span><span class="o">.</span><span class="n">lanes</span> <span class="o">=</span> <span class="p">[</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">lane</span><span class="p">)</span> <span class="k">for</span> <span class="n">lane</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">BlockInterface</span><span class="p">):</span>
+            <span class="n">block_copied</span><span class="o">.</span><span class="n">targeted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targeted</span><span class="p">[:]</span>    <span class="c1"># message d&#39;erreur car l&#39;attribut n&#39;existe que pour l&#39;interface</span>
+        <span class="k">return</span> <span class="n">block_copied</span>
+
+    <span class="k">def</span> <span class="nf">_empty_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">block_copied</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">block_copied</span><span class="o">.</span><span class="n">lanes</span> <span class="o">=</span> <span class="p">[</span><span class="n">lane</span><span class="o">.</span><span class="n">_empty_copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">lane</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">BlockInterface</span><span class="p">):</span>
+            <span class="n">block_copied</span><span class="o">.</span><span class="n">nb_places_available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span>
+            <span class="n">block_copied</span><span class="o">.</span><span class="n">targeted</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span>
+        <span class="k">return</span> <span class="n">block_copied</span>
+
+    
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># on représente les lanes horizontalement pour construire et on transpose avant d&#39;afficher</span>
+        
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;U6&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">lane</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">):</span>
+            <span class="n">liste</span> <span class="o">=</span> <span class="n">lane</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[:]</span>
+            <span class="n">liste</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">liste</span><span class="p">]</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">row_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">liste</span>
+
+        <span class="c1"># les lanes sont les colonnes (la première à gauche)</span>
+        <span class="c1"># conformément aux termes top et bottom pour les extrémités</span>
+        <span class="k">return</span> <span class="n">matrix</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="BlockInterface"><a class="viewcode-back" href="../index.html#parking.BlockInterface">[docs]</a><span class="k">class</span> <span class="nc">BlockInterface</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sous-classe correspondant au bloc des lanes de l&#39;interface</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lanes</span><span class="p">,</span> <span class="n">nb_lanes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lane_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;topbottom&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lanes</span><span class="p">,</span> <span class="n">nb_lanes</span><span class="p">,</span> <span class="n">lane_length</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_places_available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targeted</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span>
+
+    <span class="k">def</span> <span class="nf">empty_lane</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="c1">#renvoie &quot;full&quot; si interface est pleine, et return premier vehicule</span>
+        <span class="k">for</span> <span class="n">i_lane</span><span class="p">,</span> <span class="n">lane</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">lane</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">i_lane</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;full&quot;</span>
+
+    <span class="k">def</span> <span class="nf">occupied_lane</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="c1">#renvoie &quot;empty&quot; si interface est pleine, et return premier vehicule</span>
+        <span class="k">for</span> <span class="n">i_lane</span><span class="p">,</span> <span class="n">lane</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lanes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">lane</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">i_lane</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;empty&quot;</span></div>
+
+
+
+<span class="k">class</span> <span class="nc">Lane</span><span class="p">()</span> <span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_lane</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">top_access</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">bottom_access</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">id_lane</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">=</span> <span class="kc">None</span>                <span class="c1"># indice de la premiere voiture occupée dans la lane (None si pas de voiture)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">=</span> <span class="kc">None</span>             <span class="c1"># indice de la derniere voiture occupée dans la lane (None si pas de voiture)</span>
+        
+        <span class="c1"># Obsolète</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">=</span> <span class="kc">None</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Accessibilité des différents côtés de la lane - NON FONCTIONNEL</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">top_access</span> <span class="o">=</span> <span class="n">top_access</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottom_access</span> <span class="o">=</span> <span class="n">bottom_access</span>
+
+        <span class="c1"># Paramètre utilisé lordque les lanes sont unimodales : position du max /\</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="k">def</span> <span class="nf">_empty_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Lane</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_access</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_access</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">liste</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[:]</span>
+        <span class="n">liste</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">liste</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">liste</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">is_top_available</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Maxint</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_access</span> <span class="ow">and</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">is_bottom_available</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># Minint</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span><span class="p">)</span>   
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_access</span> <span class="ow">and</span> <span class="n">M</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span>
+    
+    <span class="k">def</span> <span class="nf">is_end_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top_available</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom_available</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">end_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span>
+    
+    <span class="k">def</span> <span class="nf">end_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">future_end_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span>
+
+
+    <span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_vehicle</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">stock</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_access</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_vehicle</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_vehicle</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">top_position</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_vehicle</span>
+                <span class="n">max_retrieval</span> <span class="o">=</span> <span class="n">stock</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span><span class="p">]]</span><span class="o">.</span><span class="n">retrieval</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="ow">and</span> <span class="n">stock</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="n">id_vehicle</span><span class="p">]</span><span class="o">.</span><span class="n">retrieval</span> <span class="o">&gt;</span> <span class="n">max_retrieval</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">elif</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_access</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_vehicle</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_vehicle</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_vehicle</span>
+                <span class="n">max_retrieval</span> <span class="o">=</span> <span class="n">stock</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span><span class="p">]]</span><span class="o">.</span><span class="n">retrieval</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="ow">and</span> <span class="n">stock</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="n">id_vehicle</span><span class="p">]</span><span class="o">.</span><span class="n">retrieval</span> <span class="o">&gt;</span> <span class="n">max_retrieval</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">push_reserve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_vehicle</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">mark</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_access</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">elif</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_access</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">//</span><span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">push_cancel_reserve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span><span class="p">:</span> <span class="c1"># si jamais l&#39;indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu&#39;il n&#39;y a plus de voiture</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">elif</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span><span class="p">:</span> <span class="c1"># si jamais l&#39;indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu&#39;il n&#39;y a plus de voiture</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_top_position</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">future_bottom_position</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+    <span class="k">def</span> <span class="nf">pop_reserve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_cancel_reserve</span><span class="p">(</span><span class="n">side</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">pop_cancel_reserve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_reserve</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">side</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">vehicle_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">top_position</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">top_position</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span><span class="p">:</span> <span class="c1"># si jamais l&#39;indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu&#39;il n&#39;y a plus de voiture</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span>
+                <span class="k">return</span> <span class="n">vehicle_id</span>
+
+        <span class="k">elif</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;bottom&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">vehicle_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span><span class="p">:</span> <span class="c1"># si jamais l&#39;indice de la premiere voiture est plus grand que celui de la dernière, ça veut dire qu&#39;il n&#39;y a plus de voiture</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">top_position</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">argmax_retrieval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_position</span>
+                <span class="k">return</span> <span class="n">vehicle_id</span>
+
+
+    <span class="k">def</span> <span class="nf">retrieval_side</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">stock</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        renvoie le côté de sortie (a priori) du véhicule situé en position position, None si il n&#39;y en a pas</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vehicle</span> <span class="o">=</span> <span class="n">stock</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="n">position</span><span class="p">]]</span>
+        <span class="c1"># on vérifie qu&#39;il y a bien un véhicule à cette place</span>
+        <span class="k">if</span> <span class="n">vehicle</span><span class="p">:</span>
+            <span class="n">bottom_displacement</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">top_displacement</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># on parcours toutes les positions pour voir si le véhicule gène</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">):</span>
+                <span class="c1"># on vérifie qu&#39;il y a bien un véhicule en place i</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">vehicle_i</span> <span class="o">=</span> <span class="n">stock</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                    <span class="c1"># on regarde si il va falloir le déplacer</span>
+                    <span class="k">if</span> <span class="n">vehicle_i</span><span class="o">.</span><span class="n">retrieval</span> <span class="o">&gt;</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">retrieval</span><span class="p">:</span>
+                        <span class="c1"># il faudra déplacer ce véhicule, on regarde si il est côté top ou côté bottom</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">position</span><span class="p">:</span>
+                            <span class="n">top_displacement</span> <span class="o">+=</span> <span class="mi">1</span> 
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">bottom_displacement</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># on renvoie le côté pour lequel le nombre de véhicules à déplacer est le plus petit</span>
+            <span class="k">if</span> <span class="n">top_displacement</span> <span class="o">&lt;=</span> <span class="n">bottom_displacement</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;top&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;bottom&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    
+    <span class="k">def</span> <span class="nf">next_retrieval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">stock</span><span class="p">,</span> <span class="n">exception</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        renvoie la date de prochaine sortie d&#39;un véhicule par ce coté de la lane</span>
+<span class="sd">        on suppose qu&#39;un véhicule sort par le côté où il y a le moins de véhicule à déplacer</span>
+<span class="sd">        Attention : peut renvoyer None si la lane est vide</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">retrieval</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">vehicle_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_vehicles</span><span class="p">):</span>
+            <span class="c1"># on vérifie que le véhicule n&#39;est pas None et qu&#39;il va bien sortir par notre côté</span>
+            <span class="k">if</span> <span class="n">vehicle_id</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieval_side</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">stock</span><span class="p">)</span> <span class="o">==</span> <span class="n">side</span><span class="p">:</span>
+                <span class="n">vehicle</span> <span class="o">=</span> <span class="n">stock</span><span class="o">.</span><span class="n">vehicles</span><span class="p">[</span><span class="n">vehicle_id</span><span class="p">]</span>
+                <span class="c1"># on diminue la date de prochaine sortie de ce côté si besoin</span>
+                <span class="k">if</span> <span class="n">retrieval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">retrieval</span> <span class="o">&gt;</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">retrieval</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">retrieval</span> <span class="o">==</span> <span class="n">exception</span><span class="p">:</span>
+                        <span class="n">retrieval</span> <span class="o">=</span> <span class="n">vehicle</span><span class="o">.</span><span class="n">retrieval</span>
+        
+        <span class="k">return</span> <span class="n">retrieval</span>
+
+
+
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ParkMines</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Code du module</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Recherche rapide</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Marius ALONSO, Enol ALVAREZ, Laure BOURGUELLE, Pierre LOUISOT.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
