@@ -12,6 +12,8 @@ class Parking():
         ### Attributs variant au cours d'une simulation
 
         self.occupation = occupation
+        self.blocks = blocks
+        self.number_blocks = len(blocks)
 
         ### Attributs ne variant pas au cours d'une simulation
 
@@ -30,7 +32,6 @@ class Parking():
         for block in self.blocks:
             L.append(len(block.lanes[0].list_vehicles))
         self.longest_lane = max(L)          # lane la plus longue du parking
-
 
         ### Calcul des coordonnées du maillage correspondant à la matrice disposal
         

@@ -11,6 +11,8 @@ from math import isclose, sqrt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from itertools import product
+import xlrd
+from xlwt import Workbook, Formula
 
 class Dashboard():
     """
@@ -18,7 +20,6 @@ class Dashboard():
     puis calcule la performance
     """
     def __init__(self, simulation):
-
         self.completed = True
         try:
             simulation.complete()
@@ -27,12 +28,18 @@ class Dashboard():
         self.simulation = simulation
 
     def averageIntermediateMovesPerVehicle(self):
+        """
+        Calcule le nombre de déplacement intermédaire moyen d'un véhicule au cours de la simulation
+        """
         if len(self.simulation.stock):
             return self.simulation.algorithm.nb_placements/len(self.simulation.stock) - 1
         else:
             return 0
     
     def averageBeforeDepositDelay(self):
+        """
+        Calcule le temps d'attente moyen d'un client avant de déposer son véhicule au cours de la simulation
+        """
         before_deposit_delays = np.array(self.simulation.before_deposit_delays)
         if len(before_deposit_delays[before_deposit_delays < datetime.timedelta()]):
             before_deposit_delays[before_deposit_delays < datetime.timedelta()] = datetime.timedelta()
@@ -42,6 +49,9 @@ class Dashboard():
             return datetime.timedelta()
 
     def averageAfterDepositDelay(self):
+        """
+        Calcule le temps d'attente moyen d'un véhicule dans l'interface avant son placement dans le parking au cours de la simulation
+        """
         after_deposit_delays = np.array(self.simulation.after_deposit_delays)
         if len(after_deposit_delays[after_deposit_delays < datetime.timedelta()]):
             after_deposit_delays[after_deposit_delays < datetime.timedelta()] = datetime.timedelta()
@@ -51,6 +61,9 @@ class Dashboard():
             return datetime.timedelta()
     
     def averageRetrievalDelay(self):
+        """
+        Calcule le temps d'attente moyen d'un client avant de récupérer son véhicule au cours de la simulation
+        """
         retrieval_delays = np.array(self.simulation.retrieval_delays)
         if len(retrieval_delays[retrieval_delays < datetime.timedelta()]):
             retrieval_delays[retrieval_delays < datetime.timedelta()] = datetime.timedelta()
@@ -61,7 +74,7 @@ class Dashboard():
     
     def depositDelaysRates(self, delays=[i for i in range(180)]):
         """
-        renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
+        Renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
         """
         deposit_delays = np.array(self.simulation.before_deposit_delays)
         delays_rates = {}
@@ -73,7 +86,7 @@ class Dashboard():
     
     def retrievalDelaysRates(self, delays=[i for i in range(180)]):
         """
-        renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
+        Renvoie un dictionnaire donnant pour chaque durée dt dans delays, la part des clients ayant attendu plus de dt minutes
         """
         retrieval_delays = np.array(self.simulation.retrieval_delays)
         delays_rates = {}
@@ -85,13 +98,13 @@ class Dashboard():
     
     def mark(self):
         """
-        renvoie la note de la simulation
+        Renvoie la note de la simulation (SOMME(retards_sortie^3/2)/nombre_de_véhicules_placés)
         """
         retrieval_delays = np.array(self.simulation.retrieval_delays)
         mark = 0
         nb_vehicles = len(self.simulation.stock)
 
-        for delay in range(600):
+        for delay in range(120):
             mark += pow(np.sum(datetime.timedelta(minutes=delay) < retrieval_delays) - np.sum(datetime.timedelta(minutes=delay+1) < retrieval_delays), 3/2)
         
         mark /= nb_vehicles
@@ -112,18 +125,23 @@ class Performance():
     def __init__(self, t0, stock_args, robots, parking, AlgorithmType, delays=[i for i in range(180)]):
 
         self.stock_args = stock_args
+        # liste des robots
         self.robots = robots
         # t0 la date d'initial
         self.t = t0
         self.parking = parking
         self.algorithm = AlgorithmType
+        # discrétisation des temps pour lesquels on veut calculer les retards
         self.delays = delays
+        self.optimization_parameters = optimization_parameters
     
     def averageDashboard(self, nb_repetitions=10):
         """
-        renvoie les données du Dashboard de la simulation de référence,
-        moyennées sur nb_repetitions répétitions
+        Renvoie les données du Dashboard de la simulation de référence,
+        moyennées sur nb_repetitions répétitions (sous forme de dictionnaire)
         """
+
+        # versions moyennées des inducateurs décrits dans la classe Dashboard
         average_dashboard = {}
         effective_nb_repetitions = 0
         average_intermediate_mpv = 0.
@@ -133,10 +151,10 @@ class Performance():
         average_deposit_delay_rates = {key: 0. for key in self.delays}
         average_retrieval_delay_rates = {key: 0. for key in self.delays}
 
+        # calcul des valeurs moyennées sur les simulations arrivant à leur terme
         for _ in range(nb_repetitions):
-            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm))
+            simulation = Simulation(self.t, RandomStock(*self.stock_args), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=self.optimization_parameters)
             dashboard = Dashboard(simulation)
-            print(dashboard.simulation.retrieval_delays)
             if dashboard.completed and dashboard.simulation.retrieval_delays:
                 average_intermediate_mpv += dashboard.averageIntermediateMovesPerVehicle()
                 average_before_deposit_delay += dashboard.averageBeforeDepositDelay()
@@ -151,6 +169,7 @@ class Performance():
                 for delay in retrieval_delay_rates:
                     average_retrieval_delay_rates[delay] += retrieval_delay_rates[delay]
 
+                # incrément du nombre de simulations arrivant à leur terme
                 effective_nb_repetitions += 1
         
         for key, value in average_deposit_delay_rates.items():
@@ -164,14 +183,14 @@ class Performance():
         average_dashboard["average_after_deposit_delay"] = average_after_deposit_delay / effective_nb_repetitions
         average_dashboard["average_retrieval_delay"] = average_retrieval_delay / effective_nb_repetitions
         average_dashboard["success_rate"] = effective_nb_repetitions / nb_repetitions
-        average_dashboard["average_deposit_delay_rates"] = average_deposit_delay_rates # attention, c'est un dictionnaire
-        average_dashboard["average_retrieval_delay_rates"] = average_retrieval_delay_rates # attention, c'est un dictionnaire
+        average_dashboard["average_deposit_delay_rates"] = average_deposit_delay_rates # attention, ceci est un dictionnaire
+        average_dashboard["average_retrieval_delay_rates"] = average_retrieval_delay_rates # attention, ceci est un dictionnaire
 
         return average_dashboard
     
     def printAverageDashboard(self, nb_repetitions=10):
         """
-        affiche les résulats de averageDashboard
+        Affiche les résulats de averageDashboard
         """
         means = self.averageDashboard(nb_repetitions=nb_repetitions)
         for key in means:
@@ -221,7 +240,7 @@ class Performance():
 
     def variableStockAndRobots(self, nb_repetitions=10, factors=[1+0.1*i for i in range(-4, 3)], nb_robots_max=3):
         """
-        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
+        Regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
         """
         # curves = {(factor, nb_robots): dictionnaire des performances pour ce facteur et ce nombre de robots}
         curves = {}
@@ -461,7 +480,7 @@ class Performance():
 
     def variableInterfaceAndRobots(self, nb_repetitions=10, interface_delta_sizes=[i for i in range(-2, 4)], nb_robots_max=3):
         """
-        regarde l'influence d'une variation du stock sur les différents retards, en moyennant sur nb_repetitions répétitions
+        Regarde l'influence d'une variation de la taille de l'interface et du nombre de robots sur les différents retards, en moyennant sur nb_repetitions répétitions
         """
         # curves = {(interface_size, nb_robots): dictionnaire des performances pour cette taille d'interface et ce nombre de robots}
         curves = {}
@@ -927,7 +946,7 @@ class Performance():
                     hspace=0.35)
         plt.show()
 
-    def variableAlgorithmsAnticipationTimeAndFlow(self, nb_repetitions=10, algorithms=[AlgorithmRandom], factors=[1+0.1*i for i in range(-4, 3)], anticipation_times=[datetime.timedelta(hours=1), datetime.timedelta(hours=4), datetime.timedelta(hours=8)]):
+    def variableAlgorithmsAnticipationTimeAndFlow(self, nb_repetitions=10, algorithms=[AlgorithmRandom], factors=[1+0.1*i for i in range(-4, 3)], anticipation_times=[datetime.timedelta(hours=1)], optimization_parameters=None):
         """
         Compare les performances de différents algorithmes pour un stock variable et différentes durée d'anticipation des sorties
         """
@@ -941,7 +960,7 @@ class Performance():
                 for anticipation_time in anticipation_times:
                     print(algorithm.__repr__(), factor, anticipation_time.total_seconds()/3600)
                     # génération de toutes les sorties
-                    performance = Performance(self.t, stock_args, self.robots, deepcopy(self.parking), deepcopy(algorithm))
+                    performance = Performance(self.t, stock_args, self.robots, deepcopy(self.parking), deepcopy(algorithm), optimization_parameters=optimization_parameters)
                     curves[(factor, algorithm, anticipation_time)] = performance.averageDashboard(nb_repetitions)
 
         # tracé
@@ -1081,7 +1100,7 @@ class Performance():
         success_rate.set_title("taux de succès de l'algorithme")
         success_rate.autoscale(tight=True)
 
-        """
+        
         ### average_deposit_delay_rates ###
         
         deposit_delays = plt.subplot(3, 3, (5, 8))
@@ -1114,11 +1133,11 @@ class Performance():
         deposit_delays.set_ylabel("part des clients concernés")
         deposit_delays.set_title("temps d'attente moyen au dépôt")
         deposit_delays.autoscale(tight=True)
-        """
+        
 
         ### average_retrieval_delay_rates ###
         
-        retrieval_delays = plt.subplot(3, 3, (5, 9))
+        retrieval_delays = plt.subplot(3, 3, (6, 9))
         
         for factor, algorithm, anticipation_time in curves:
             # abscisses : le retard
@@ -1188,19 +1207,20 @@ class Performance():
         effective_nb_repetitions = 0
         average_mark = 0
         root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        root_path_laure = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
         root_path_marius = "C:/Users/alons/desktop/MINES/INFO/ParkMines/inputs/pool_for_optim/"
 
 
         for i in range(10):
-            print("i : ", i)
-            path = root_path_marius + 'stock_' + str(i) + '.csv'
+            print(i)
+            path = root_path_laure + 'easy_stock_' + str(i) + '.csv'
             simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
             dashboard = Dashboard(simulation)
             if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
                 mark = dashboard.mark()
-                print(mark)
                 average_mark += mark
                 effective_nb_repetitions += 1
+                print(mark)
 
         try:
             average_mark /= effective_nb_repetitions
@@ -1209,7 +1229,31 @@ class Performance():
         return average_mark
 
 
-    def refineParametersZeroMinus(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 1.1, 20., -5.]):
+    def algorithmMarksList(self, optimization_parameters=None):
+        """
+        calcule les "notes" de l'algorithme : somme(retards^3/2)/nb_véhicules pour 10 stocks
+        """
+        #root_path = "C:/Users/LOUIS/mines/ParkMines/inputs/pool_for_optim/"
+        root_path = "C:/Users/laure/Desktop/git/ParkMines/inputs/pool_for_optim/"
+        MarksList = []
+
+        for i in range(10):
+            path = root_path + 'easy_stock_' + str(i) + '.csv'
+            simulation = Simulation(self.t, Stock(importFromFile(path=path)), deepcopy(self.robots), deepcopy(self.parking), deepcopy(self.algorithm), optimization_parameters=optimization_parameters)
+            dashboard = Dashboard(simulation)
+            if dashboard.completed:     # indique si on a réussi a aller au bout de la simulation
+                x = dashboard.mark()
+                print(x, i)
+                MarksList.append(x)
+
+        MarksArray = np.array(MarksList)
+        moy = np.mean(MarksArray)
+        std = np.std(MarksArray)
+
+        return MarksList, moy, std
+
+
+    def refineParametersZeroMinus(self, variation_coef=0.9, nb_steps=10, nb_repetitions=100, initial_parameters=[1., 3., 100., -10.]):
         """
         Affine les paramètres de 0- sur nb_repetitions
         """
@@ -1254,12 +1298,11 @@ class Performance():
             print(f"{best_optimization_parameters} : {best_mark}")
         return marks
 
-    def refineParametersZeroMinusOnPool(self, low_variation_coef=0.5, high_variation_coef=0.9, nb_steps=10, initial_parameters=[1., 3., 100., -10.]):
+    def refineParametersZeroMinusOnPool(self, variation_coef=0.7, nb_steps=10, initial_parameters=[1., 3., 100., -10.]):
         """
         Affine les paramètres de 0- sur nb_repetitions
         """
         best_optimization_parameters = initial_parameters
-        variation_coef = sqrt(low_variation_coef*high_variation_coef)
 
         # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
         marks = {}
@@ -1293,29 +1336,26 @@ class Performance():
                 marks[tuple(parameters)] = mark
                 local_marks[tuple(parameters)] = mark
                 print(f"{tuple(parameters)} : {mark}")
-
+            
             # mise à jour des paramètres de référence
             best_mark = local_marks[tuple(best_optimization_parameters)]
-            changed = False
             for parameters, mark in local_marks.items():
                 if mark < best_mark:
-                    changed = True
                     best_optimization_parameters = parameters
                     best_mark = mark
-            path.append((best_optimization_parameters, best_mark, variation_coef))
-            
-            # si on arrive à améliorer le coût : on rapproche le coefficient de variation de la cible haute (proche de 1)
-            if changed:
-                variation_coef = sqrt(variation_coef*high_variation_coef)
-            # si on n'arrive pas à améliorer le coût, i.e. on est dans un minimum local : on rapproche le coefficient de variation de la cible basse (plus proche de 0)
-            else:
-                variation_coef = sqrt(variation_coef*low_variation_coef)
+            print(f"{best_optimization_parameters} : {best_mark}")
+
         return marks, path
 
     def cutViewZeroMinusOnPool(self, start=0.5, stop=10, step=0.5, other_parameters=[100., -10.]):
         """
         calcule le score pour une gamme de valeurs ded alpha et beta
         """
+        # On créer un "classeur"
+        classeur = Workbook()
+        # On ajoute une feuille au classeur
+        feuille = classeur.add_sheet("test 0-")
+        i, j = 0, 0 #lignes et colonnes
 
         # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
         marks = {}
@@ -1327,13 +1367,23 @@ class Performance():
                     mark = self.algorithmMarkOnPool(optimization_parameters=optimization_parameters)
                     print(f"{tuple(optimization_parameters)} : {mark:.3f}")
                     marks[tuple(optimization_parameters)] = mark
+
+                    feuille.write(i, j, mark)
+                j += 1
+            i += 1
+            j = 0
+        classeur.save(r"C:\Users\LOUIS\mines\ParkMines\inputs\pool_for_optim\stock.xls")
         return marks
     
     def logCutViewZeroMinusOnPool(self, start=-3, stop=5, step=1, other_parameters=[100., -10.]):
         """
-        calcule le score pour une gamme de valeurs ded alpha et beta
+        calcule le score pour une gamme de valeurs de alpha et beta
         """
-
+        # On créer un "classeur"
+        classeur = Workbook()
+        # On ajoute une feuille au classeur
+        feuille = classeur.add_sheet("test 0- log")
+        i, j = 0, 0 #lignes et colonnes
         # dictionnaire : (alpha, beta, start_new_lane_weight, distance_to_lane_end_coef) : score pour les simulations réalisées
         marks = {}
 
@@ -1346,4 +1396,10 @@ class Performance():
                     mark = self.algorithmMarkOnPool(optimization_parameters=optimization_parameters)
                     print(f"{tuple(optimization_parameters)} : {mark:.3f}")
                     marks[tuple(optimization_parameters)] = mark
+                    
+                    feuille.write(i, j, mark)
+                j += 1
+            i += 1
+            j = 0
+        classeur.save(r"C:\Users\laure\Desktop\git\ParkMines\inputs\pool_for_optim\stock.xls")
         return marks
